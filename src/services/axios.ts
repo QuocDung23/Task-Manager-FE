@@ -15,10 +15,30 @@ axiosLocal.interceptors.request.use((config) => {
     const url = config.url ?? "";
     const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/register");
 
-    const token = authStorage.getToken();
+    const token = authStorage.getValidToken();
     if (token && !isAuthEndpoint) {
         config.headers.Authorization = `Bearer ${token}`
     }
 
     return config
 })
+
+axiosLocal.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error?.response?.status;
+        const requestUrl = String(error?.config?.url ?? "");
+        const isAuthEndpoint =
+            requestUrl.includes("/auth/login") || requestUrl.includes("/auth/register");
+
+        if (status === 401 && !isAuthEndpoint) {
+            authStorage.clearToken();
+
+            if (window.location.pathname !== "/login") {
+                window.location.href = "/login";
+            }
+        }
+
+        return Promise.reject(error);
+    }
+)

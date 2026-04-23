@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Button } from "../../../components/ui/button";
+import { Button } from "../../components/ui/button";
 import {
   Card,
   CardAction,
@@ -8,9 +8,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
+} from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import { useRegister } from "@/features/auth/hooks/useRegister";
 import type { FormEvent } from "react";
 import { toast } from "sonner";
@@ -32,7 +32,7 @@ export function ViewRegister() {
 
     if (payload.password !== payload.confirmPassword) {
       toast.error("Confirm password does not match");
- 
+
       return;
     }
 
@@ -79,12 +79,7 @@ export function ViewRegister() {
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
               </div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-              />
+              <Input id="password" name="password" type="password" required />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="confirm-password">Confirm Password</Label>

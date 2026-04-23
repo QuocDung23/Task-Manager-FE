@@ -1,20 +1,45 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { LoginPage } from "../pages/auth/login-page";
 import { RegisterPage } from '../pages/auth/register-page';
-import { TestPage } from '../layouts/auth/components/test';
+import { ProjectPage } from '@/pages/projects/project-page';
+import { MainLayout } from '@/layouts/main/main-layout';
+import {
+    AuthRedirectRoute,
+    ProtectedRoute,
+    RootRedirectRoute,
+} from './route-guards';
 
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <TestPage />
+        element: <RootRedirectRoute />
     },
     {
-        path: "/login",
-        element: <LoginPage/>
+        element: <AuthRedirectRoute />,
+        children: [
+            {
+                path: "/login",
+                element: <LoginPage />
+            },
+            {
+                path: "/register",
+                element: <RegisterPage />
+            },
+        ]
     },
     {
-        path: "/register",
-        element: <RegisterPage/>
+        element: <ProtectedRoute />,
+        children: [
+            {
+                path: "/projects",
+                element: <MainLayout />,
+                children: [
+                    {
+                        index: true,
+                        element: <ProjectPage />,
+                    },
+                ],
+            },
+        ]
     },
-
 ])

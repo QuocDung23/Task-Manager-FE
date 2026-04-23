@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { authApi } from "../api/auth-api";
 import { authStorage } from "../storage/auth-storage";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { APP_ROUTES } from "../constans";
 
 type ApiError = {
   message?: string;
@@ -19,7 +20,7 @@ export const useLogin = () => {
       authStorage.setToken(data.accessToken);
       toast.success("Dang nhap thanh cong");
     //   queryClient.invalidateQueries({ queryKey: ["me"] });
-      navigate('/');
+      navigate(APP_ROUTES.PROJECTS, { replace: true });
     },
     onError: (error: AxiosError<ApiError>) => {
       const message = error.response?.data?.message ?? "Dang nhap that bai";

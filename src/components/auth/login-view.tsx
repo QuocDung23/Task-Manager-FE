@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "../../../components/ui/button";
+import { Button } from "../../components/ui/button";
 import {
   Card,
   CardAction,
@@ -9,12 +9,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
-import type { LoginRequest } from "../../../features/auth/types";
-import { APP_ROUTES } from "../../../features/auth/constans";
-import { useLogin } from "../../../features/auth/hooks/useLogin";
+} from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import type { LoginRequest } from "../../features/auth/types";
+import { APP_ROUTES } from "../../features/auth/constans";
+import { useLogin } from "../../features/auth/hooks/useLogin";
 import { toast } from "sonner";
 
 export function ViewLogin() {
