@@ -1,12 +1,12 @@
 import { LucideFolderOpen } from "lucide-react";
 import { CardDescription, CardHeader, CardTitle } from "../ui/card";
 
-interface BoardCardProps {
-  name: string;
-  description?: string;
+interface ProjectCardProps {
+    name: string
+    description?: string
 }
 
-export function BoardCard({ name, description }: BoardCardProps) {
+export function ProjectCard({name, description}: ProjectCardProps) {
   return (
     <CardHeader className="p-6 pr-14 space-y-4">
       <div className="flex items-start gap-4">

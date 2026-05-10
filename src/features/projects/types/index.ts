@@ -28,4 +28,15 @@ export type ProjectListResult = {
   pagination: PaginationResponse | null;
 };
 
+export type AddProjectMemberRequest = {
+  userId: string;
+};
+
+export type AddProjectMemberResponse = {
+  id: string;
+  userId: string;
+  projectId: string;
+  roleId: string;
+};
+
 

@@ -1,21 +1,18 @@
-import { useProjects } from "@/features/projects/hooks/useProject";
-import { HeaderProject } from "./header-project";
-import { Loader2, LucideFolderOpen, LucideSearch } from "lucide-react";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useProjects } from "@/features/projects/hooks/useProjects";
+import { Loader2, LucideSearch } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { CreateProjectDialog } from "./create-project";
+import { CreateProjectDialog } from "./createProject-main";
 import { useEffect, useState } from "react";
-import { PaginationPageProject } from "./pagination-project";
 import { Input } from "../ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { MenuSettingProject } from "./setting-project";
+import { MenuSettingProject } from "./settingProject-main";
+import { HeaderLayout } from "../../layouts/header-layout";
+import { ProjectCard } from "./projectCard-main";
+import { APP_ROUTES } from "@/router/constans";
+import { PaginationLayout } from "@/layouts/pagination-layout";
 
-export function ViewProject() {
+export function ViewMainPage() {
   const [page, setPage] = useState(1);
   const limit = 12;
 
@@ -54,17 +51,12 @@ export function ViewProject() {
   }
 
   return (
-    <div className="flex flex-col flex-1 w-full gap-6">
+    <div className="flex flex-col flex-1 w-full gap-6 relative">
       <div className="flex items-center justify-between w-full">
-        <HeaderProject />
-        <div>
-          <CreateProjectDialog />
-        </div>
+        <HeaderLayout>List Project</HeaderLayout>
       </div>
 
-      {/* GRID DANH SÁCH PROJECT */}
       <div className="w-full flex flex-col gap-6">
-        {/* Search Bar */}
         <div className="flex justify-start w-full mb-4">
           <div className="relative w-full max-w-xs">
             <Input
@@ -98,31 +90,21 @@ export function ViewProject() {
                   <div className="absolute right-3 top-5 z-10 rounded-md p-1 transition-colors hover:bg-gray-200 inline-flex items-center">
                     <MenuSettingProject project={project} />
                   </div>
-
-                  <Link to={`/board/${project.id}`} className="block group">
-                    <CardHeader className="p-6 pr-14 space-y-4">
-                      <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                          <LucideFolderOpen className="h-6 w-6 text-primary" />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <CardTitle className="truncate text-lg font-bold text-zinc-800 group-hover:text-primary">
-                            {project.name}
-                          </CardTitle>
-                          <CardDescription className="mt-2 line-clamp-2 text-sm text-zinc-500">
-                            {project.description || "Không có mô tả"}
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
+                  <Link
+                    to={`${APP_ROUTES.PROJECT}/${project.id}`}
+                    state={{ projectName: project.name }}
+                    className="block group"
+                  >
+                    <ProjectCard
+                      name={project.name}
+                      description={project.description}
+                    />
                   </Link>
                 </Card>
               </motion.div>
             ))}
           </AnimatePresence>
 
-          {/* Nếu không có kết quả, hiển thị thông báo với hiệu ứng mờ dần */}
           {projects.length === 0 && !isLoading && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -138,7 +120,7 @@ export function ViewProject() {
       </div>
       {pagination && totalPage > 1 && (
         <div className="pagination mt-auto py-6">
-          <PaginationPageProject
+          <PaginationLayout
             currentPage={page}
             totalPage={totalPage}
             onChangePage={(newPage) => {
@@ -151,6 +133,11 @@ export function ViewProject() {
           />
         </div>
       )}
+
+      {/* CreateProjectDialog ở góc phải phía dưới */}
+      <div className="fixed bottom-30 right-20 z-50">
+        <CreateProjectDialog />
+      </div>
     </div>
   );
 }

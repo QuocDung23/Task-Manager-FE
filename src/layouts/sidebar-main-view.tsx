@@ -14,6 +14,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { ChevronRightIcon, FolderKanbanIcon } from "lucide-react";
+import { APP_ROUTES } from "@/router/constans";
 
 export function SidebarMain() {
   return (
@@ -26,7 +27,8 @@ export function SidebarMain() {
 
       <SidebarContent>
         <SidebarGroup>
-          <NavLink to="/projects">
+          <NavLink to={APP_ROUTES.MAIN}>
+     
             {({ isActive }) => (
               <Item variant={isActive ? "default" : "outline"} size="sm">
                 <ItemMedia>

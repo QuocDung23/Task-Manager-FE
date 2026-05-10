@@ -13,7 +13,7 @@ import {
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import type { LoginRequest } from "../../features/auth/types";
-import { APP_ROUTES } from "../../features/auth/constans";
+import { APP_ROUTES } from "../../router/constans";
 import { useLogin } from "../../features/auth/hooks/useLogin";
 import { toast } from "sonner";
 

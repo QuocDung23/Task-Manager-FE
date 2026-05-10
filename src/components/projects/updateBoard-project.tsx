@@ -1,51 +1,67 @@
-import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useCreateProject } from "@/features/projects/hooks/useCreateProject";
-import type { ProjectRequest } from "@/features/projects/types";
-import { LucidePlus, FolderPlus } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Label } from "../ui/label";
+import { FolderPlus } from "lucide-react";
+import { Field, FieldGroup } from "../ui/field";
+import { useEffect } from "react";
+import { useUpdateBoard } from "@/features/boards/hooks/useUpdateBoard";
+import type { BoardResponse } from "@/features/boards/types";
+import { useParams } from "react-router-dom";
 
-export function CreateProjectDialog() {
-  const [open, setOpen] = useState(false);
-  const { mutate: createProject, isPending } = useCreateProject();
+type UpdateBoardDialogProps = {
+  board: BoardResponse;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
 
-  const formInputProject = useForm<ProjectRequest>({
+export function UpdateBoardDialog({
+  board,
+  open,
+  onOpenChange,
+}: UpdateBoardDialogProps) {
+  const { projectId } = useParams<{ projectId: string }>();
+  const { mutate: update, isPending } = useUpdateBoard(projectId);
+
+  const formInputUpdate = useForm<{
+    name: string;
+    description?: string;
+  }>({
     defaultValues: {
-      name: "",
-      description: "",
+      name: board.name,
+      description: board.description || "",
     },
   });
 
-  const onSubmit = (data: ProjectRequest) => {
-    createProject(data, {
-      onSuccess: () => {
-        formInputProject.reset();
-        setOpen(false);
+  const {reset} = formInputUpdate
+
+  useEffect(() => {
+    if(open && board) {
+      reset({
+        name: board.name,
+        description: board.description || "",
+      })
+    }
+  }, [open, board, reset])
+
+  const onSubmit = (values: { name: string; description?: string }) => {
+    update(
+      { id: board.id, data: values },
+      {
+        onSuccess: () => onOpenChange(false),
       },
-    });
+    );
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {/* Trigger */}
-      <DialogTrigger asChild>
-        <Button className="flex items-center gap-2 px-5">
-          <LucidePlus className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-
+    <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Content */}
       <DialogContent className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-lg sm:max-w-md">
         <DialogHeader className="space-y-3">
@@ -56,30 +72,27 @@ export function CreateProjectDialog() {
 
             <div>
               <DialogTitle className="text-lg font-semibold ">
-                Create new project
+                Edit Board
               </DialogTitle>
-              <DialogDescription className="text-sm">
-                Fill in the information below
-              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         {/* Form */}
         <form
-          onSubmit={formInputProject.handleSubmit(onSubmit)}
+          onSubmit={formInputUpdate.handleSubmit(onSubmit)}
           className="mt-4 space-y-5"
         >
           <FieldGroup className="space-y-4">
             {/* Name */}
             <Field className="space-y-1.5">
               <Label htmlFor="name" className="text-sm ">
-                Project name
+                Board name
               </Label>
               <Input
                 id="name"
                 placeholder="Enter project name..."
-                {...formInputProject.register("name", { required: true })}
+                {...formInputUpdate.register("name", { required: true })}
               />
             </Field>
 
@@ -91,7 +104,7 @@ export function CreateProjectDialog() {
               <Input
                 id="description"
                 placeholder="Description..."
-                {...formInputProject.register("description")}
+                {...formInputUpdate.register("description")}
               />
             </Field>
           </FieldGroup>
@@ -103,7 +116,7 @@ export function CreateProjectDialog() {
               disabled={isPending}
               className="w-full text-white hover:bg-zinc-800"
             >
-              {isPending ? "Creating..." : "Create Project"}
+              {isPending ? "Update..." : "Update Board"}
             </Button>
           </DialogFooter>
         </form>

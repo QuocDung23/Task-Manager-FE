@@ -1,41 +1,55 @@
-
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCreateProject } from "@/features/projects/hooks/useCreateProject";
+import { useCreateBoard } from "@/features/boards/hooks/useCreateBoard";
+import type { BoardRequest } from "@/features/boards/types";
 import type { ProjectRequest } from "@/features/projects/types";
-import { LucidePlus, FolderPlus } from "lucide-react";
+import { FolderPlus, LucideSquarePlus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
 
-export function CreateProjectDialog() {
+export function CreateBoardDialog() {
   const [open, setOpen] = useState(false);
-  const { mutate: createProject, isPending } = useCreateProject();
+  const { mutate: createBoard, isPending } = useCreateBoard();
+  const { projectId } = useParams<{ projectId: string }>();
 
-  const formInputProject = useForm<ProjectRequest>({
+  const formInputBoard = useForm<ProjectRequest>({
     defaultValues: {
       name: "",
       description: "",
     },
   });
 
-  const onSubmit = (data: ProjectRequest) => {
-    createProject(data, {
-      onSuccess: () => {
-        formInputProject.reset();
-        setOpen(false);
+  const onSubmit = (data: BoardRequest) => {
+    if (!projectId) return;
+    createBoard(
+      { data, projectId },
+      {
+        onSuccess: () => {
+          formInputBoard.reset();
+          setOpen(false);
+        },
       },
-    });
+    );
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Trigger */}
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2 px-5">
-          <LucidePlus className="h-4 w-4" />
+        <Button className="flex items-center justify-center rounded-2xl bg-primary text-white shadow-lg hover:bg-primary/90 transition-colors w-17 h-15 p-0">
+          <LucideSquarePlus />
         </Button>
       </DialogTrigger>
 
@@ -49,7 +63,7 @@ export function CreateProjectDialog() {
 
             <div>
               <DialogTitle className="text-lg font-semibold ">
-                Create new project
+                Create new board
               </DialogTitle>
               <DialogDescription className="text-sm">
                 Fill in the information below
@@ -60,19 +74,19 @@ export function CreateProjectDialog() {
 
         {/* Form */}
         <form
-          onSubmit={formInputProject.handleSubmit(onSubmit)}
+          onSubmit={formInputBoard.handleSubmit(onSubmit)}
           className="mt-4 space-y-5"
         >
           <FieldGroup className="space-y-4">
             {/* Name */}
             <Field className="space-y-1.5">
               <Label htmlFor="name" className="text-sm ">
-                Project name
+                Board name
               </Label>
               <Input
                 id="name"
                 placeholder="Enter project name..."
-                {...formInputProject.register("name", { required: true })}
+                {...formInputBoard.register("name", { required: true })}
               />
             </Field>
 
@@ -84,7 +98,7 @@ export function CreateProjectDialog() {
               <Input
                 id="description"
                 placeholder="Description..."
-                {...formInputProject.register("description")}
+                {...formInputBoard.register("description")}
               />
             </Field>
           </FieldGroup>

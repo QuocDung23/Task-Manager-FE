@@ -12,7 +12,7 @@ import {
   LucideTrash2,
 } from "lucide-react";
 import { useDeleteProject } from "@/features/projects/hooks/useDeleteProject";
-import { UpdateProjectDialog } from "./update-project";
+import { UpdateProjectDialog } from "./updateProject-main";
 import type { ProjectResponse } from "@/features/projects/types";
 
 interface MenuSettingProps {
