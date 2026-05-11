@@ -14,4 +14,8 @@ export const userApi = {
     });
     return response.data;
   },
+  getMe: async (): Promise<ApiResponse<UserResponse>> => {
+    const response = await axiosLocal.get<ApiResponse<UserResponse>>('/user/me');
+    return response.data;
+  }
 };

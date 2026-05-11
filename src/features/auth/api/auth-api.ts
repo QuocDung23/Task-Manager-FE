@@ -15,5 +15,9 @@ export const authApi = {
     register: async(data: RegisterRequest): Promise<RegisterResponse> => {
         const response = await axiosLocal.post<ApiResponse<RegisterResponse>>('/auth/register', data)
         return response.data.data
+    },
+    logout: async(): Promise<void> => {
+        const response = await axiosLocal.post('/auth/logout')
+        return response.data
     }
 }

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ChevronRightIcon, FolderKanbanIcon } from "lucide-react";
 import { APP_ROUTES } from "@/router/constans";
+import { UserPage } from "@/pages/user/user-page";
 
 export function SidebarMain() {
   return (
@@ -46,6 +47,7 @@ export function SidebarMain() {
         </SidebarGroup>
       </SidebarContent>
 
+      <UserPage/>
       <SidebarFooter />
     </Sidebar>
   );
