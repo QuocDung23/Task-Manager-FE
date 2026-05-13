@@ -47,7 +47,7 @@ export function CreateProjectDialog() {
       </DialogTrigger>
 
       {/* Content */}
-      <DialogContent className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-lg sm:max-w-md">
+      <DialogContent className="rounded-2xl border border-zinc-200 bg-[#FFFFFF] p-6 shadow-lg sm:max-w-md">
         <DialogHeader className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100">

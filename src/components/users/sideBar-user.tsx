@@ -12,8 +12,7 @@ import { useCurrentUser } from "@/features/users/hooks/useCurrentUser";
 import { getInitials } from "@/utils/getInitials";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { getAvatarUrl } from "@/utils/getAvatarUrl";
-
-
+import { ViewProfileUser } from "./profile-user";
 
 export function SidebarUser() {
   const { data: userRes, isLoading } = useCurrentUser();
@@ -51,10 +50,10 @@ export function SidebarUser() {
 
         <div className="grid flex-1 text-sm leading-tight">
           <span className="truncate font-semibold text-zinc-900 dark:text-zinc-100">
-          {displayUser.name}
+            {displayUser.name}
           </span>
           <span className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-          {displayUser.email}
+            {displayUser.email}
           </span>
         </div>
 
@@ -68,10 +67,12 @@ export function SidebarUser() {
         sideOffset={4}
       >
         <DropdownMenuGroup>
-          <DropdownMenuItem className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-          </DropdownMenuItem>
+          <ViewProfileUser>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+          </ViewProfileUser>
           <DropdownMenuItem className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             <span>Setting</span>
