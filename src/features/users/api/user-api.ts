@@ -22,5 +22,11 @@ export const userApi = {
   updateMe: async (data: UserUpdatePayload): Promise<ApiResponse<UserResponse>> => {
     const response = await axiosLocal.patch<ApiResponse<UserResponse>>('/user/me', data);
     return response.data;
+  },
+  updateMyAvatar: async (file: File): Promise<ApiResponse<{ avatar: string }>> => {
+    const formData = new FormData()
+    formData.append("avatar", file)
+    const response = await axiosLocal.patch<ApiResponse<{ avatar: string }>>('/user/me/avatar', formData)
+    return response.data;
   }
 };

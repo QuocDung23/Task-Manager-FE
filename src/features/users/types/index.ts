@@ -24,3 +24,8 @@ export type UserUpdatePayload = {
   phoneNumber?: number | null;
   avatar?: string | null;
 };
+
+export type UpdateAvatarPayload = {
+  file: File;
+  previewUrl?: string;
+}

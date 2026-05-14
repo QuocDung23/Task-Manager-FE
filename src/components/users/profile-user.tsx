@@ -1,9 +1,5 @@
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "../ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { Separator } from "../ui/separator";
 import { useCurrentUser } from "@/features/users/hooks/useCurrentUser";
 import { useUpdateUser } from "@/features/users/hooks/useUpdateUser";
