@@ -10,6 +10,22 @@ export type RegisterRequest = {
   name: string;
 };
 
+export type SendOtpRequest = {
+  email: string;
+};
+
+export type VerifyOtpRequest = {
+  email: string;
+  otp: string;
+};
+
+export type ResetPasswordRequest = {
+  email: string;
+  otp: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
 export type ApiResponse<T> = {
   success: boolean;
   data: T;
@@ -29,4 +45,18 @@ export type RegisterResponse = {
   avatar: string;
   verify: boolean;
   status?: string;
+};
+
+export type ForgotPasswordResponse = {
+  message: string;
+};
+
+export type VerifyOtpResponse = {
+  email: string;
+  isValid: boolean;
+};
+
+export type ResetPasswordResponse = {
+  email: string;
+  isReset: boolean;
 };

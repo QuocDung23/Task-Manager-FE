@@ -68,7 +68,7 @@ export function ViewLogin() {
                   href="#"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
-                  Forgot your password?
+                  <Link to={APP_ROUTES.FORGOT_PASSWORD}>Forgot your password?</Link>
                 </a>
                 <CardAction>
                   <Button variant="link" asChild>
