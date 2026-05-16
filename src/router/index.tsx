@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { LoginPage } from "../pages/auth/login-page";
 import { RegisterPage } from "../pages/auth/register-page";
 import { ForgotPasswordPage } from "../pages/auth/sendOtp-page";
+import { VerifyAccountPage } from "../pages/auth/verify-account-page";
 import { VerifyOtpPage } from "../pages/auth/verify-otp-page";
 import { ResetPasswordPage } from "../pages/auth/reset-password-page";
 import { MainPage } from "@/pages/mainSpace/main-page";
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: `${APP_ROUTES.FORGOT_PASSWORD}`,
         element: <ForgotPasswordPage />,
+      },
+      {
+        path: `${APP_ROUTES.VERIFY_ACCOUNT}`,
+        element: <VerifyAccountPage />,
       },
       {
         path: `${APP_ROUTES.VERIFY_OTP}`,

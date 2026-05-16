@@ -1,4 +1,5 @@
 import { AUTH_TOKEN_KEY } from "../../../router/constans";
+import type { TokenPayload } from "../types";
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   const parts = token.split(".");
@@ -10,6 +11,12 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   } catch {
     return null;
   }
+}
+
+export function decodeTokenPayload(
+  token: string,
+): Record<string, unknown> | null {
+  return decodeJwtPayload(token);
 }
 
 function isExpiredJwtToken(token: string): boolean {
@@ -41,6 +48,13 @@ export const authStorage = {
     }
 
     return token;
+  },
+  getTokenPayload(): TokenPayload | null {
+    const token = this.getValidToken();
+    if (!token) return null;
+    const payload = decodeJwtPayload(token);
+    if (!payload) return null;
+    return payload as TokenPayload;
   },
   hasValidToken() {
     return !!this.getValidToken();

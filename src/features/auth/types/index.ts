@@ -14,7 +14,7 @@ export type SendOtpRequest = {
   email: string;
 };
 
-export type VerifyOtpRequest = {
+export type Verify = {
   email: string;
   otp: string;
 };
@@ -34,6 +34,9 @@ export type ApiResponse<T> = {
 export type LoginResponse = {
   accessToken: string;
   refreshToken: string;
+  email: string;
+  verify: boolean;
+  status?: string;
 };
 
 export type RegisterResponse = {
@@ -59,4 +62,25 @@ export type VerifyOtpResponse = {
 export type ResetPasswordResponse = {
   email: string;
   isReset: boolean;
+};
+
+export type VerifyAccountResponse = {
+  id: string;
+  userId: string;
+  email: string;
+  name: string;
+  bio: string;
+  avatar: string;
+  verify: boolean;
+  status?: string;
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type TokenPayload = {
+  userId: string;
+  email: string;
+  verify: boolean;
+  status: string;
+  exp: number;
 };

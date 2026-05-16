@@ -9,8 +9,9 @@ import type {
   RegisterResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
-  VerifyOtpRequest,
+  Verify,
   VerifyOtpResponse,
+  VerifyAccountResponse,
 } from "../types";
 
 export const authApi = {
@@ -45,9 +46,18 @@ export const authApi = {
     );
     return response.data.data;
   },
-  verifyOtp: async (data: VerifyOtpRequest): Promise<VerifyOtpResponse> => {
+  verifyOtp: async (data: Verify): Promise<VerifyOtpResponse> => {
     const response = await axiosLocal.post<ApiResponse<VerifyOtpResponse>>(
       "/auth/verifyOtp",
+      data,
+    );
+    return response.data.data;
+  },
+  verifyAccount: async (
+    data: Verify,
+  ): Promise<VerifyAccountResponse> => {
+    const response = await axiosLocal.post<ApiResponse<VerifyAccountResponse>>(
+      "/auth/verify",
       data,
     );
     return response.data.data;

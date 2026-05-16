@@ -3,12 +3,22 @@ import { APP_ROUTES } from "@/router/constans";
 import { authStorage } from "@/features/auth/storage/auth-storage";
 
 export function ProtectedRoute() {
-  const token = authStorage.getValidToken();
+  const tokenPayload = authStorage.getTokenPayload();
   const location = useLocation();
 
-  if (!token) {
+  if (!tokenPayload) {
     return (
       <Navigate to={APP_ROUTES.LOGIN} replace state={{ from: location }} />
+    );
+  }
+
+  if (!tokenPayload.verify || tokenPayload.status !== "ACTIVE") {
+    return (
+      <Navigate
+        to={`${APP_ROUTES.VERIFY_ACCOUNT}?email=${encodeURIComponent(tokenPayload.email)}&flow=verify-account`}
+        replace
+        state={{ from: location }}
+      />
     );
   }
 
@@ -16,17 +26,29 @@ export function ProtectedRoute() {
 }
 
 export function AuthRedirectRoute() {
-  const token = authStorage.getValidToken();
+  const tokenPayload = authStorage.getTokenPayload();
 
-  if (token) {
+  if (tokenPayload?.verify && tokenPayload?.status === "ACTIVE") {
     return <Navigate to={APP_ROUTES.MAIN} replace />;
+  }
+
+  if (tokenPayload && !tokenPayload.verify) {
+    return <Navigate to={`${APP_ROUTES.VERIFY_ACCOUNT}?email=${encodeURIComponent(tokenPayload.email)}&flow=verify-account`} replace />;
   }
 
   return <Outlet />;
 }
 
 export function RootRedirectRoute() {
-  const token = authStorage.getValidToken();
+  const tokenPayload = authStorage.getTokenPayload();
 
-  return <Navigate to={token ? APP_ROUTES.MAIN : APP_ROUTES.LOGIN} replace />;
+  if (tokenPayload?.verify && tokenPayload?.status === "ACTIVE") {
+    return <Navigate to={APP_ROUTES.MAIN} replace />;
+  }
+
+  if (tokenPayload && !tokenPayload.verify) {
+    return <Navigate to={`${APP_ROUTES.VERIFY_ACCOUNT}?email=${encodeURIComponent(tokenPayload.email)}&flow=verify-account`} replace />;
+  }
+
+  return <Navigate to={APP_ROUTES.LOGIN} replace />;
 }
