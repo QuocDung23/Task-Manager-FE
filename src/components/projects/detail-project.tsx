@@ -1,5 +1,5 @@
 import { HeaderLayout } from "@/layouts/header-layout";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Input } from "../ui/input";
 import { Loader2, LucideArrowRight, LucideSearch } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,6 +12,7 @@ import { CreateBoardDialog } from "./createBoard-project";
 import { MenuSettingBoard } from "./settingBoard-project";
 import { useEditTitleProject } from "@/features/projects/hooks/useEditTitleProject";
 import { DropDownSettingProject } from "./dropDown-setting-project";
+import { APP_ROUTES } from "@/router/constans";
 
 interface DetailProjectLocationState {
   projectName?: string;
@@ -25,6 +26,7 @@ export function DetailProject() {
   //lấy dữ liệu từ url
   const { projectId } = useParams<{ projectId: string }>();
 
+  const navigate = useNavigate();
   const { editing, setEditing, title, setTitle, handleSave, handleKeyBoard } =
     useEditTitleProject(projectId, initialProjectName || "Project");
 
@@ -96,7 +98,6 @@ export function DetailProject() {
         </HeaderLayout>
         <div className="flex items-center justify-center mr-3">
           <DropDownSettingProject projectId={projectId ?? ""} />
-     
         </div>
       </div>
 
@@ -128,7 +129,18 @@ export function DetailProject() {
                   delay: index * 0.05,
                 }}
               >
-                <Card className="relative h-full rounded-2xl border border-zinc-200 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
+                <Card
+                  className="relative h-full rounded-2xl border border-zinc-200 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                  onClick={() =>
+                    navigate(`/${APP_ROUTES.BOARD}/${board.id}`, {
+                      state: {
+                        boardName: board.name,
+                        projectId,
+                        projectName: title,
+                      },
+                    })
+                  }
+                >
                   <div className="absolute right-3 top-5 z-10 rounded-md p-1 transition-colors hover:bg-gray-200 inline-flex items-center">
                     <MenuSettingBoard board={board} />
                   </div>
@@ -148,7 +160,7 @@ export function DetailProject() {
               className="col-span-full text-center p-14 border-2 border-dashed rounded-2xl border-zinc-300 bg-zinc-50"
             >
               <p className="text-zinc-500 font-medium text-lg">
-                Không tìm thấy dự án phù hợp.
+                No suitable boards found.
               </p>
             </motion.div>
           )}

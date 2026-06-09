@@ -110,7 +110,7 @@ export function CreateBoardDialog() {
               disabled={isPending}
               className="w-full text-white hover:bg-zinc-800"
             >
-              {isPending ? "Creating..." : "Create Project"}
+              {isPending ? "Creating..." : "Create Board"}
             </Button>
           </DialogFooter>
         </form>

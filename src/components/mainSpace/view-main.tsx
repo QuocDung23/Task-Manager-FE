@@ -112,7 +112,7 @@ export function ViewMainPage() {
               className="col-span-full text-center p-14 border-2 border-dashed rounded-2xl border-zinc-300 bg-zinc-50"
             >
               <p className="text-zinc-500 font-medium text-lg">
-                Không tìm thấy dự án phù hợp.
+                No suitable projects found.
               </p>
             </motion.div>
           )}

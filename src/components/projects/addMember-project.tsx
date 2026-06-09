@@ -57,7 +57,8 @@ export function DialogAddMemberProject({
         <div className="flex flex-col gap-4 py-4">
         <div className="relative">
     <Input
-      placeholder="Tìm kiếm theo email..."
+      placeholder="Search by email..."
+ 
       value={searchEmail}
       onChange={(e) => setSearchEmail(e.target.value)}
     />
@@ -70,7 +71,8 @@ export function DialogAddMemberProject({
               <Loader2 className="animate-spin text-zinc-500" />
             </div>
           ) : users.length === 0 ? (
-            <div className="text-center p-4 text-zinc-500 text-sm">Không tìm thấy người dùng hợp lệ</div>
+            <div className="text-center p-4 text-zinc-500 text-sm">No valid users found</div>
+       
           ) : (
             users.map((user) => (
               <div

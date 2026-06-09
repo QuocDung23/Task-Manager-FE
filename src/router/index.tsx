@@ -14,6 +14,7 @@ import {
 import { MainLayout } from "@/layouts/main-layout";
 import { DetailProject } from "@/components/projects/detail-project";
 import { APP_ROUTES } from "./constans";
+import { BoardPage } from "@/pages/board/board-page";
 
 export const router = createBrowserRouter([
   {
@@ -72,6 +73,16 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      {
+        path: `/${APP_ROUTES.BOARD}/:boardId`,
+        element: <MainLayout />,
+        children: [
+          {
+            index: true,
+            element: <BoardPage />,
+          },
+        ],
+      }
     ],
   },
 ]);

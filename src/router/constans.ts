@@ -10,4 +10,5 @@ export const APP_ROUTES = {
   MAIN: "/projects",
   PROJECT: "/project",
   BOARD: "/board",
+  LIST: "/list",
 } as const;

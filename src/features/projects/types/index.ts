@@ -8,6 +8,14 @@ export type ProjectResponse = {
   id: string;
   name: string;
   description?: string;
+  members?: ProjectMemberUser[];
+};
+
+export type ProjectMemberUser = {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string | null;
 };
 
 export type ProjectRequest = {
@@ -38,5 +46,4 @@ export type AddProjectMemberResponse = {
   projectId: string;
   roleId: string;
 };
-
 

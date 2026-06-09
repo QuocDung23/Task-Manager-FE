@@ -29,7 +29,6 @@ export function SidebarMain() {
       <SidebarContent>
         <SidebarGroup>
           <NavLink to={APP_ROUTES.MAIN}>
-     
             {({ isActive }) => (
               <Item variant={isActive ? "default" : "outline"} size="sm">
                 <ItemMedia>
@@ -47,7 +46,7 @@ export function SidebarMain() {
         </SidebarGroup>
       </SidebarContent>
 
-      <UserPage/>
+      <UserPage />
       <SidebarFooter />
     </Sidebar>
   );
