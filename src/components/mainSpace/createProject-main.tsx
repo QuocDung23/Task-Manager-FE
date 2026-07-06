@@ -14,10 +14,15 @@ import { Label } from "@/components/ui/label";
 import { useCreateProject } from "@/features/projects/hooks/useCreateProject";
 import type { ProjectRequest } from "@/features/projects/types";
 import { FolderPlus, LucideSquarePlus } from "lucide-react";
+import type { ReactElement } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-export function CreateProjectDialog() {
+interface CreateProjectDialogProps {
+  trigger?: ReactElement;
+}
+
+export function CreateProjectDialog({ trigger }: CreateProjectDialogProps) {
   const [open, setOpen] = useState(false);
   const { mutate: createProject, isPending } = useCreateProject();
 
@@ -41,9 +46,14 @@ export function CreateProjectDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Trigger */}
       <DialogTrigger asChild>
-        <Button className="flex items-center justify-center rounded-2xl bg-primary text-white shadow-lg hover:bg-primary/90 transition-colors w-17 h-15 p-0">
-          <LucideSquarePlus />
-        </Button>
+        {trigger ?? (
+          <Button
+            aria-label="Create project"
+            className="flex items-center justify-center rounded-2xl bg-primary text-white shadow-lg hover:bg-primary/90 transition-colors w-17 h-15 p-0"
+          >
+            <LucideSquarePlus />
+          </Button>
+        )}
       </DialogTrigger>
 
       {/* Content */}

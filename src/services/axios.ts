@@ -34,7 +34,7 @@ axiosLocal.interceptors.request.use(
 );
 
 
-axiosLocal.interceptors.request.use(
+axiosLocal.interceptors.response.use(
   (response) => response,
   async (error) => {
     //original = ban đầu
@@ -42,7 +42,7 @@ axiosLocal.interceptors.request.use(
 
     //1 check condition bo qa refresh
     if (
-      error.response?.status === 401 ||
+      error.response?.status !== 401 ||
       !originalRequest ||
       originalRequest._retry ||
       NO_REFRESHTOKEN_ENDPOINTS.some((url) =>

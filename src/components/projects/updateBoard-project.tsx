@@ -28,7 +28,7 @@ export function UpdateBoardDialog({
   onOpenChange,
 }: UpdateBoardDialogProps) {
   const { projectId } = useParams<{ projectId: string }>();
-  const { mutate: update, isPending } = useUpdateBoard(projectId);
+  const { mutate: update, isPending } = useUpdateBoard(projectId ?? "");
 
   const formInputUpdate = useForm<{
     name: string;

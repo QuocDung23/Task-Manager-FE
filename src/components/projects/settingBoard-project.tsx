@@ -24,7 +24,7 @@ export function MenuSettingBoard({ board }: MenuSettingProps) {
   const {projectId} = useParams<{projectId: string}>()
   const [openEdit, setOpenEdit] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
-  const { mutate: deleteBoard, isPending } = useDeleteBoard(projectId);
+  const { mutate: deleteBoard, isPending } = useDeleteBoard(projectId ?? "");
 
   const handleDelete = () => {
     deleteBoard(board.id);

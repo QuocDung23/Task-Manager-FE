@@ -28,7 +28,7 @@ export function DetailProject() {
 
   const navigate = useNavigate();
   const { editing, setEditing, title, setTitle, handleSave, handleKeyBoard } =
-    useEditTitleProject(projectId, initialProjectName || "Project");
+    useEditTitleProject(projectId ?? "", initialProjectName || "Project");
 
   const [page, setPage] = useState(1);
   const limit = 12;
