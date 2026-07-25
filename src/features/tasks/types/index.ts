@@ -1,5 +1,14 @@
 export type TaskStatus = "ACTIVE" | "INACTIVE";
 
+export type TaskStatusAction =
+  | "ARCHIVED"
+  | "COMPLETED"
+  | "CREATED"
+  | "DELETED"
+  | "RESTORED"
+  | "UPDATED"
+  | (string & {});
+
 export type TaskResponse = {
   id: string;
   name: string;
@@ -9,6 +18,7 @@ export type TaskResponse = {
   listId: string;
   assign: string[];
   status: TaskStatus;
+  statusAction?: TaskStatusAction;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -45,4 +55,8 @@ export type MoveTaskResponse = {
   movedTask: TaskResponse;
   sourceTasks: TaskResponse[];
   targetTasks: TaskResponse[];
+};
+
+export type AssignTaskRequest = {
+  userIds: string[];
 };

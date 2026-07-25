@@ -1,6 +1,7 @@
 import { axiosLocal } from "@/services/axios";
 import type {
   ApiResponse,
+  AssignTaskRequest,
   CreateTaskRequest,
   MoveTaskRequest,
   MoveTaskResponse,
@@ -60,6 +61,27 @@ export const taskApi = {
     const response = await axiosLocal.patch<ApiResponse<MoveTaskResponse>>(
       `/task/${taskId}/move`,
       data,
+    );
+    return response.data;
+  },
+
+  assign: async (
+    taskId: string,
+    data: AssignTaskRequest,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.patch<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/assign`,
+      data,
+    );
+    return response.data;
+  },
+
+  unassign: async (
+    taskId: string,
+    userId: string,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.delete<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/assign/${userId}`,
     );
     return response.data;
   },

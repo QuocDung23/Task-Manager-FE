@@ -12,13 +12,27 @@ interface TaskDetailContextValue {
   selectedTask: TaskResponse | null;
   isOpen: boolean;
   isPending: boolean;
+  boardId: string | null;
   openTask: (task: TaskResponse) => void;
   closeTask: () => void;
+  /**
+   * Cập nhật task đang mở trong dialog sau khi mutation (assign/unassign/update).
+   * Chỉ thay thế khi id khớp để tránh ghi đè task khác.
+   */
+  updateSelectedTask: (task: TaskResponse) => void;
 }
 
 const TaskDetailContext = createContext<TaskDetailContextValue | null>(null);
 
-export function TaskDetailProvider({ children }: { children: ReactNode }) {
+interface TaskDetailProviderProps {
+  children: ReactNode;
+  boardId?: string;
+}
+
+export function TaskDetailProvider({
+  children,
+  boardId,
+}: TaskDetailProviderProps) {
   const [selectedTask, setSelectedTask] = useState<TaskResponse | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [, startTransition] = useTransition();
@@ -35,14 +49,23 @@ export function TaskDetailProvider({ children }: { children: ReactNode }) {
     setSelectedTask(null);
   }, []);
 
+  const updateSelectedTask = useCallback((task: TaskResponse) => {
+    setSelectedTask((current) => {
+      if (!current || current.id !== task.id) return current;
+      return task;
+    });
+  }, []);
+
   return (
     <TaskDetailContext.Provider
       value={{
         selectedTask,
         isOpen,
         isPending: false,
+        boardId: boardId ?? null,
         openTask,
         closeTask,
+        updateSelectedTask,
       }}
     >
       {children}

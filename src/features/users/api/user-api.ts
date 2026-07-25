@@ -15,6 +15,12 @@ export const userApi = {
     });
     return response.data;
   },
+  getById: async (id: string): Promise<ApiResponse<UserResponse>> => {
+    const response = await axiosLocal.get<ApiResponse<UserResponse>>(
+      `/user/${id}`,
+    );
+    return response.data;
+  },
   getMe: async (): Promise<ApiResponse<UserResponse>> => {
     const response = await axiosLocal.get<ApiResponse<UserResponse>>('/user/me');
     return response.data;

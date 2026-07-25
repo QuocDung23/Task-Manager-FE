@@ -8,9 +8,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import type { TaskResponse } from "@/features/tasks/types";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DeleteTaskDialog } from "./delete-task-dialog";
+import { AssigneeAvatarGroup } from "./assignee-avatar-group";
 import { useTaskDetail } from "./task-detail-context";
+import { useBoardMembers } from "@/features/boards/hooks/useBoardMembers";
 import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
@@ -32,7 +34,22 @@ export function TaskCard({
   disabled,
 }: TaskCardProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const { openTask } = useTaskDetail();
+  const { openTask, boardId } = useTaskDetail();
+
+  // Shared with `TaskAssignees` (same `queryKey` → 1 network request per board).
+  // Skipped while dragging to avoid an extra fetch mid-drag.
+  const { data: members = [] } = useBoardMembers(boardId, {
+    enabled: !isDragging,
+  });
+
+  const assignees = useMemo(() => {
+    const byId = new Map(members.map((m) => [m.id, m]));
+    return (task.assign ?? [])
+      .map((id) => byId.get(id))
+      .filter((m): m is NonNullable<typeof m> => Boolean(m));
+  }, [members, task.assign]);
+
+  const assignCount = task.assign?.length ?? 0;
 
   return (
     <>
@@ -79,6 +96,20 @@ export function TaskCard({
                 ) : null}
               </div>
             </div>
+            {assignCount > 0 ? (
+              <div
+                className="flex justify-end"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <AssigneeAvatarGroup
+                  users={assignees}
+                  totalCount={assignCount}
+                  max={3}
+                  size="sm"
+                />
+              </div>
+            ) : null}
           </div>
 
           <DropdownMenu>

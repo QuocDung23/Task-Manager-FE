@@ -5,8 +5,6 @@ import {
   Check,
   Pencil,
   Trash2,
-  LucideUser,
-  LucideUsers,
   X,
 } from "lucide-react";
 import {
@@ -19,7 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { DeleteTaskDialog } from "./delete-task-dialog";
+import { TaskAssignees } from "./task-assignees";
 import { useUpdateTask } from "@/features/tasks/hooks/useUpdateTask";
+import { useTaskDetail } from "./task-detail-context";
 import type { TaskResponse } from "@/features/tasks/types";
 
 function formatDateField(dateStr: string | undefined): string {
@@ -73,6 +73,7 @@ export default function TaskDetailContent({
 
   const listId = task?.listId ?? "";
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask(listId);
+  const { updateSelectedTask } = useTaskDetail();
 
   useEffect(() => {
     if (isEditingName && nameInputRef.current) {
@@ -103,6 +104,7 @@ export default function TaskDetailContent({
         {
           onSuccess: (res) => {
             setNameValue(res.data.name);
+            updateSelectedTask(res.data);
           },
         },
       );
@@ -121,6 +123,7 @@ export default function TaskDetailContent({
         {
           onSuccess: (res) => {
             setDescValue(res.data.description ?? "");
+            updateSelectedTask(res.data);
           },
         },
       );
@@ -141,6 +144,7 @@ export default function TaskDetailContent({
             setDueDateValue(
               res.data.dueDate ? res.data.dueDate.split("T")[0] : "",
             );
+            updateSelectedTask(res.data);
           },
         },
       );
@@ -310,31 +314,11 @@ export default function TaskDetailContent({
                     )}
                   </div>
 
-                  <div className="space-y-2 sm:col-span-2">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-zinc-400 dark:text-zinc-500">
-                      <LucideUsers className="h-3.5 w-3.5" />
-                      <span>Assignees</span>
-                    </div>
-                    {task.assign && task.assign.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {task.assign.map((user, i) => (
-                          <span
-                            key={`${user}-${i}`}
-                            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-zinc-100 px-3 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800"
-                          >
-                            <LucideUser className="h-3.5 w-3.5" />
-                            {user}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center gap-2 text-sm font-semibold italic text-zinc-300 dark:text-zinc-600">
-                        <span className="flex size-7 items-center justify-center rounded-full border border-dashed border-zinc-300 dark:border-zinc-700">
-                          <LucideUsers className="h-3.5 w-3.5" />
-                        </span>
-                        No assignees
-                      </div>
-                    )}
+                  <div className="space-y-3 sm:col-span-2">
+                    <TaskAssignees
+                      task={task}
+                      onTaskUpdated={updateSelectedTask}
+                    />
                   </div>
                 </div>
               </section>

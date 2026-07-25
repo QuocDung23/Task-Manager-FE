@@ -14,7 +14,7 @@ export const projectApi = {
     name?: string,
   ): Promise<ApiResponse<ProjectResponse[]>> => {
     const response = await axiosLocal.get<ApiResponse<ProjectResponse[]>>(
-      "/project/getAlls",
+      "/project",
       {
         params: {
           page,
@@ -32,16 +32,21 @@ export const projectApi = {
     );
     return response.data;
   },
-  create: async (data: ProjectRequest): Promise<ProjectResponse> => {
-    const response = await axiosLocal.post("/auth/create-project", data);
+  create: async (
+    data: ProjectRequest,
+  ): Promise<ApiResponse<ProjectResponse>> => {
+    const response = await axiosLocal.post<ApiResponse<ProjectResponse>>(
+      "/project",
+      data,
+    );
     return response.data;
   },
   update: async (
     id: string,
     data: Partial<ProjectRequest>,
   ): Promise<ApiResponse<ProjectResponse>> => {
-    const response = await axiosLocal.put<ApiResponse<ProjectResponse>>(
-      `/project/${id}/update`,
+    const response = await axiosLocal.patch<ApiResponse<ProjectResponse>>(
+      `/project/${id}`,
       data,
     );
     return response.data;

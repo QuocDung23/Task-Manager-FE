@@ -75,7 +75,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
   }
 
   return (
-    <TaskDetailProvider>
+    <TaskDetailProvider boardId={boardId}>
       <div className="flex flex-col flex-1 w-full">
         <div className="flex items-center justify-between w-full mt-5">
           <div className="flex items-center gap-2">

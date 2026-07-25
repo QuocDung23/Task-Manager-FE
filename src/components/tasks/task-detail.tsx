@@ -2,7 +2,8 @@ import TaskDetailContent from "./task-detail-content";
 import { useTaskDetail } from "./task-detail-context";
 
 export function TaskDetail() {
-  const { selectedTask: task, isOpen, closeTask } = useTaskDetail();
+    const { selectedTask: task, isOpen, closeTask } =
+    useTaskDetail();
 
   if (!task) {
     return null;
