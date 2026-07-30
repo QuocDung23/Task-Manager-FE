@@ -62,8 +62,6 @@ export function PaginationLayout({
           </NavPill>
         </PaginationItem>
 
-        <span className="mx-3 hidden h-4 w-px bg-border sm:block" />
-
         <AnimatePresence mode="popLayout" initial={false}>
           {pages.map((page, idx) =>
             page === "ellipsis" ? (
@@ -84,8 +82,6 @@ export function PaginationLayout({
           )}
         </AnimatePresence>
 
-        <span className="mx-3 hidden h-4 w-px bg-border sm:block" />
-
         <PaginationItem>
           <NavPill
             label="Next"
@@ -93,7 +89,6 @@ export function PaginationLayout({
             onClick={() => !isLast && onChangePage(currentPage + 1)}
             side="right"
           >
-            <span className="text-[13px] font-medium">Next</span>
             <CaretRight weight="bold" className="size-3.5" />
           </NavPill>
         </PaginationItem>

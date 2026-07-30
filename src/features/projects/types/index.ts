@@ -9,6 +9,8 @@ export type ProjectResponse = {
   name: string;
   description?: string;
   members?: ProjectMemberUser[];
+  boardCount?: number;
+  _count?: { boards?: number };
 };
 
 export type ProjectMemberUser = {

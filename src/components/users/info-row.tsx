@@ -16,7 +16,7 @@ export function InfoRow({ icon, label, value }: InfoRowProps) {
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {label}
         </p>
-        <p className="mt-0.5 truncate text-sm text-foreground">{value || "—"}</p>
+        <p className="mt-0.5 truncate text-sm text-foreground">{value || "Not set"}</p>
       </div>
     </div>
   );

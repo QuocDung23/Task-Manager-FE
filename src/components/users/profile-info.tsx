@@ -28,7 +28,7 @@ export function ProfileInfo({ user }: ProfileInfoProps) {
       <InfoRow
         icon={<Phone className="size-4" />}
         label="Phone"
-        value={user.phoneNumberRaw?.toString() || "—"}
+        value={user.phoneNumberRaw?.toString() || "Not set"}
       />
       <Separator className="my-1" />
       <InfoRow

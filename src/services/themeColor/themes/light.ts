@@ -30,7 +30,7 @@ export const lightTheme: ThemeTokens = {
   popover: "oklch(1 0 0)",
   popoverForeground: "oklch(0.18 0.005 240)",
 
-  primary: "oklch(0.20 0.005 240)",
+  primary: "oklch(0.55 0.20 250)",
   primaryForeground: "oklch(0.99 0.003 240)",
 
   secondary: "oklch(0.965 0.004 240)",
@@ -56,7 +56,7 @@ export const lightTheme: ThemeTokens = {
 
   sidebar: "oklch(1 0 0)",
   sidebarForeground: "oklch(0.18 0.005 240)",
-  sidebarPrimary: "oklch(0.20 0.005 240)",
+  sidebarPrimary: "oklch(0.55 0.20 250)",
   sidebarPrimaryForeground: "oklch(0.99 0.003 240)",
   sidebarAccent: "oklch(0.965 0.004 240)",
   sidebarAccentForeground: "oklch(0.20 0.005 240)",
