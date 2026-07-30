@@ -10,7 +10,7 @@ import { MoreVertical, SquarePen, Trash2, UserPlus } from "lucide-react";
 
 import { UpdateBoardDialog } from "./updateBoard-project";
 import { useDeleteBoard } from "@/features/boards/hooks/useDeleteBoard";
-import { DialogAddMemberProject } from "./addMember-project";
+import { DialogAddMemberBoard } from "./addMember-board";
 import type { BoardResponse } from "@/features/boards/types";
 import { stopDropdownTriggerPropagation } from "@/lib/dropdown-trigger";
 
@@ -98,7 +98,8 @@ export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DialogAddMemberProject
+      <DialogAddMemberBoard
+        boardId={board.id}
         projectId={projectId}
         open={openAddMember}
         onOpenChange={setOpenAddMember}

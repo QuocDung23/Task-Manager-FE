@@ -71,4 +71,23 @@ export const boardApi = {
     );
     return response.data;
   },
+  addMember: async (
+    boardId: string,
+    userId: string,
+  ): Promise<ApiResponse<BoardMemberUser>> => {
+    const response = await axiosLocal.post<ApiResponse<BoardMemberUser>>(
+      `/board/${boardId}/members`,
+      { userId },
+    );
+    return response.data;
+  },
+  removeMember: async (
+    boardId: string,
+    userId: string,
+  ): Promise<ApiResponse<BoardMemberUser>> => {
+    const response = await axiosLocal.delete<ApiResponse<BoardMemberUser>>(
+      `/board/${boardId}/members/${userId}`,
+    );
+    return response.data;
+  },
 };
