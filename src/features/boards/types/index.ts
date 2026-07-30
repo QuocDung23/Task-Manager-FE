@@ -5,10 +5,13 @@ export type ApiResponse<T> = {
 };
 
 export type BoardResponse = {
+  _count: any;
   id: string;
   name: string;
   description?: string;
   projectId: string;
+  listCount: number;
+  memberCount: number;
 };
 
 export type BoardRequest = {

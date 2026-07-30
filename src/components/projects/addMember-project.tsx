@@ -271,11 +271,11 @@ function SearchResults({
   }
 
   return (
-    <ul
-      role="listbox"
-      aria-label="Search results"
-      className="flex max-h-72 flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/8 bg-background/65 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-    >
+              <ul
+                role="listbox"
+                aria-label="Search results"
+                className="flex max-h-72 flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/8 bg-card p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+              >
       {users.map((user) => {
         const isSelected = selectedUserId === user.id;
         return (
@@ -296,7 +296,7 @@ function SearchResults({
                   name={user.name}
                   email={user.email}
                   className={cn(
-                    "size-9 rounded-[calc(0.75rem-0.25rem)] text-[12px]",
+                    "size-9 rounded-xl text-[12px]",
                     isSelected
                       ? "bg-primary-foreground/15 text-primary-foreground"
                       : "bg-secondary text-secondary-foreground",

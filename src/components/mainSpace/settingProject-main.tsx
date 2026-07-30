@@ -11,6 +11,8 @@ import { useDeleteProject } from "@/features/projects/hooks/useDeleteProject";
 import { UpdateProjectDialog } from "./updateProject-main";
 import type { ProjectResponse } from "@/features/projects/types";
 import { DialogAddMemberProject } from "../projects/addMember-project";
+import { stopDropdownTriggerPropagation } from "@/lib/dropdown-trigger";
+
 
 interface MenuSettingProps {
   project: ProjectResponse;
@@ -33,6 +35,7 @@ export function MenuSettingProject({ project }: MenuSettingProps) {
           <button
             type="button"
             aria-label="Project actions"
+            {...stopDropdownTriggerPropagation}
             className="group inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/4 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/20 data-[state=open]:bg-foreground/4 data-[state=open]:text-foreground"
           >
             <MoreVertical className="size-4.5 transition-transform duration-500  group-data-[state=open]:rotate-90" />

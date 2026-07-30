@@ -104,7 +104,7 @@ export function ViewMainPage() {
         transition={{ duration: 0.55, ease: EASE_FLUID, delay: 0.15 }}
         className="mt-8 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div className="relative w-full sm:max-w-xs">
+        <div className="relative w-full sm:max-w-xs pl-2">
           <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/70">
             <Search className="size-4" strokeWidth={1.75} aria-hidden="true" />
           </span>
