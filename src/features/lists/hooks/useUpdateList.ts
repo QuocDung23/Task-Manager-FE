@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UpdateListRequest } from "../types";
 import { listApi } from "../api/list-api";
 import { toast } from "sonner";
+import type { ApiError } from "@/lib/api-error";
 
 export const useUpdateList = (boardId: string) => {
   const queryClient = useQueryClient();
@@ -12,8 +13,8 @@ export const useUpdateList = (boardId: string) => {
       toast.success("Update List Successfully");
       queryClient.invalidateQueries({ queryKey: ["lists", boardId] });
     },
-    onError: (error: any) => {
-      toast.error(error.response.data.message || "Update Failed");
+    onError: (error: ApiError) => {
+      toast.error(error.response?.data?.message || "Update Failed");
     },
   });
 };

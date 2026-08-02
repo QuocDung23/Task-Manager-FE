@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
 import type { AssignTaskRequest } from "../types";
 import { updateTaskInListCache } from "../utils/task-cache";
+import type { ApiError } from "@/lib/api-error";
 
 type AssignTaskVariables = {
   taskId: string;
@@ -10,11 +11,11 @@ type AssignTaskVariables = {
   userIds: string[];
 };
 
-function getApiErrorMessage(error: any, fallback: string): string {
+function getApiErrorMessage(error: ApiError, fallback: string): string {
   return (
-    error?.response?.data?.message ||
-    error?.response?.data?.error ||
-    error?.message ||
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    error.message ||
     fallback
   );
 }
@@ -31,8 +32,8 @@ export const useAssignTask = () => {
       toast.success("Assignees updated");
     },
 
-    onError: (error: any) => {
-      const status = error?.response?.status;
+    onError: (error: ApiError) => {
+      const status = error.response?.status;
 
       if (status === 403) {
         toast.error(

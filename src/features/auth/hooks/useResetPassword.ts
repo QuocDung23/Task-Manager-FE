@@ -3,6 +3,7 @@ import type { ResetPasswordRequest } from "../types";
 import { authApi } from "../api/auth-api";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import type { ApiError } from "@/lib/api-error";
 
 export const useResetPassword = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export const useResetPassword = () => {
       toast.success("Password reset successfully");
       navigate("/login", { replace: true });
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || "Password reset failed!");
     },
   });

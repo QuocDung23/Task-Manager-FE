@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { listApi } from "../api/list-api";
 import { toast } from "sonner";
+import type { ApiError } from "@/lib/api-error";
 
 export const useDeleteList = (boardId: string) => {
   const queryClient = useQueryClient();
@@ -10,8 +11,8 @@ export const useDeleteList = (boardId: string) => {
       toast.success("Delete List Successfully");
       queryClient.invalidateQueries({ queryKey: ["lists", boardId] });
     },
-    onError: (error: any) => {
-      toast.error(error.response.data.message || "Delete Failed");
+    onError: (error: ApiError) => {
+      toast.error(error.response?.data?.message || "Delete Failed");
     },
   });
 };

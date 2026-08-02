@@ -3,6 +3,7 @@ import { authApi } from "../api/auth-api";
 import type { SendOtpRequest } from "../types";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import type { ApiError } from "@/lib/api-error";
 
 export function useSendOtp() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export function useSendOtp() {
       toast.success("OTP sent! Please check your email.");
       navigate(`/verify-otp?email=${encodeURIComponent(variables.email)}`);
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || "Email does not exist!");
     },
   });

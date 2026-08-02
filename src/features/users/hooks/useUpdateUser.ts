@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "../api/user-api";
 import type { UserUpdatePayload } from "../types";
 import { toast } from "sonner";
+import type { ApiError } from "@/lib/api-error";
 
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
@@ -12,7 +13,7 @@ export const useUpdateUser = () => {
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
       toast.success("Update Successfully");
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || "Update Failed");
     },
   });

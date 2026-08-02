@@ -5,6 +5,7 @@ import { authStorage } from "../storage/auth-storage";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/router/constans";
 import { useQueryClient } from "@tanstack/react-query";
+import type { ApiError } from "@/lib/api-error";
 
 export const useVerifyAccount = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export const useVerifyAccount = () => {
       navigate(APP_ROUTES.MAIN, { replace: true });
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       toast.error(
         error.response?.data?.message ||
           "Verification failed. Please check your OTP and try again.",

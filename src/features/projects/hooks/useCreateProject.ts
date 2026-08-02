@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ProjectRequest } from "../types";
 import { projectApi } from "../api/project-api";
 import { toast } from "sonner";
+import type { ApiError } from "@/lib/api-error";
 
 export const useCreateProject = () => {
   const queryClient = useQueryClient();
@@ -12,8 +13,8 @@ export const useCreateProject = () => {
       toast.success("Create Successfully");
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: (error: any) => {
-        toast.error(error.response.data.message || 'Create Failed')
+    onError: (error: ApiError) => {
+        toast.error(error.response?.data?.message || 'Create Failed');
     }
   });
 };

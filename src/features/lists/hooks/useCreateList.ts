@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CreateListRequest } from "../types"
 import { listApi } from "../api/list-api"
 import { toast } from "sonner"
+import type { ApiError } from "@/lib/api-error"
 
 export const useCreateList = (boardId: string) => {
     const queryClient = useQueryClient();
@@ -11,8 +12,8 @@ export const useCreateList = (boardId: string) => {
             toast.success("Create Successfully");
             queryClient.invalidateQueries({ queryKey: ["lists", boardId] });
         },
-        onError: (error: any) => {
-            toast.error(error.response.data.message || 'Create Failed');
+        onError: (error: ApiError) => {
+            toast.error(error.response?.data?.message || 'Create Failed');
         }
     })
 }

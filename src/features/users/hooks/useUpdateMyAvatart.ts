@@ -1,7 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "../api/user-api";
 import { toast } from "sonner";
-import type { UpdateAvatarPayload } from "../types";
+import type { ApiResponse, UpdateAvatarPayload, UserResponse } from "../types";
+
+type CurrentUserCache = ApiResponse<UserResponse> | undefined;
 
 export const useUpdateMyAvatar = () => {
   const queryClient = useQueryClient();
@@ -12,24 +14,30 @@ export const useUpdateMyAvatar = () => {
       await queryClient.cancelQueries({ queryKey: ["current-user"] });
       const previousUser = queryClient.getQueryData(["current-user"]);
       if (previewUrl) {
-        queryClient.setQueryData(["current-user"], (old: any) => {
-          if (!old?.data) return old;
-          return {
-            ...old,
-            data: { ...old.data, avatar: previewUrl },
-          };
-        });
+        queryClient.setQueryData<CurrentUserCache>(
+          ["current-user"],
+          (old) => {
+            if (!old?.data) return old;
+            return {
+              ...old,
+              data: { ...old.data, avatar: previewUrl },
+            };
+          },
+        );
       }
       return { previousUser };
     },
     onSuccess: (response) => {
-      queryClient.setQueryData(["current-user"], (old: any) => {
-        if (!old?.data) return old;
-        return {
-          ...old,
-          data: { ...old.data, avatar: response.data.avatar },
-        };
-      });
+      queryClient.setQueryData<CurrentUserCache>(
+        ["current-user"],
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: { ...old.data, avatar: response.data.avatar },
+          };
+        },
+      );
       toast.success("Update Avatar Successfully");
     },
     onError: (_error, _variables, context) => {

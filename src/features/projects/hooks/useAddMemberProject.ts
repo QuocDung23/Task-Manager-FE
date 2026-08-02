@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { projectApi } from "../api/project-api";
 import type { AddProjectMemberRequest } from "../types";
 import { toast } from "sonner";
+import type { ApiError } from "@/lib/api-error";
 
 export const useAddMemberProject = () => {
   const queryClient = useQueryClient();
@@ -20,7 +21,7 @@ export const useAddMemberProject = () => {
         queryKey: ["project-member", variables.projectId],
       });
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       const errorMessage = error.response?.data?.message || "Add Member Failed";
       if (
         errorMessage.includes("Already in project") ||

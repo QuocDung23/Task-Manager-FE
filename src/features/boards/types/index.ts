@@ -5,7 +5,7 @@ export type ApiResponse<T> = {
 };
 
 export type BoardResponse = {
-  _count: any;
+  _count?: { lists?: number; tasks?: number };
   id: string;
   name: string;
   description?: string;
