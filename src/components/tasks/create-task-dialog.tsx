@@ -19,9 +19,10 @@ import type { CreateTaskRequest } from "@/features/tasks/types";
 
 type CreateTaskDialogProps = {
   listId: string;
+  trigger?: React.ReactNode;
 };
 
-export function CreateTaskDialog({ listId }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const { mutate: createTask, isPending } = useCreateTask(listId);
 
@@ -44,18 +45,22 @@ export function CreateTaskDialog({ listId }: CreateTaskDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border/80 bg-background/70 px-3 py-3 text-left text-sm text-muted-foreground transition-all duration-150 hover:border-border hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
-            <Plus className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium text-foreground">Add task</p>
-            <p className="text-xs text-muted-foreground">Create a new task in this list</p>
-          </div>
-        </button>
+        {trigger ?? (
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border/80 bg-background/70 px-3 py-3 text-left text-sm text-muted-foreground transition-all duration-150 hover:border-border hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
+              <Plus className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-medium text-foreground">Add task</p>
+              <p className="text-xs text-muted-foreground">
+                Create a new task in this list
+              </p>
+            </div>
+          </button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">

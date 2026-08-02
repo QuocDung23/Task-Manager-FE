@@ -500,15 +500,20 @@ export function BoardDndProvider({
         items={orderedLists.map((l) => l.id)}
         strategy={horizontalListSortingStrategy}
       >
-        <div className="flex gap-4 w-full overflow-x-auto pb-4">
-          <AnimatePresence mode="popLayout">
+        <div className="flex w-full gap-4 overflow-x-auto px-1 pb-6 pt-1">
+          <AnimatePresence mode="popLayout" initial={false}>
             {orderedLists.map((list, index) => (
               <motion.div
                 key={list.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2, delay: index * 0.03 }}
+                layout="position"
+                initial={{ opacity: 0, y: 12, scale: 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.18 } }}
+                transition={{
+                  duration: 0.45,
+                  delay: Math.min(index * 0.04, 0.24),
+                  ease: [0.32, 0.72, 0, 1],
+                }}
               >
                 <TaskListWrapper
                   list={list}
@@ -524,14 +529,16 @@ export function BoardDndProvider({
 
       <DragOverlay
         dropAnimation={{
-          duration: 180,
-          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          duration: 220,
+          easing: "cubic-bezier(0.32, 0.72, 0, 1)",
         }}
         modifiers={dragOverlayModifiers}
       >
         {activeTask ? (
-          <div className="w-72 cursor-grabbing rotate-1 opacity-95 shadow-2xl">
-            <TaskCard task={activeTask} listId="" isDragging={true} />
+          <div className="w-72 cursor-grabbing will-change-transform">
+            <div className="rotate-1 rounded-2xl shadow-[0_32px_64px_-24px_rgba(15,23,42,0.4)] ring-1 ring-foreground/10">
+              <TaskCard task={activeTask} listId="" isDragging={true} />
+            </div>
           </div>
         ) : null}
       </DragOverlay>

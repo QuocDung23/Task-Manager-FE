@@ -13,7 +13,7 @@ export const listApi = {
         return response.data
     },
     create: async (boardId: string, data: CreateListRequest): Promise<ApiResponse<ListResponse>> => {
-        const response = await axiosLocal.post<ApiResponse<ListResponse>>(`/board/${boardId}/create-lists`, data)
+        const response = await axiosLocal.post<ApiResponse<ListResponse>>(`/board/${boardId}/lists`, data)
         return response.data
     },
     update: async (id: string, data: UpdateListRequest): Promise<ApiResponse<ListResponse>> => {

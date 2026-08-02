@@ -1,9 +1,12 @@
-import { Loader2, LucideArrowRight, LucideSearch } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { Loader2, Search } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import { useBoard } from "@/features/boards/hooks/useBoard";
 import { useLists } from "@/features/lists/hooks/useLists";
-import type { ListResponse } from "@/features/lists/types";
+import { EASE_FLUID } from "@/lib/motion";
+
 import { CreateListDialog } from "../lists/create-list-dialog";
 import { TaskDetail } from "../tasks/task-detail";
 import { TaskDetailProvider } from "../tasks/task-detail-context";
@@ -13,13 +16,21 @@ interface DetailBoardProps {
   boardId: string;
 }
 
+const enterTransition = (reduceMotion: boolean | null) =>
+  reduceMotion ? { duration: 0 } : { duration: 0.55, ease: EASE_FLUID };
+
+const contentTransition = (reduceMotion: boolean | null) =>
+  reduceMotion
+    ? { duration: 0 }
+    : { duration: 0.6, delay: 0.06, ease: EASE_FLUID };
+
 export function DetailBoard({ boardId }: DetailBoardProps) {
   const { data: boardData, isLoading: isLoadingBoard } = useBoard(boardId);
   const [page] = useState(1);
   const limit = 200;
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [orderedLists, setOrderedLists] = useState<ListResponse[]>([]);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -37,76 +48,154 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
   const board = boardData?.data;
   const pagination = listsData?.pagination;
 
+  // Pure derived state — sort on the fly from server payload. No effect,
+  // no `setState` inside an effect; just memoize the sorted view.
+  const orderedLists = useMemo(() => {
+    if (!listsData?.data) return [];
+    return [...listsData.data].sort((a, b) => a.order - b.order);
+  }, [listsData]);
+
   const isReorderDisabled = useMemo(() => {
     if (debouncedSearch) return true;
     if (pagination && pagination.totalItems > orderedLists.length) return true;
     return false;
   }, [debouncedSearch, pagination, orderedLists.length]);
 
-  useEffect(() => {
-    if (listsData?.data) {
-      const sorted = [...listsData.data].sort((a, b) => a.order - b.order);
-      setOrderedLists(sorted);
-    }
-  }, [listsData]);
-
   if (isLoadingBoard) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+      <div className="flex min-h-[60dvh] items-center justify-center">
+        <div className="flex items-center gap-3 rounded-full border border-border/60 bg-card/60 px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] backdrop-blur dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <Loader2
+            className="size-4 animate-spin text-muted-foreground"
+            aria-hidden="true"
+          />
+          <span className="text-[12.5px] font-medium text-muted-foreground">
+            Loading board
+          </span>
+        </div>
       </div>
     );
   }
 
   if (!board) {
-    return <div className="p-8 text-red-500">Board not found.</div>;
+    return (
+      <div className="flex min-h-[60dvh] items-center justify-center px-4">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-[13px] font-medium text-destructive">
+          Board not found.
+        </div>
+      </div>
+    );
   }
 
   if (isLoadingLists) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+      <div className="flex min-h-[60dvh] items-center justify-center">
+        <div className="flex items-center gap-3 rounded-full border border-border/60 bg-card/60 px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] backdrop-blur dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <Loader2
+            className="size-4 animate-spin text-muted-foreground"
+            aria-hidden="true"
+          />
+          <span className="text-[12.5px] font-medium text-muted-foreground">
+            Loading lists
+          </span>
+        </div>
       </div>
     );
   }
 
   if (isErrorLists) {
-    return <div className="p-8 text-red-500">Error loading lists!</div>;
+    return (
+      <div className="flex min-h-[60dvh] items-center justify-center px-4">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-[13px] font-medium text-destructive">
+          Error loading lists.
+        </div>
+      </div>
+    );
   }
 
   return (
     <TaskDetailProvider boardId={boardId}>
-      <div className="flex flex-col flex-1 w-full">
-        <div className="flex items-center justify-between w-full mt-5">
-          <div className="flex items-center gap-2">
-            <h2 className="font-heading text-4xl font-semibold text-zinc-900 dark:text-zinc-50">
-              {board.name}
-            </h2>
-            <LucideArrowRight className="h-5 w-5 text-zinc-400" />
-            <h2 className="font-heading text-4xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Lists
-            </h2>
-          </div>
-        </div>
-
-        <div className="w-full flex flex-col gap-4">
-          <div className="relative w-full max-w-xs mt-4">
-            <Input
-              className="py-3 pl-10 pr-4 border border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900"
-              placeholder="Search lists..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
-              <LucideSearch />
-            </span>
-          </div>
-
-          {orderedLists.length === 0 && !isLoadingLists ? (
-            <div className="flex items-center justify-center min-h-[200px] border-2 border-dashed rounded-2xl border-zinc-300 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-              <p className="text-zinc-500 font-medium text-base dark:text-zinc-400">
-                No lists found. Click the button to add a new list.
+      <div className="flex w-full flex-1 flex-col">
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={enterTransition(reduceMotion)}
+          className="mt-2 flex flex-col gap-5"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/70">
+                Board
               </p>
+              <h1 className="mt-2 truncate font-heading text-[28px] font-semibold leading-none tracking-[-0.02em] text-foreground sm:text-[32px]">
+                {board.name}
+              </h1>
+              <div className="mt-3 flex items-center gap-2 text-[12px] font-medium text-muted-foreground">
+                <span className="tabular-nums text-foreground/80">
+                  {orderedLists.length}
+                </span>
+                <span className="text-muted-foreground/70">
+                  {orderedLists.length === 1 ? "list" : "lists"}
+                </span>
+                <span
+                  className="size-1 rounded-full bg-muted-foreground/30"
+                  aria-hidden="true"
+                />
+                <span className="text-muted-foreground/80">
+                  Drag to reorder lanes
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <CreateListDialog boardId={boardId} />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="group relative w-full max-w-sm">
+              <span
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/70 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-focus-within:text-foreground"
+                aria-hidden="true"
+              >
+                <Search className="size-4" strokeWidth={1.75} />
+              </span>
+              <Input
+                type="search"
+                placeholder="Search lists"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-10 rounded-full border border-foreground/8 bg-card/70 pl-10 pr-4 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-card focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={contentTransition(reduceMotion)}
+          className="mt-6 flex flex-col gap-4"
+        >
+          {orderedLists.length === 0 && !isLoadingLists ? (
+            <div className="flex min-h-70 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-border/80 bg-card/40 px-6 text-center">
+              <div className="rounded-2xl bg-muted/60 p-1.5 ring-1 ring-inset ring-border/60">
+                <div className="grid size-10 place-items-center rounded-[calc(1rem-0.375rem)] bg-card text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_8px_24px_-16px_rgba(15,23,42,0.18)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                  <Search
+                    className="size-4"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[13.5px] font-medium text-foreground">
+                  No lists yet
+                </p>
+                <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                  Add the first lane to start grouping tasks on this board.
+                </p>
+              </div>
             </div>
           ) : (
             <BoardDndProvider
@@ -115,9 +204,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
               isReorderDisabled={isReorderDisabled}
             />
           )}
-
-          <CreateListDialog boardId={boardId} />
-        </div>
+        </motion.div>
       </div>
 
       <TaskDetail />
