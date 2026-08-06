@@ -1,20 +1,20 @@
 "use client";
-import { MoreVertical, AlignLeft, Trash2, ExternalLink } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import type { TaskResponse } from "@/features/tasks/types";
-import { useMemo, useState } from "react";
-import { DeleteTaskDialog } from "./delete-task-dialog";
-import { AssigneeAvatarGroup } from "./assignee-avatar-group";
-import { useTaskDetail } from "./task-detail-context";
+import { stopDropdownTriggerPropagation } from "@/lib/dropdown-trigger";
+import { useTaskDetail } from "./use-task-detail";
 import { useBoardMembers } from "@/features/boards/hooks/useBoardMembers";
 import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
+import type { TaskResponse } from "@/features/tasks/types";
+import { DeleteTaskDialog } from "./delete-task-dialog";
+import { AssigneeAvatarGroup } from "./assignee-avatar-group";
 
 type TaskCardProps = {
   task: TaskResponse;
@@ -35,9 +35,6 @@ export function TaskCard({
 }: TaskCardProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { openTask, boardId } = useTaskDetail();
-
-  // Shared with `TaskAssignees` (same `queryKey` → 1 network request per board).
-  // Skipped while dragging to avoid an extra fetch mid-drag.
   const { data: members = [] } = useBoardMembers(boardId, {
     enabled: !isDragging,
   });
@@ -53,13 +50,12 @@ export function TaskCard({
 
   return (
     <>
-      <article
-        className="group/task cursor-grab touch-none rounded-xl border border-border/80 bg-background/95 p-3 transition-[border-color,background-color] duration-150 hover:border-border hover:bg-background active:cursor-grabbing dark:border-border/60"
+      <div
+        className="group/task relative flex cursor-grab touch-none items-start gap-2 rounded-md border border-border bg-card px-2.5 py-2 text-left text-foreground outline-none transition-colors hover:border-foreground/20 active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring/40"
         style={{
           borderColor: isDragging ? "var(--ring)" : undefined,
         }}
         onClick={(e) => {
-          // Ignore clicks that originated from a drag gesture.
           if ((e as React.MouseEvent).detail === 0) return;
           if (!disabled) openTask(task);
         }}
@@ -74,78 +70,55 @@ export function TaskCard({
         {...dragHandleAttributes}
         {...dragHandleListeners}
       >
-        <div className="flex items-start gap-3">
-          <div
-            className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-primary"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
-          ></div>
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex items-start gap-2">
-              <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground">
-                <AlignLeft className="h-3.5 w-3.5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
-                  {task.name}
-                </h4>
-                {task.description ? (
-                  <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
-                    {task.description}
-                  </p>
-                ) : null}
-              </div>
+        <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-snug text-foreground">
+          {task.name}
+        </p>
+
+        <div className="flex shrink-0 items-center gap-1.5">
+          {assignCount > 0 ? (
+            <div
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <AssigneeAvatarGroup
+                users={assignees}
+                totalCount={assignCount}
+                max={3}
+                size="sm"
+              />
             </div>
-            {assignCount > 0 ? (
-              <div
-                className="flex justify-end"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <AssigneeAvatarGroup
-                  users={assignees}
-                  totalCount={assignCount}
-                  max={3}
-                  size="sm"
-                />
-              </div>
-            ) : null}
-          </div>
+          ) : null}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="shrink-0 opacity-0 transition-opacity duration-150 group-hover/task:opacity-100 focus:opacity-100"
+              <button
+                type="button"
+                aria-label="Task actions"
                 disabled={isDragging}
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
+                className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 opacity-0 outline-none transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40 group-hover/task:opacity-100 data-[state=open]:opacity-100 data-[state=open]:bg-muted data-[state=open]:text-foreground disabled:pointer-events-none"
+                {...stopDropdownTriggerPropagation}
               >
-                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                <span className="sr-only">Task actions</span>
-              </Button>
+                <MoreHorizontal className="size-3.5" aria-hidden="true" />
+              </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent align="end" sideOffset={6} className="w-40">
               <DropdownMenuItem
                 onClick={() => openTask(task)}
-                className="gap-2"
+                className="cursor-pointer"
               >
-                <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                <span>Open detail</span>
+                Open detail
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
                 onClick={() => setDeleteOpen(true)}
-                className="gap-2"
+                className="cursor-pointer"
               >
-                <Trash2 className="h-4 w-4" />
-                <span>Delete</span>
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </article>
+      </div>
 
       <DeleteTaskDialog
         task={task}

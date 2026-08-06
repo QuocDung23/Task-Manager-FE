@@ -1,19 +1,21 @@
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { ClipboardList, Plus, X } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Plus } from "lucide-react";
+
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Field, FieldGroup } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { useCreateTask } from "@/features/tasks/hooks/useCreateTask";
 import type { CreateTaskRequest } from "@/features/tasks/types";
 
@@ -24,110 +26,146 @@ type CreateTaskDialogProps = {
 
 export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
+  const formId = useId();
+  const nameId = `${formId}-name`;
+  const descriptionId = `${formId}-description`;
   const { mutate: createTask, isPending } = useCreateTask(listId);
 
-  const form = useForm<CreateTaskRequest>({
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+    reset,
+  } = useForm<CreateTaskRequest>({
+    mode: "onTouched",
     defaultValues: {
       name: "",
       description: "",
     },
   });
 
+  useEffect(() => {
+    if (!open) reset({ name: "", description: "" });
+  }, [open, reset]);
+
   const onSubmit = (data: CreateTaskRequest) => {
     createTask(data, {
       onSuccess: () => {
-        form.reset();
+        reset();
         setOpen(false);
       },
     });
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!isPending) setOpen(nextOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        {trigger ?? (
-          <button
-            type="button"
-            className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border/80 bg-background/70 px-3 py-3 text-left text-sm text-muted-foreground transition-all duration-150 hover:border-border hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
-              <Plus className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-medium text-foreground">Add task</p>
-              <p className="text-xs text-muted-foreground">
-                Create a new task in this list
-              </p>
-            </div>
-          </button>
+        {trigger === undefined ? (
+          <Button size="sm">
+            <Plus />
+            New task
+          </Button>
+        ) : (
+          trigger
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create new task</DialogTitle>
-          <DialogDescription>
-            Add a task to this list so it appears immediately in the board.
-          </DialogDescription>
+      <DialogContent showCloseButton={false} className="sm:max-w-lg">
+        <DialogHeader className="flex-row items-start gap-3 space-y-0 text-left">
+          <span className="grid size-9 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
+            <ClipboardList
+              className="size-4"
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
+          </span>
+          <div className="min-w-0 flex-1 space-y-1">
+            <DialogTitle>Create new task</DialogTitle>
+            <DialogDescription className="max-w-[34ch]">
+              Add a task to this list so it appears immediately in the board.
+            </DialogDescription>
+          </div>
+          <DialogClose asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Close"
+              disabled={isPending}
+              className="text-muted-foreground"
+            >
+              <X />
+            </Button>
+          </DialogClose>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FieldGroup className="space-y-4">
-            <Field className="space-y-1.5">
-              <Label htmlFor="task-name">
-                Task name <span className="text-destructive">*</span>
-              </Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <FieldGroup>
+            <Field data-invalid={Boolean(errors.name)}>
+              <Label htmlFor={nameId}>Task name</Label>
               <Input
-                id="task-name"
+                id={nameId}
+                autoFocus
+                autoComplete="off"
+                aria-invalid={Boolean(errors.name)}
                 placeholder="e.g. Draft onboarding flow"
-                {...form.register("name", {
+                maxLength={255}
+                {...register("name", {
                   required: "Task name is required",
                   maxLength: {
                     value: 255,
-                    message: "Task name must be 255 characters or less",
+                    message: "Keep the task name under 255 characters.",
                   },
                 })}
               />
-              {form.formState.errors.name ? (
-                <p className="mt-1 text-xs text-destructive">
-                  {form.formState.errors.name.message}
-                </p>
-              ) : null}
+              <FieldError
+                errors={[errors.name]}
+                className="text-[12px] leading-relaxed"
+              />
             </Field>
 
-            <Field className="space-y-1.5">
-              <Label htmlFor="task-description">Description</Label>
+            <Field data-invalid={Boolean(errors.description)}>
+              <div className="flex items-center justify-between">
+                <Label htmlFor={descriptionId}>Description</Label>
+                <span className="text-[11.5px] text-muted-foreground">
+                  Optional
+                </span>
+              </div>
               <Textarea
-                id="task-description"
+                id={descriptionId}
+                aria-invalid={Boolean(errors.description)}
                 placeholder="Add context, checklist, or notes for this task"
                 rows={4}
-                {...form.register("description", {
+                maxLength={2000}
+                className="resize-none"
+                {...register("description", {
                   maxLength: {
                     value: 2000,
-                    message: "Description must be 2000 characters or less",
+                    message: "Keep the description under 2000 characters.",
                   },
                 })}
               />
-              {form.formState.errors.description ? (
-                <p className="mt-1 text-xs text-destructive">
-                  {form.formState.errors.description.message}
-                </p>
-              ) : null}
+              <FieldError
+                errors={[errors.description]}
+                className="text-[12px] leading-relaxed"
+              />
             </Field>
           </FieldGroup>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
             <Button
+              variant="ghost"
               type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={() => setOpen(false)}
               disabled={isPending}
+              onClick={() => setOpen(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending} className="flex-1">
-              {isPending ? "Creating..." : "Create Task"}
+            <Button type="submit" disabled={isPending} aria-live="polite">
+              {isPending ? "Creating" : "Create task"}
             </Button>
           </div>
         </form>

@@ -9,7 +9,7 @@ import { EASE_FLUID } from "@/lib/motion";
 
 import { CreateListDialog } from "../lists/create-list-dialog";
 import { TaskDetail } from "../tasks/task-detail";
-import { TaskDetailProvider } from "../tasks/task-detail-context";
+import { TaskDetailProvider } from "../tasks/task-detail-provider";
 import { BoardDndProvider } from "./board-dnd-provider";
 
 interface DetailBoardProps {

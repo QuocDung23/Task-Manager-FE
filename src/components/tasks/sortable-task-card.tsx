@@ -44,25 +44,17 @@ export function SortableTaskCard({
       className="touch-none"
       data-dragging={isDragging}
     >
-      <div
-        className={
-          isDragging
-            ? "rounded-xl border border-dashed border-primary/40 bg-primary/5"
-            : "rounded-xl"
-        }
-      >
-        {isDragging ? (
-          <div className="min-h-[76px]" />
-        ) : (
-          <TaskCard
-            task={task}
-            listId={listId}
-            dragHandleAttributes={attributes}
-            dragHandleListeners={listeners}
-            disabled={disabled}
-          />
-        )}
-      </div>
+      {isDragging ? (
+        <div className="min-h-10 rounded-md border border-dashed border-border" />
+      ) : (
+        <TaskCard
+          task={task}
+          listId={listId}
+          dragHandleAttributes={attributes}
+          dragHandleListeners={listeners}
+          disabled={disabled}
+        />
+      )}
     </div>
   );
 }

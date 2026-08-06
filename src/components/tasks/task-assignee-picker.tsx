@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
-import { Check, Loader2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, ListChecks, Loader2, X } from "lucide-react";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -31,14 +31,14 @@ type TaskAssigneePickerProps = {
  *
  * Behavior:
  * - Loads active board members via `useBoardMembers`. Each member is shown
- *   with a checkbox + avatar + name/email.
+ *   with a checkbox + avatar + name.
  * - Already-assigned members are checked and disabled (label "Assigned").
  * - Toggling a member stages it into a local `pendingIds` set.
  * - Confirming merges pending IDs with `currentAssignIds`, dedupes, and
  *   hands the final list back via `onConfirm`. The parent triggers PATCH.
  *
  * Staged selection is reset every time the dialog closes (overlay, Esc,
- * Cancel) by remounting the body via `key={open}`.
+ * Cancel) via a remount-keyed body.
  */
 export function TaskAssigneePicker({
   boardId,
@@ -50,9 +50,11 @@ export function TaskAssigneePicker({
 }: TaskAssigneePickerProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* Remount body when `open` flips true so staged state is fresh and
-          no reset effect is needed. */}
-      <DialogContent key={String(open)} className="sm:max-w-md">
+      <DialogContent
+        key={String(open)}
+        showCloseButton={false}
+        className="sm:max-w-md"
+      >
         {open ? (
           <PickerBody
             boardId={boardId}
@@ -96,6 +98,12 @@ function PickerBody({
     });
   }, [members, currentSet]);
 
+  useEffect(() => {
+    return () => {
+      setPendingIds(new Set());
+    };
+  }, []);
+
   const togglePending = (userId: string) => {
     setPendingIds((current) => {
       const next = new Set(current);
@@ -125,26 +133,41 @@ function PickerBody({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>Add assignees</DialogTitle>
-        <DialogDescription>
-          Choose from active members of this board. Already-assigned members are
-          marked.
-        </DialogDescription>
+      <DialogHeader className="flex-row items-start gap-3 space-y-0 text-left">
+        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
+          <ListChecks className="size-4" strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1 space-y-1">
+          <DialogTitle>Add assignees</DialogTitle>
+          <DialogDescription className="max-w-[34ch]">
+            Pick active board members. Already-assigned members are marked.
+          </DialogDescription>
+        </div>
+        <DialogClose asChild>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Close"
+            disabled={isSubmitting}
+            className="text-muted-foreground"
+          >
+            <X />
+          </Button>
+        </DialogClose>
       </DialogHeader>
 
-      <div className="max-h-72 overflow-y-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="max-h-72 overflow-y-auto rounded-md border border-border">
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 p-4 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            Loading members...
+          <div className="flex items-center justify-center gap-2 p-3 text-[12px] text-muted-foreground">
+            <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
+            Loading members…
           </div>
         ) : sortedMembers.length === 0 ? (
-          <div className="p-4 text-xs text-muted-foreground">
+          <div className="p-3 text-[12px] text-muted-foreground">
             No active members in this board.
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <ul className="divide-y divide-border/60">
             {sortedMembers.map((member) => (
               <AssigneeMemberRow
                 key={member.id}
@@ -159,38 +182,38 @@ function PickerBody({
         )}
       </div>
 
-      <DialogFooter className="-mx-4 -mb-4">
-        <span className="mr-auto text-[11px] font-medium text-zinc-400 dark:text-zinc-500">
+      <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-[11.5px] text-muted-foreground">
           {pendingIds.size > 0
             ? `${pendingIds.size} selected`
             : "Select members to add"}
         </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleCancel}
-          disabled={isSubmitting}
-          className="h-8 rounded-lg text-zinc-500"
-        >
-          <X className="h-3.5 w-3.5" />
-          Cancel
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          onClick={handleConfirm}
-          disabled={isSubmitting || pendingIds.size === 0}
-          className="h-8 gap-1.5 rounded-lg"
-        >
-          {isSubmitting ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Check className="h-3.5 w-3.5" />
-          )}
-          {pendingIds.size > 0 ? `Add ${pendingIds.size}` : "Add"}
-        </Button>
-      </DialogFooter>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+          <Button
+            variant="ghost"
+            disabled={isSubmitting}
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={isSubmitting || pendingIds.size === 0}
+            onClick={handleConfirm}
+            aria-live="polite"
+          >
+            {isSubmitting ? (
+              <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
+            ) : pendingIds.size > 0 ? (
+              <Check className="size-3.5" strokeWidth={2.25} />
+            ) : null}
+            {isSubmitting
+              ? "Adding"
+              : pendingIds.size > 0
+                ? `Add ${pendingIds.size}`
+                : "Add"}
+          </Button>
+        </div>
+      </div>
     </>
   );
 }

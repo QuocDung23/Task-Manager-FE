@@ -1,28 +1,11 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useState,
   useTransition,
   type ReactNode,
 } from "react";
+import { TaskDetailContext } from "./task-detail-context";
 import type { TaskResponse } from "@/features/tasks/types";
-
-interface TaskDetailContextValue {
-  selectedTask: TaskResponse | null;
-  isOpen: boolean;
-  isPending: boolean;
-  boardId: string | null;
-  openTask: (task: TaskResponse) => void;
-  closeTask: () => void;
-  /**
-   * Cập nhật task đang mở trong dialog sau khi mutation (assign/unassign/update).
-   * Chỉ thay thế khi id khớp để tránh ghi đè task khác.
-   */
-  updateSelectedTask: (task: TaskResponse) => void;
-}
-
-const TaskDetailContext = createContext<TaskDetailContextValue | null>(null);
 
 interface TaskDetailProviderProps {
   children: ReactNode;
@@ -71,12 +54,4 @@ export function TaskDetailProvider({
       {children}
     </TaskDetailContext.Provider>
   );
-}
-
-export function useTaskDetail() {
-  const ctx = useContext(TaskDetailContext);
-  if (!ctx) {
-    throw new Error("useTaskDetail must be used within TaskDetailProvider");
-  }
-  return ctx;
 }

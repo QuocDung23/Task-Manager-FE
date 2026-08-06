@@ -1,29 +1,20 @@
 import { useMemo, useState } from "react";
 import { UserPlus, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAssignTask } from "@/features/tasks/hooks/useAssignTask";
 import { useUnassignTask } from "@/features/tasks/hooks/useUnassignTask";
 import { useBoardMembers } from "@/features/boards/hooks/useBoardMembers";
-import { useTaskDetail } from "./task-detail-context";
+import { useTaskDetail } from "./use-task-detail";
 import { TaskAssigneePicker } from "./task-assignee-picker";
 import type { TaskResponse } from "@/features/tasks/types";
 import AssigneeChip from "./task-assignee-chip";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 type TaskAssigneesProps = {
   task: TaskResponse;
   onTaskUpdated?: (task: TaskResponse) => void;
 };
 
-/**
- * Renders the assignee chips for a single task, plus a trigger that opens
- * `<TaskAssigneePicker>` as a modal. Removing a chip calls DELETE directly;
- * adding new assignees is delegated to the picker, which PATCHes the merged
- * list back via `useAssignTask`.
- *
- * Members are resolved through `useBoardMembers`, shared with the picker via
- * React Query so opening it costs no extra network round trip.
- */
 export function TaskAssignees({ task, onTaskUpdated }: TaskAssigneesProps) {
   const { boardId } = useTaskDetail();
   const { data: members = [], isLoading: isLoadingMembers } =
@@ -62,39 +53,37 @@ export function TaskAssignees({ task, onTaskUpdated }: TaskAssigneesProps) {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-semibold text-zinc-400 dark:text-zinc-500">
-          <Users className="h-3.5 w-3.5" />
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <Users className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
           <span>Assignees</span>
         </div>
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="icon-xs"
           onClick={() => setPickerOpen(true)}
           disabled={isMutating}
-          className="text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200"
           aria-label="Add assignees"
+          className="text-muted-foreground"
         >
-          <UserPlus className="h-3.5 w-3.5" />
+          <UserPlus className="size-3.5" strokeWidth={1.75} />
         </Button>
       </div>
 
       {currentAssignIds.length === 0 ? (
-        <div className="inline-flex items-center gap-2 text-sm font-semibold italic text-zinc-300 dark:text-zinc-600">
-          <span className="flex size-7 items-center justify-center rounded-full border border-dashed border-zinc-300 dark:border-zinc-700">
-            <Users className="h-3.5 w-3.5" />
-          </span>
-          No assignees
+        <div className="inline-flex items-center gap-2 rounded-md border border-dashed border-border bg-card/40 px-2.5 py-1 text-[12px] text-muted-foreground">
+          <Users className="size-3" strokeWidth={1.75} aria-hidden="true" />
+          No assignees yet
         </div>
       ) : (
-        <ul className="flex flex-wrap gap-2">
+        <ul className="flex flex-wrap gap-1.5">
           {currentAssignIds.map((userId) => {
             const member = members.find((m) => m.id === userId);
             return (
               <li key={userId}>
                 {isLoadingMembers && !member ? (
-                  <Skeleton className="h-8 w-32 rounded-full" />
+                  <Skeleton className="h-7 w-32 rounded-full" />
                 ) : (
                   <AssigneeChip
                     userId={userId}
@@ -120,4 +109,3 @@ export function TaskAssignees({ task, onTaskUpdated }: TaskAssigneesProps) {
     </div>
   );
 }
-

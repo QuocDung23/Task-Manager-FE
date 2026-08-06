@@ -1,4 +1,3 @@
-import { AvatarGroup, AvatarGroupCount } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -41,14 +40,22 @@ export function AssigneeAvatarGroup({
 
   const visible = users.slice(0, max);
   const overflow = Math.max(totalCount - visible.length, 0);
+  const avatarSize: "default" | "sm" | "lg" = size;
 
   return (
-    <AvatarGroup className="shrink-0">
+    <div className="flex -space-x-1.5">
       {visible.map((user) => (
         <Tooltip key={user.id}>
           <TooltipTrigger asChild>
-            <span tabIndex={-1} className="cursor-default outline-none">
-              <UserAvatar name={user.name} avatar={user.avatar} size={size} />
+            <span
+              tabIndex={-1}
+              className="cursor-default outline-none **:data-[slot=avatar]:ring-1 **:data-[slot=avatar]:ring-card"
+            >
+              <UserAvatar
+                name={user.name}
+                avatar={user.avatar}
+                size={avatarSize}
+              />
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
@@ -59,15 +66,23 @@ export function AssigneeAvatarGroup({
       {overflow > 0 ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <AvatarGroupCount className="cursor-default">
+            <span
+              className={`grid shrink-0 cursor-default place-items-center rounded-full bg-muted font-medium text-muted-foreground ring-1 ring-card **:data-[slot=avatar]:hidden ${
+                avatarSize === "sm"
+                  ? "size-6 text-[9px]"
+                  : avatarSize === "lg"
+                    ? "size-10 text-xs"
+                    : "size-8 text-[10px]"
+              }`}
+            >
               +{overflow}
-            </AvatarGroupCount>
+            </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
             {overflow} more assignee{overflow === 1 ? "" : "s"}
           </TooltipContent>
         </Tooltip>
       ) : null}
-    </AvatarGroup>
+    </div>
   );
 }
