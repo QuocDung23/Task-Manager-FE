@@ -2,17 +2,24 @@ import { axiosLocal } from "@/services/axios";
 import type {
   ApiResponse,
   AssignTaskRequest,
+  CreateTaskCommentRequest,
   CreateTaskRequest,
+  DeleteTaskCommentResponse,
+  GetTaskCommentRepliesParams,
+  GetTaskCommentsParams,
   MoveTaskRequest,
   MoveTaskResponse,
+  SetTaskScheduleRequest,
   TaskApiResponse,
+  TaskComment,
+  TaskCommentsResponse,
   TaskResponse,
+  UpdateTaskCommentRequest,
 } from "../types";
 
 export type UpdateTaskRequest = {
   name?: string;
   description?: string;
-  dueDate?: string;
 };
 
 export const taskApi = {
@@ -83,6 +90,105 @@ export const taskApi = {
     const response = await axiosLocal.delete<ApiResponse<TaskResponse>>(
       `/task/${taskId}/assign/${userId}`,
     );
+    return response.data;
+  },
+
+  setSchedule: async (
+    taskId: string,
+    data: SetTaskScheduleRequest,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.patch<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/schedule`,
+      data,
+    );
+    return response.data;
+  },
+
+  reschedule: async (
+    taskId: string,
+    data: SetTaskScheduleRequest,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.patch<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/reschedule`,
+      data,
+    );
+    return response.data;
+  },
+
+  clearSchedule: async (
+    taskId: string,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.delete<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/schedule`,
+    );
+    return response.data;
+  },
+
+  getComments: async (
+    taskId: string,
+    params?: GetTaskCommentsParams,
+  ): Promise<ApiResponse<TaskCommentsResponse>> => {
+    const response = await axiosLocal.get<ApiResponse<TaskCommentsResponse>>(
+      `/task/${taskId}/comments`,
+      { params },
+    );
+    return response.data;
+  },
+
+  createComment: async (
+    taskId: string,
+    data: CreateTaskCommentRequest,
+  ): Promise<ApiResponse<TaskComment>> => {
+    const response = await axiosLocal.post<ApiResponse<TaskComment>>(
+      `/task/${taskId}/comments`,
+      data,
+    );
+    return response.data;
+  },
+
+  getCommentReplies: async (
+    taskId: string,
+    commentId: string,
+    params?: GetTaskCommentRepliesParams,
+  ): Promise<ApiResponse<TaskCommentsResponse>> => {
+    const response = await axiosLocal.get<ApiResponse<TaskCommentsResponse>>(
+      `/task/${taskId}/comments/${commentId}/replies`,
+      { params },
+    );
+    return response.data;
+  },
+
+  createCommentReply: async (
+    taskId: string,
+    commentId: string,
+    data: CreateTaskCommentRequest,
+  ): Promise<ApiResponse<TaskComment>> => {
+    const response = await axiosLocal.post<ApiResponse<TaskComment>>(
+      `/task/${taskId}/comments/${commentId}/replies`,
+      data,
+    );
+    return response.data;
+  },
+
+  updateComment: async (
+    taskId: string,
+    commentId: string,
+    data: UpdateTaskCommentRequest,
+  ): Promise<ApiResponse<TaskComment>> => {
+    const response = await axiosLocal.patch<ApiResponse<TaskComment>>(
+      `/task/${taskId}/comments/${commentId}`,
+      data,
+    );
+    return response.data;
+  },
+
+  deleteComment: async (
+    taskId: string,
+    commentId: string,
+  ): Promise<ApiResponse<DeleteTaskCommentResponse>> => {
+    const response = await axiosLocal.delete<
+      ApiResponse<DeleteTaskCommentResponse>
+    >(`/task/${taskId}/comments/${commentId}`);
     return response.data;
   },
 };
