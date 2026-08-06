@@ -17,26 +17,33 @@ export type TaskStatusAction =
   | "PAUSED"
   | "FIXED"
   | "CANCELLED"
-  | "ARCHIVED"
-  | "COMPLETED"
-  | "CREATED"
-  | "DELETED"
-  | "RESTORED"
-  | "UPDATED"
   | (string & {});
+
+export type ReminderPresetId =
+  | "AT_TIME"
+  | "BEFORE_15"
+  | "BEFORE_30"
+  | "BEFORE_60"
+  | "BEFORE_DAY"
+  | "CUSTOM";
 
 export type TaskResponse = {
   id: string;
   name: string;
   description?: string;
   orderTask: number;
-  dueDate?: string | null;
-  reminderAt?: string | null;
-  lockStatus?: TaskLockStatus;
-  lockReason?: string | null;
-  isLocked?: boolean;
-  isOverdue?: boolean;
-  scheduleState?: TaskScheduleState;
+  dueDate: string | null;
+  reminderAt: string | null;
+  reminderSentAt: string | null;
+  overdueNotifiedAt: string | null;
+  lockedAt: string | null;
+  lockStatus: TaskLockStatus;
+  lockReason: string | null;
+  rescheduleCount: number;
+  completedAt: string | null;
+  isLocked: boolean;
+  isOverdue: boolean;
+  scheduleState: TaskScheduleState;
   listId: string;
   assign: string[];
   status: TaskStatus;
@@ -49,6 +56,8 @@ export type TaskResponse = {
 export type CreateTaskRequest = {
   name: string;
   description?: string;
+  dueDate?: string;
+  reminderAt?: string;
 };
 
 export type TaskApiResponse = {
@@ -65,6 +74,13 @@ export type TaskApiResponse = {
 export type ApiResponse<T> = {
   success: boolean;
   data: T;
+};
+
+export type TaskListFilters = {
+  scheduleState?: TaskScheduleState;
+  lockStatus?: TaskLockStatus;
+  dueBefore?: string;
+  dueAfter?: string;
 };
 
 export type MoveTaskRequest = {
@@ -87,6 +103,14 @@ export type SetTaskScheduleRequest = {
   dueDate: string;
   reminderAt?: string;
   reason?: string;
+};
+
+export type ClearTaskScheduleRequest = {
+  reason?: string;
+};
+
+export type UnlockTaskRequest = {
+  reason: string;
 };
 
 export type TaskCommentUser = {

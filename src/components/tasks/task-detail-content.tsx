@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUpdateTask } from "@/features/tasks/hooks/useUpdateTask";
 import { useTaskDetail } from "./use-task-detail";
 import { DeleteTaskDialog } from "./delete-task-dialog";
 import { TaskDetailMainPanel } from "./task-detail/task-detail-main-panel";
 import { TaskDetailCommentsPanel } from "./task-detail/task-detail-comments-panel";
+import { Root as VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { TaskResponse } from "@/features/tasks/types";
 import { TaskDetailHeader } from "./task-detail/task-detail-header";
+import { useTaskSocket } from "@/features/realtime/hooks/useTaskSocket";
+import { taskKeys } from "@/features/tasks/utils/task-query-keys";
 
 type TaskDetailContentProps = {
   task: TaskResponse;
@@ -25,10 +29,50 @@ export default function TaskDetailContent({
   listTitle,
   boardTitle,
 }: TaskDetailContentProps) {
-  const listId = task.listId ?? "";
-  const { mutate: updateTask, isPending: isUpdating } = useUpdateTask(listId);
+  const { mutate: updateTask, isPending: isUpdating } = useUpdateTask();
   const { updateSelectedTask } = useTaskDetail();
+  const queryClient = useQueryClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  useTaskSocket(isOpen ? task.id : null);
+
+  // Keep the open dialog in sync with the latest task data from the
+  // query cache. Any mutation (schedule, reschedule, clear, unlock, realtime
+  // event) eventually writes through `taskKeys.detail(task.id)`, so this
+  // effect guarantees the dialog re-renders no matter which source
+  // triggered the update.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // 1) Initial sync: pull the latest cached task if it differs from the
+    //    currently selected task (handles the case where the dialog was
+    //    opened with a stale task while the cache was updated elsewhere).
+    const initial = queryClient.getQueryData<TaskResponse>(
+      taskKeys.detail(task.id),
+    );
+    if (initial && initial !== task && initial.id === task.id) {
+      updateSelectedTask(initial);
+    }
+
+    // 2) Continuous sync: subscribe to cache mutations so any update to
+    //    this task (mutations + realtime events) propagates into the dialog.
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (!event?.query) return;
+      const key = event.query.queryKey;
+      if (
+        key[0] === taskKeys.all[0] &&
+        key[1] === "detail" &&
+        key[2] === task.id &&
+        event.type === "updated"
+      ) {
+        const data = queryClient.getQueryData<TaskResponse>(key);
+        if (data && data.id === task.id) {
+          updateSelectedTask(data);
+        }
+      }
+    });
+    return unsubscribe;
+  }, [isOpen, queryClient, task, updateSelectedTask]);
 
   const handleSaveName = (name: string) => {
     updateTask(
@@ -59,7 +103,9 @@ export default function TaskDetailContent({
           showCloseButton={false}
           className="flex h-[min(780px,calc(100dvh-1.25rem))] max-h-[calc(100dvh-1.25rem)] w-full max-w-[calc(100%-1.25rem)] flex-col gap-0 overflow-hidden bg-background p-0 shadow-[0_28px_90px_oklch(0.12_0.02_250/0.2)] sm:max-w-260"
         >
-          <DialogTitle className="sr-only">{task.name}</DialogTitle>
+          <VisuallyHidden>
+            <DialogTitle>{task.name}</DialogTitle>
+          </VisuallyHidden>
 
           <TaskDetailHeader
             task={task}

@@ -4,6 +4,7 @@ import { DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { TaskResponse } from "@/features/tasks/types";
+import { isTaskLocked } from "@/features/tasks/utils/task-schedule";
 
 
 type TaskDetailHeaderProps = {
@@ -24,9 +25,7 @@ export function TaskDetailHeader({
   const [nameValue, setNameValue] = useState(task.name);
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const isTaskLocked = Boolean(
-    task.isLocked || (task.lockStatus && task.lockStatus !== "UNLOCKED"),
-  );
+  const isTaskLockedState = isTaskLocked(task);
 
   useEffect(() => {
     setNameValue(task.name);
@@ -131,13 +130,13 @@ export function TaskDetailHeader({
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            disabled={isTaskLocked}
+            disabled={isTaskLockedState}
             className="group flex min-w-0 flex-1 items-start gap-2 rounded-lg px-1 py-0.5 text-left outline-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-muted/45 focus-visible:ring-3 focus-visible:ring-ring/30 active:scale-[0.995] disabled:cursor-default disabled:hover:bg-transparent disabled:active:scale-100"
           >
             <h1 className="min-w-0 flex-1 wrap-break-words text-[18px] font-medium leading-snug text-foreground sm:text-[19px]">
               {task.name}
             </h1>
-            {!isTaskLocked ? (
+            {!isTaskLockedState ? (
               <Pencil
                 className="mt-1 size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
                 strokeWidth={1.5}

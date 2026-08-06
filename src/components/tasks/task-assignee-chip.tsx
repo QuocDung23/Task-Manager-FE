@@ -35,7 +35,7 @@ export default function AssigneeChip({
             avatar={member?.avatar}
             size="sm"
           />
-          <span className="max-w-[120px] truncate">{label}</span>
+          <span className="max-w-30 truncate">{label}</span>
           <button
             type="button"
             onClick={(e) => {

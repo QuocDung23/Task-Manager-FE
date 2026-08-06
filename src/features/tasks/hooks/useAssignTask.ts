@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
 import type { AssignTaskRequest } from "../types";
-import { updateTaskInListCache } from "../utils/task-cache";
+import { replaceTaskAcrossCaches } from "../utils/task-cache";
 import type { ApiError } from "@/lib/api-error";
 
 type AssignTaskVariables = {
@@ -28,7 +28,7 @@ export const useAssignTask = () => {
       taskApi.assign(taskId, { userIds } satisfies AssignTaskRequest),
 
     onSuccess: (res) => {
-      updateTaskInListCache(queryClient, res.data);
+      replaceTaskAcrossCaches(queryClient, res.data);
       toast.success("Assignees updated");
     },
 

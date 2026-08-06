@@ -10,6 +10,8 @@ import { EASE_FLUID } from "@/lib/motion";
 import { CreateListDialog } from "../lists/create-list-dialog";
 import { TaskDetail } from "../tasks/task-detail";
 import { TaskDetailProvider } from "../tasks/task-detail-provider";
+import { TaskScheduleFilter } from "../tasks/schedule/task-schedule-filter";
+import type { TaskListFilters } from "@/features/tasks/types";
 import { BoardDndProvider } from "./board-dnd-provider";
 
 interface DetailBoardProps {
@@ -30,6 +32,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
   const limit = 200;
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [taskFilters, setTaskFilters] = useState<TaskListFilters>({});
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -60,6 +63,9 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
     if (pagination && pagination.totalItems > orderedLists.length) return true;
     return false;
   }, [debouncedSearch, pagination, orderedLists.length]);
+
+  const hasActiveFilters = (value: TaskListFilters) =>
+    Boolean(value.scheduleState || value.lockStatus || value.dueBefore || value.dueAfter);
 
   if (isLoadingBoard) {
     return (
@@ -168,6 +174,10 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
                 className="h-10 rounded-full border border-foreground/8 bg-card/70 pl-10 pr-4 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-card focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
               />
             </div>
+            <TaskScheduleFilter
+              filters={taskFilters}
+              onChange={setTaskFilters}
+            />
           </div>
         </motion.div>
 
@@ -201,7 +211,8 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
             <BoardDndProvider
               lists={orderedLists}
               boardId={boardId}
-              isReorderDisabled={isReorderDisabled}
+              isReorderDisabled={isReorderDisabled || hasActiveFilters(taskFilters)}
+              taskFilters={taskFilters}
             />
           )}
         </motion.div>

@@ -2,6 +2,7 @@ import { axiosLocal } from "@/services/axios";
 import type {
   ApiResponse,
   AssignTaskRequest,
+  ClearTaskScheduleRequest,
   CreateTaskCommentRequest,
   CreateTaskRequest,
   DeleteTaskCommentResponse,
@@ -13,7 +14,9 @@ import type {
   TaskApiResponse,
   TaskComment,
   TaskCommentsResponse,
+  TaskListFilters,
   TaskResponse,
+  UnlockTaskRequest,
   UpdateTaskCommentRequest,
 } from "../types";
 
@@ -22,10 +25,24 @@ export type UpdateTaskRequest = {
   description?: string;
 };
 
+function buildListParams(filters?: TaskListFilters): Record<string, string> {
+  if (!filters) return {};
+  const params: Record<string, string> = {};
+  if (filters.scheduleState) params.scheduleState = filters.scheduleState;
+  if (filters.lockStatus) params.lockStatus = filters.lockStatus;
+  if (filters.dueBefore) params.dueBefore = filters.dueBefore;
+  if (filters.dueAfter) params.dueAfter = filters.dueAfter;
+  return params;
+}
+
 export const taskApi = {
-  getAllByListId: async (listId: string): Promise<TaskApiResponse> => {
+  getAllByListId: async (
+    listId: string,
+    filters?: TaskListFilters,
+  ): Promise<TaskApiResponse> => {
     const response = await axiosLocal.get<TaskApiResponse>(
       `/task/${listId}/tasks`,
+      { params: buildListParams(filters) },
     );
     return response.data;
   },
@@ -117,9 +134,22 @@ export const taskApi = {
 
   clearSchedule: async (
     taskId: string,
+    data?: ClearTaskScheduleRequest,
   ): Promise<ApiResponse<TaskResponse>> => {
     const response = await axiosLocal.delete<ApiResponse<TaskResponse>>(
       `/task/${taskId}/schedule`,
+      { data: data ?? {} },
+    );
+    return response.data;
+  },
+
+  unlock: async (
+    taskId: string,
+    data: UnlockTaskRequest,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.patch<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/unlock`,
+      data,
     );
     return response.data;
   },

@@ -15,6 +15,7 @@ import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import type { TaskResponse } from "@/features/tasks/types";
 import { DeleteTaskDialog } from "./delete-task-dialog";
 import { AssigneeAvatarGroup } from "./assignee-avatar-group";
+import { TaskScheduleBadge } from "./schedule/task-schedule-badge";
 
 type TaskCardProps = {
   task: TaskResponse;
@@ -70,9 +71,12 @@ export function TaskCard({
         {...dragHandleAttributes}
         {...dragHandleListeners}
       >
-        <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-snug text-foreground">
-          {task.name}
-        </p>
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="line-clamp-2 min-w-0 text-[13px] leading-snug text-foreground">
+            {task.name}
+          </p>
+          <TaskScheduleBadge task={task} />
+        </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
           {assignCount > 0 ? (

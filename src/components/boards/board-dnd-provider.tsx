@@ -37,6 +37,9 @@ import { TaskCard } from "@/components/tasks/task-card";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
 import { useMoveTask } from "@/features/tasks/hooks/useMoveTask";
 import { useReorderList } from "@/features/lists/hooks/useReorderList";
+import { taskKeys } from "@/features/tasks/utils/task-query-keys";
+import { useAutoJoinVisibleTaskRooms } from "@/features/realtime/hooks/useTaskSocket";
+import type { TaskApiResponse, TaskListFilters } from "@/features/tasks/types";
 
 type ListDragData = { type: "list"; list: ListResponse };
 type TaskDragData = { type: "task"; task: TaskResponse; listId: string };
@@ -122,12 +125,14 @@ interface BoardDndProviderProps {
   lists: ListResponse[];
   boardId: string;
   isReorderDisabled: boolean;
+  taskFilters?: TaskListFilters;
 }
 
 export function BoardDndProvider({
   lists,
   boardId,
   isReorderDisabled,
+  taskFilters,
 }: BoardDndProviderProps) {
   const [orderedLists, setOrderedLists] = useState<ListResponse[]>(lists);
   const [activeTask, setActiveTask] = useState<TaskResponse | null>(null);
@@ -142,6 +147,12 @@ export function BoardDndProvider({
   const queryClient = useQueryClient();
   const { mutate: reorderLists } = useReorderList(boardId);
   const { mutate: moveTask } = useMoveTask();
+
+  // Auto-join task rooms for every task currently rendered on the board.
+  // Combined with `useTaskSocket` inside the dialog this gives every open
+  // browser tab realtime updates for schedule / due_soon / overdue_locked
+  // events without per-task handshakes.
+  useAutoJoinVisibleTaskRooms();
 
   // Sync lists
   useEffect(() => {
@@ -159,10 +170,9 @@ export function BoardDndProvider({
 
   const getTaskQuery = useCallback(
     (listId: string) =>
-      queryClient.getQueryData<{
-        success: boolean;
-        data: TaskResponse[];
-      }>(["tasks", listId]),
+      queryClient.getQueryData<TaskApiResponse>(
+        taskKeys.list(listId),
+      ),
     [queryClient],
   );
 
@@ -179,8 +189,8 @@ export function BoardDndProvider({
       const normalizedTasks = normalizeTasksForList(listId, tasks);
 
       queryClient.setQueryData(
-        ["tasks", listId],
-        (old: { success: boolean; data: TaskResponse[] } | undefined) => {
+        taskKeys.list(listId),
+        (old: TaskApiResponse | undefined) => {
           if (!old) return old;
           if (areTasksEqual(old.data, normalizedTasks)) return old;
           return { ...old, data: normalizedTasks };
@@ -520,6 +530,7 @@ export function BoardDndProvider({
                   boardId={boardId}
                   disabled={isReorderDisabled}
                   isTaskDragOver={activeTaskOverListId === list.id}
+                  taskFilters={taskFilters}
                 />
               </motion.div>
             ))}
@@ -552,6 +563,7 @@ interface TaskListWrapperProps {
   boardId: string;
   disabled?: boolean;
   isTaskDragOver?: boolean;
+  taskFilters?: TaskListFilters;
 }
 
 function TaskListWrapper({
@@ -559,8 +571,11 @@ function TaskListWrapper({
   boardId,
   disabled,
   isTaskDragOver,
+  taskFilters,
 }: TaskListWrapperProps) {
-  const { data: tasksData, isLoading, isError } = useTasks(list.id);
+  const { data: tasksData, isLoading, isError } = useTasks(list.id, {
+    filters: taskFilters,
+  });
   const tasks = tasksData?.data ?? [];
 
   const {

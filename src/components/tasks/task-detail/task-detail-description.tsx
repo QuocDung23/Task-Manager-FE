@@ -3,6 +3,7 @@ import { AlignLeft, Check, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { TaskResponse } from "@/features/tasks/types";
+import { isTaskLocked } from "@/features/tasks/utils/task-schedule";
 
 type TaskDetailDescriptionProps = {
   task: TaskResponse;
@@ -18,9 +19,7 @@ export function TaskDetailDescription({
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(task.description ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const isTaskLocked = Boolean(
-    task.isLocked || (task.lockStatus && task.lockStatus !== "UNLOCKED"),
-  );
+  const isTaskLockedState = isTaskLocked(task);
 
   useEffect(() => {
     setValue(task.description ?? "");
@@ -63,7 +62,7 @@ export function TaskDetailDescription({
           </h2>
         </div>
 
-        {!isEditing && !isTaskLocked ? (
+        {!isEditing && !isTaskLockedState ? (
           <Button
             variant="ghost"
             size="icon-sm"
@@ -117,7 +116,7 @@ export function TaskDetailDescription({
         <button
           type="button"
           onClick={() => setIsEditing(true)}
-          disabled={isTaskLocked}
+          disabled={isTaskLockedState}
           className="group min-h-64 flex-1 rounded-lg bg-muted/35 px-4 py-3 text-left outline-none ring-1 ring-foreground/6 transition-[background-color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-muted/55 hover:ring-foreground/10 focus-visible:ring-3 focus-visible:ring-ring/30 active:scale-[0.995] disabled:cursor-default disabled:hover:bg-muted/35 disabled:hover:ring-foreground/6 disabled:active:scale-100"
         >
           {task.description ? (
@@ -127,7 +126,7 @@ export function TaskDetailDescription({
           ) : (
             <div className="flex min-h-56 items-center justify-center text-center">
               <p className="max-w-[28ch] text-[13px] leading-5 text-muted-foreground">
-                {isTaskLocked
+                {isTaskLockedState
                   ? "Reschedule this task to unlock description editing."
                   : "Add a description to keep scope and decisions in one place."}
               </p>
