@@ -36,7 +36,8 @@ export type ClientToServerTaskEvents = {
 };
 
 function resolveSocketUrl(): string {
-  const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+  const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+  const apiUrl = configuredUrl || "http://localhost:3000";
   return apiUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
 }
 
@@ -90,13 +91,18 @@ export function getSocket(): Socket<ServerToClientTaskEvents, ClientToServerTask
 
 export function ensureSocketConnected(): void {
   const instance = getSocket();
+  // The singleton can be created on the login screen before a token exists.
+  // Refresh the handshake auth immediately before connecting so the first
+  // connection after login does not send an empty token.
+  const token = authStorage.getValidToken();
+  instance.auth = token ? { token } : {};
   if (!instance.connected) {
     instance.connect();
   }
 }
 
 export function disconnectSocket(): void {
-  if (socket && socket.connected) {
+  if (socket) {
     socket.disconnect();
   }
 }

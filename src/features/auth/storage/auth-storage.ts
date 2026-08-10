@@ -1,6 +1,12 @@
 import { AUTH_TOKEN_KEY } from "../../../router/constans";
 import type { TokenPayload } from "../types";
 
+export const AUTH_TOKEN_CHANGED_EVENT = "auth-token-changed";
+
+function notifyTokenChanged(): void {
+  window.dispatchEvent(new Event(AUTH_TOKEN_CHANGED_EVENT));
+}
+
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
@@ -34,6 +40,7 @@ function isExpiredJwtToken(token: string): boolean {
 export const authStorage = {
   setToken(token: string) {
     localStorage.setItem(AUTH_TOKEN_KEY, token);
+    notifyTokenChanged();
   },
   getToken() {
     return localStorage.getItem(AUTH_TOKEN_KEY);
@@ -61,5 +68,6 @@ export const authStorage = {
   },
   clearToken() {
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    notifyTokenChanged();
   },
 };
