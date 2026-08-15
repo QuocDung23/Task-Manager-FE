@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
 import {
   removeTaskAcrossCaches,
-  replaceTaskAcrossCaches,
+  applyCanonicalTaskSnapshot,
 } from "../utils/task-cache";
 import type { ApiError } from "@/lib/api-error";
 import type {
@@ -38,7 +38,7 @@ export function useSetTaskSchedule() {
         ? taskApi.reschedule(taskId, data)
         : taskApi.setSchedule(taskId, data),
     onSuccess: (response, variables) => {
-      replaceTaskAcrossCaches(queryClient, response.data);
+      applyCanonicalTaskSnapshot(queryClient, response.data, { source: "http" });
       toast.success(
         variables.intent === "reschedule"
           ? "Task rescheduled"
@@ -91,7 +91,7 @@ export function useClearTaskSchedule() {
     mutationFn: ({ taskId, data }: ClearScheduleVariables) =>
       taskApi.clearSchedule(taskId, data),
     onSuccess: (response) => {
-      replaceTaskAcrossCaches(queryClient, response.data);
+      applyCanonicalTaskSnapshot(queryClient, response.data, { source: "http" });
       toast.success("Schedule cleared");
     },
     onError: (error: ApiError, variables) => {
@@ -126,7 +126,7 @@ export function useUnlockTask() {
     mutationFn: ({ taskId, data }: UnlockVariables) =>
       taskApi.unlock(taskId, data),
     onSuccess: (response) => {
-      replaceTaskAcrossCaches(queryClient, response.data);
+      applyCanonicalTaskSnapshot(queryClient, response.data, { source: "http" });
       toast.success("Task unlocked");
     },
     onError: (error: ApiError) => {

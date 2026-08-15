@@ -57,6 +57,7 @@ export type TaskResponse = {
   tags: TaskTagSummary[];
   status: TaskStatus;
   statusAction?: TaskStatusAction;
+  tagVersion: number;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;

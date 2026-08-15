@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
 import {
   removeTaskAcrossCaches,
-  replaceTaskAcrossCaches,
+  applyCanonicalTaskSnapshot,
 } from "../utils/task-cache";
 import type { ApiError } from "@/lib/api-error";
 
@@ -30,7 +30,7 @@ export const useUnassignTask = () => {
       taskApi.unassign(taskId, userId),
 
     onSuccess: (res) => {
-      replaceTaskAcrossCaches(queryClient, res.data);
+      applyCanonicalTaskSnapshot(queryClient, res.data, { source: "http" });
       toast.success("Assignee removed");
     },
 

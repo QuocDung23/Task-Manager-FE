@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Loader2, Plus, Search, Tag, X } from "lucide-react";
 import {
   Popover,
@@ -39,6 +39,8 @@ export function TaskTagsPicker({
   const [draftTagIds, setDraftTagIds] = useState<Set<string>>(
     () => new Set(task.tags?.map((t) => t.id) ?? []),
   );
+  const baselineTagIdsRef = useRef<string[]>(task.tags?.map((tag) => tag.id) ?? []);
+  const [hasRemoteConflict, setHasRemoteConflict] = useState(false);
   const [dialogMode, setDialogMode] = useState<Mode>("picker");
   const deferredSearch = useDeferredValue(searchQuery);
 
@@ -47,6 +49,32 @@ export function TaskTagsPicker({
   });
 
   const { mutate: replaceTags, isPending: isReplacing } = useReplaceTaskTags();
+
+  // Keep an unsaved draft intact when a canonical socket snapshot arrives.
+  // A clean picker follows the snapshot immediately; a dirty picker asks the
+  // user to reload before it can send a replace-all command.
+  useEffect(() => {
+    const nextIds = task.tags?.map((tag) => tag.id) ?? [];
+    const baselineIds = baselineTagIdsRef.current;
+    const hasCanonicalChanged =
+      nextIds.length !== baselineIds.length || nextIds.some((id) => !baselineIds.includes(id));
+    const hasDraftChanges =
+      draftTagIds.size !== baselineIds.length ||
+      Array.from(draftTagIds).some((id) => !baselineIds.includes(id));
+
+    if (!open || !hasDraftChanges) {
+      baselineTagIdsRef.current = nextIds;
+      const draftIds = Array.from(draftTagIds);
+      const isDraftEqual =
+        draftIds.length === nextIds.length && draftIds.every((id) => nextIds.includes(id));
+      // The draft is a local mirror of server state only while clean.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (!isDraftEqual) setDraftTagIds(new Set(nextIds));
+      setHasRemoteConflict(false);
+    } else if (hasCanonicalChanged) {
+      setHasRemoteConflict(true);
+    }
+  }, [draftTagIds, open, task.tags]);
 
   const activeTags = useMemo(
     (): TagResponse[] =>
@@ -87,6 +115,7 @@ export function TaskTagsPicker({
   }, []);
 
   const handleApply = useCallback(() => {
+    if (hasRemoteConflict) return;
     const currentIds = new Set(task.tags?.map((t) => t.id) ?? []);
     const draftIds = Array.from(draftTagIds);
 
@@ -110,7 +139,7 @@ export function TaskTagsPicker({
         },
       },
     );
-  }, [task, draftTagIds, replaceTags, onTaskUpdated]);
+  }, [hasRemoteConflict, task, draftTagIds, replaceTags, onTaskUpdated]);
 
   const handleClearAll = useCallback(() => {
     setDraftTagIds(new Set());
@@ -118,6 +147,8 @@ export function TaskTagsPicker({
 
   const handleCancel = useCallback(() => {
     setDraftTagIds(new Set(task.tags?.map((t) => t.id) ?? []));
+    baselineTagIdsRef.current = task.tags?.map((tag) => tag.id) ?? [];
+    setHasRemoteConflict(false);
     setSearchQuery("");
     setOpen(false);
   }, [task.tags]);
@@ -126,6 +157,8 @@ export function TaskTagsPicker({
     (nextOpen: boolean) => {
       if (nextOpen) {
         setDraftTagIds(new Set(task.tags?.map((t) => t.id) ?? []));
+        baselineTagIdsRef.current = task.tags?.map((tag) => tag.id) ?? [];
+        setHasRemoteConflict(false);
         setSearchQuery("");
         setDialogMode("picker");
       }
@@ -150,6 +183,13 @@ export function TaskTagsPicker({
   }, [task.tags, draftTagIds]);
 
   const isTaskLocked = task.lockStatus === "OVERDUE_LOCKED";
+
+  const handleReloadSelection = useCallback(() => {
+    const canonicalIds = task.tags?.map((tag) => tag.id) ?? [];
+    baselineTagIdsRef.current = canonicalIds;
+    setDraftTagIds(new Set(canonicalIds));
+    setHasRemoteConflict(false);
+  }, [task.tags]);
 
   return (
     <>
@@ -295,6 +335,21 @@ export function TaskTagsPicker({
               </div>
             )}
 
+            {hasRemoteConflict && (
+              <div className="flex items-center justify-between gap-3 border-t border-amber-500/25 bg-amber-500/8 px-3 py-2.5">
+                <p className="text-[11.5px] text-amber-800 dark:text-amber-200">
+                  Labels changed elsewhere.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleReloadSelection}
+                  className="shrink-0 rounded-full px-2.5 py-1 text-[11.5px] font-medium text-amber-900 underline decoration-amber-500/60 underline-offset-2 hover:bg-amber-500/10 dark:text-amber-100"
+                >
+                  Reload selection
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between gap-2 border-t border-foreground/7 p-2">
               <Button
                 type="button"
@@ -322,7 +377,7 @@ export function TaskTagsPicker({
                   type="button"
                   size="sm"
                   onClick={handleApply}
-                  disabled={isBusy || (!hasChanges && !isTaskLocked)}
+                  disabled={isBusy || hasRemoteConflict || (!hasChanges && !isTaskLocked)}
                   className="h-9 rounded-full bg-primary px-4 text-[12.5px] font-medium text-primary-foreground shadow-[0_8px_22px_-14px_color-mix(in_oklab,var(--primary)_70%,transparent)] hover:bg-primary/90 focus-visible:ring-4 focus-visible:ring-primary/20"
                 >
                   {isReplacing ? (

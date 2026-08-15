@@ -6,15 +6,16 @@ import {
   ensureSocketConnected,
   getSocket,
   refreshSocketAuth,
+  type TypedSocket,
 } from "../socket";
-import type {
-  ClientToServerTaskEvents,
-  ServerToClientTaskEvents,
-} from "../socket";
-import type { Socket } from "socket.io-client";
+import { registerTagEventHandlers } from "../handlers/tag-event-handlers";
 import {
-  replaceTaskAcrossCaches,
-} from "@/features/tasks/utils/task-cache";
+  clearJoinedBoardRooms,
+  rejoinBoardRooms,
+  resetBoardRooms,
+} from "../rooms/board-room-registry";
+import type { ServerToClientEvents } from "../contracts/realtime-events";
+import { applyCanonicalTaskSnapshot } from "@/features/tasks/utils/task-cache";
 import { taskKeys } from "@/features/tasks/utils/task-query-keys";
 import type { TaskApiResponse, TaskResponse } from "@/features/tasks/types";
 import {
@@ -22,79 +23,15 @@ import {
   authStorage,
 } from "@/features/auth/storage/auth-storage";
 
-type TypedSocket = Socket<ServerToClientTaskEvents, ClientToServerTaskEvents>;
-
-// Module-level refcount for task rooms so multiple consumers (the board
-// auto-join hook + the dialog `useTaskSocket`) can independently request
-// joins without dropping the room on remount or spamming duplicate emits.
-// When a task room's refcount drops to zero the leave event is sent and
-// the room forgotten.
-const roomRefcounts = new Map<string, number>();
+const taskRoomRefcounts = new Map<string, number>();
 
 function emitTaskJoin(socket: TypedSocket, taskId: string): void {
-  if (import.meta.env.DEV) {
-    console.debug("[realtime] task:join →", taskId);
-  }
   socket.emit("task:join", { taskId }, (response) => {
-    if (import.meta.env.DEV) {
-      console.debug("[realtime] task:join ack", taskId, response);
-    }
-    if (response && response.success === false) {
-      roomRefcounts.delete(taskId);
-      toast.error(response.error ?? "Could not subscribe to live updates.");
+    if (import.meta.env.DEV) console.debug("[realtime] task:join ack", taskId, response);
+    if (!response.success && response.code === "FORBIDDEN") {
+      toast.error("You do not have permission to view this task.");
     }
   });
-}
-
-function bump(socket: TypedSocket, taskId: string): void {
-  const next = (roomRefcounts.get(taskId) ?? 0) + 1;
-  roomRefcounts.set(taskId, next);
-  if (next === 1 && socket.connected) {
-    emitTaskJoin(socket, taskId);
-  }
-}
-
-function drop(socket: TypedSocket, taskId: string): void {
-  const current = roomRefcounts.get(taskId);
-  if (!current) return;
-  const next = current - 1;
-  if (next <= 0) {
-    roomRefcounts.delete(taskId);
-    if (import.meta.env.DEV) {
-      console.debug("[realtime] task:leave →", taskId);
-    }
-    if (socket.connected) {
-      socket.emit("task:leave", { taskId }, () => undefined);
-    }
-  } else {
-    roomRefcounts.set(taskId, next);
-  }
-}
-
-export function joinTaskRoom(socket: TypedSocket, taskId: string): void {
-  bump(socket, taskId);
-}
-
-export function leaveTaskRoom(socket: TypedSocket, taskId: string): void {
-  drop(socket, taskId);
-}
-
-/** Rejoin active task rooms after Socket.IO creates a new connection. */
-export function rejoinTaskRooms(socket: TypedSocket): void {
-  for (const [taskId, count] of roomRefcounts) {
-    if (count > 0) emitTaskJoin(socket, taskId);
-  }
-}
-
-function getTaskFromPayload(payload: unknown): TaskResponse | null {
-  if (!payload || typeof payload !== "object") return null;
-  const task = (payload as { task?: unknown }).task;
-  if (!task || typeof task !== "object") return null;
-  const candidate = task as Partial<TaskResponse>;
-  if (typeof candidate.id !== "string" || typeof candidate.listId !== "string") {
-    return null;
-  }
-  return task as TaskResponse;
 }
 
 function updateTaskFieldsAcrossCaches(
@@ -116,63 +53,66 @@ function updateTaskFieldsAcrossCaches(
     },
   );
 
-  const detail = queryClient.getQueryData<TaskResponse>(taskKeys.detail(taskId));
-  if (detail) {
-    queryClient.setQueryData<TaskResponse>(taskKeys.detail(taskId), {
-      ...detail,
-      ...patch,
-    });
+  queryClient.setQueryData<TaskResponse | undefined>(taskKeys.detail(taskId), (old) =>
+    old ? { ...old, ...patch } : old,
+  );
+}
+
+export function joinTaskRoom(socket: TypedSocket, taskId: string): void {
+  const next = (taskRoomRefcounts.get(taskId) ?? 0) + 1;
+  taskRoomRefcounts.set(taskId, next);
+  if (next === 1 && socket.connected) emitTaskJoin(socket, taskId);
+}
+
+export function leaveTaskRoom(socket: TypedSocket, taskId: string): void {
+  const current = taskRoomRefcounts.get(taskId);
+  if (!current) return;
+  if (current > 1) {
+    taskRoomRefcounts.set(taskId, current - 1);
+    return;
+  }
+  taskRoomRefcounts.delete(taskId);
+  if (socket.connected) socket.emit("task:leave", { taskId }, () => undefined);
+}
+
+export function rejoinTaskRooms(socket: TypedSocket): void {
+  for (const [taskId, count] of taskRoomRefcounts) {
+    if (count > 0) emitTaskJoin(socket, taskId);
   }
 }
 
-/**
- * Register the task events once for the app. Joining a room without these
- * listeners means Socket.IO receives the event but React Query never changes,
- * which is why a board-only tab appeared stale after another tab scheduled a
- * task.
- */
+function taskFromPayload(payload: { taskId: string; task: TaskResponse }): TaskResponse {
+  return { ...payload.task, tagVersion: payload.task.tagVersion ?? 0 };
+}
+
 export function registerTaskEventHandlers(
   socket: TypedSocket,
   queryClient: QueryClient,
 ): () => void {
-  const applyTaskPayload = (event: string, payload: unknown) => {
-    const task = getTaskFromPayload(payload);
-    if (!task) {
-      if (import.meta.env.DEV) {
-        console.debug("[realtime] ignored invalid task payload", event, payload);
-      }
-      return;
-    }
-    if (import.meta.env.DEV) {
-      console.debug("[realtime] task payload received", event, task.id);
-    }
-    replaceTaskAcrossCaches(queryClient, task);
+  const applyTaskPayload = (
+    payload: { taskId: string; task: TaskResponse },
+  ): void => {
+    const task = taskFromPayload(payload);
+    if (task.id !== payload.taskId) return;
+    applyCanonicalTaskSnapshot(queryClient, task, { source: "socket" });
   };
 
-  const handleScheduleUpdated: ServerToClientTaskEvents["task:schedule_updated"] =
-    (payload) => applyTaskPayload("task:schedule_updated", payload);
-  const handleRescheduled: ServerToClientTaskEvents["task:rescheduled"] =
-    (payload) => applyTaskPayload("task:rescheduled", payload);
-  const handleUnlocked: ServerToClientTaskEvents["task:unlocked"] = (payload) => {
-    applyTaskPayload("task:unlocked", payload);
+  const handleScheduleUpdated: ServerToClientEvents["task:schedule_updated"] =
+    (payload) => applyTaskPayload(payload);
+  const handleRescheduled: ServerToClientEvents["task:rescheduled"] =
+    (payload) => applyTaskPayload(payload);
+  const handleUnlocked: ServerToClientEvents["task:unlocked"] = (payload) => {
+    applyTaskPayload(payload);
     toast.success("Task unlocked");
   };
-  const handleDueSoon: ServerToClientTaskEvents["task:due_soon"] = (payload) => {
-    if (import.meta.env.DEV) {
-      console.debug("[realtime] task:due_soon", payload.taskId);
-    }
+  const handleDueSoon: ServerToClientEvents["task:due_soon"] = (payload) => {
     updateTaskFieldsAcrossCaches(queryClient, payload.taskId, {
       scheduleState: "due_soon",
       dueDate: payload.dueDate,
-      reminderAt: payload.reminderAt ?? null,
+      reminderAt: payload.reminderAt,
     });
   };
-  const handleOverdueLocked: ServerToClientTaskEvents["task:overdue_locked"] = (
-    payload,
-  ) => {
-    if (import.meta.env.DEV) {
-      console.debug("[realtime] task:overdue_locked", payload.taskId);
-    }
+  const handleOverdueLocked: ServerToClientEvents["task:overdue_locked"] = (payload) => {
     updateTaskFieldsAcrossCaches(queryClient, payload.taskId, {
       scheduleState: "overdue_locked",
       lockStatus: payload.lockStatus,
@@ -182,12 +122,8 @@ export function registerTaskEventHandlers(
       isOverdue: true,
     });
   };
-  const handleNotification: ServerToClientTaskEvents["notification:new"] = (
-    payload,
-  ) => {
-    if (payload.type.startsWith("TASK_")) {
-      toast(payload.title, { description: payload.body });
-    }
+  const handleNotification: ServerToClientEvents["notification:new"] = (payload) => {
+    if (payload.type.startsWith("TASK_")) toast(payload.title, { description: payload.body });
   };
 
   socket.on("task:schedule_updated", handleScheduleUpdated);
@@ -196,7 +132,6 @@ export function registerTaskEventHandlers(
   socket.on("task:due_soon", handleDueSoon);
   socket.on("task:overdue_locked", handleOverdueLocked);
   socket.on("notification:new", handleNotification);
-
   return () => {
     socket.off("task:schedule_updated", handleScheduleUpdated);
     socket.off("task:rescheduled", handleRescheduled);
@@ -207,13 +142,6 @@ export function registerTaskEventHandlers(
   };
 }
 
-/**
- * Joins the realtime room for every task id currently present in the
- * TanStack Query cache (i.e. tasks rendered on the visible board). Use
- * once per board mount so cross-tab realtime works even when no task
- * detail dialog is open. Cleanup is automatic: when the component unmounts
- * the local refcount drops to zero and the rooms are left.
- */
 export function useAutoJoinVisibleTaskRooms(): void {
   const queryClient = useQueryClient();
   const joinedRef = useRef<Set<string>>(new Set());
@@ -221,95 +149,63 @@ export function useAutoJoinVisibleTaskRooms(): void {
   useEffect(() => {
     ensureSocketConnected();
     const socket = getSocket();
-
-    const reconcile = () => {
-      const tasks: TaskResponse[] = [];
-      for (const entry of queryClient.getQueryCache().findAll({
-        queryKey: taskKeys.lists(),
-      })) {
-        const data = entry.state.data as { data?: TaskResponse[] } | undefined;
-        if (data?.data?.length) {
-          tasks.push(...data.data);
-        }
+    const reconcile = (): void => {
+      const visibleTaskIds = new Set<string>();
+      for (const entry of queryClient.getQueryCache().findAll({ queryKey: taskKeys.lists() })) {
+        const data = entry.state.data as TaskApiResponse | undefined;
+        for (const task of data?.data ?? []) visibleTaskIds.add(task.id);
       }
-      const next = new Set(tasks.map((task) => task.id));
-      // Join newly appeared tasks.
-      for (const id of next) {
-        if (!joinedRef.current.has(id)) {
-          joinTaskRoom(socket, id);
-        }
+      for (const taskId of visibleTaskIds) {
+        if (!joinedRef.current.has(taskId)) joinTaskRoom(socket, taskId);
       }
-      // Leave tasks that disappeared from the cache.
-      for (const id of joinedRef.current) {
-        if (!next.has(id)) {
-          leaveTaskRoom(socket, id);
-        }
+      for (const taskId of joinedRef.current) {
+        if (!visibleTaskIds.has(taskId)) leaveTaskRoom(socket, taskId);
       }
-      joinedRef.current = next;
+      joinedRef.current = visibleTaskIds;
     };
 
     reconcile();
-
-    // Re-run on every list-query update so newly arrived tasks (via HTTP or
-    // realtime) automatically join their rooms without explicit consumer code.
     const listsPrefix = taskKeys.lists();
-    const unsubscribeQueryCache = queryClient.getQueryCache().subscribe(
-      (event) => {
-        if (!event?.query) return;
-        const key = event.query.queryKey;
-        // Match queries that start with the lists prefix, e.g.
-        // ["tasks","list",listId,filters].
-        const matches = key.length >= listsPrefix.length &&
-          listsPrefix.every((seg, idx) => key[idx] === seg);
-        if (matches) reconcile();
-      },
-    );
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      const key = event.query?.queryKey;
+      if (!key || key.length < listsPrefix.length) return;
+      if (listsPrefix.every((segment, index) => key[index] === segment)) reconcile();
+    });
 
     return () => {
-      unsubscribeQueryCache();
-      // Release refcounted rooms when the board unmounts. The refcount in
-      // `joinTaskRoom` / `leaveTaskRoom` keeps rooms joined if any other
-      // hook (e.g. `useTaskSocket`) still references them.
-      for (const id of joinedRef.current) {
-        leaveTaskRoom(socket, id);
-      }
+      unsubscribe();
+      for (const taskId of joinedRef.current) leaveTaskRoom(socket, taskId);
       joinedRef.current = new Set();
     };
   }, [queryClient]);
 }
 
-/**
- * Connects the singleton socket as soon as a valid token exists.
- * Mount this once near the application root so realtime is available
- * even when no task detail dialog is open (board view, notifications,
- * due_soon/overdue_locked broadcasts, etc.).
- *
- * The socket lazily rebuilds itself whenever auth is refreshed (see
- * `refreshSocketAuth` in `socket.ts`); this hook is just responsible for
- * the initial `connect()` and a graceful `disconnect()` on logout / token
- * loss.
- */
 export function useGlobalRealtime(): void {
   const queryClient = useQueryClient();
-  const hasTokenRef = useRef<boolean>(false);
+  const hasTokenRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     const socket = getSocket();
     const unregisterTaskHandlers = registerTaskEventHandlers(socket, queryClient);
-    const onConnect = () => rejoinTaskRooms(socket);
+    const unregisterTagHandlers = registerTagEventHandlers(socket, queryClient);
+    const onConnect = (): void => {
+      rejoinTaskRooms(socket);
+      rejoinBoardRooms(socket);
+    };
+    const onDisconnect = (): void => clearJoinedBoardRooms();
     socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
 
-    const tick = () => {
-      const token = authStorage.getValidToken();
-      const hasToken = Boolean(token);
+    const tick = (): void => {
+      const hasToken = Boolean(authStorage.getValidToken());
       if (hasToken && !hasTokenRef.current) {
         refreshSocketAuth();
         ensureSocketConnected();
         hasTokenRef.current = true;
       } else if (!hasToken && hasTokenRef.current) {
         disconnectSocket();
+        resetBoardRooms();
         hasTokenRef.current = false;
       } else if (hasToken && !socket.connected) {
         refreshSocketAuth();
@@ -326,29 +222,24 @@ export function useGlobalRealtime(): void {
       window.removeEventListener("storage", tick);
       window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, tick);
       socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
       unregisterTaskHandlers();
+      unregisterTagHandlers();
     };
   }, [queryClient]);
 }
 
 export function useTaskSocket(taskId: string | null): void {
   const joinedTaskIdRef = useRef<string | null>(null);
-
   useEffect(() => {
     if (!taskId) return;
     ensureSocketConnected();
     const socket = getSocket();
-
-    // Record the subscription before the connection finishes. The global
-    // connect handler will join every task with a positive refcount.
     joinedTaskIdRef.current = taskId;
     joinTaskRoom(socket, taskId);
-
     return () => {
-      if (joinedTaskIdRef.current) {
-        leaveTaskRoom(socket, joinedTaskIdRef.current);
-        joinedTaskIdRef.current = null;
-      }
+      if (joinedTaskIdRef.current) leaveTaskRoom(socket, joinedTaskIdRef.current);
+      joinedTaskIdRef.current = null;
     };
   }, [taskId]);
 }

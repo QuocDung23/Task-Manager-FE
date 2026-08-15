@@ -4,7 +4,7 @@ import { taskApi } from "../api/task-api";
 import type { UpdateTaskRequest } from "../api/task-api";
 import {
   removeTaskAcrossCaches,
-  replaceTaskAcrossCaches,
+  applyCanonicalTaskSnapshot,
 } from "../utils/task-cache";
 
 type ApiError = {
@@ -23,7 +23,7 @@ export const useUpdateTask = () => {
       data: UpdateTaskRequest;
     }) => taskApi.update(taskId, data),
     onSuccess: (response) => {
-      replaceTaskAcrossCaches(queryClient, response.data);
+      applyCanonicalTaskSnapshot(queryClient, response.data, { source: "http" });
       toast.success("Task updated successfully");
     },
     onError: (error: ApiError) => {

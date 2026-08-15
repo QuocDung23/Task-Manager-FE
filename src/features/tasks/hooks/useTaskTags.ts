@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
-import { replaceTaskAcrossCaches } from "../utils/task-cache";
+import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
 
 export const useReplaceTaskTags = () => {
   const queryClient = useQueryClient();
@@ -19,7 +19,7 @@ export const useReplaceTaskTags = () => {
     },
     onSuccess: (response) => {
       const updatedTask = response.data;
-      replaceTaskAcrossCaches(queryClient, updatedTask);
+      applyCanonicalTaskSnapshot(queryClient, updatedTask, { source: "http" });
       toast.success("Tags updated successfully");
       return updatedTask;
     },
@@ -51,7 +51,7 @@ export const useAttachTaskTag = () => {
       taskApi.attachTag(taskId, tagId),
     onSuccess: (response) => {
       const updatedTask = response.data;
-      replaceTaskAcrossCaches(queryClient, updatedTask);
+      applyCanonicalTaskSnapshot(queryClient, updatedTask, { source: "http" });
     },
     onError: (error: unknown) => {
       const err = error as { response?: { data?: { message?: string } } };
@@ -74,7 +74,7 @@ export const useDetachTaskTag = () => {
       taskApi.detachTag(taskId, tagId),
     onSuccess: (response) => {
       const updatedTask = response.data;
-      replaceTaskAcrossCaches(queryClient, updatedTask);
+      applyCanonicalTaskSnapshot(queryClient, updatedTask, { source: "http" });
     },
     onError: (error: unknown) => {
       const err = error as { response?: { data?: { message?: string } } };

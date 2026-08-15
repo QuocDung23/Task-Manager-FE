@@ -16,6 +16,7 @@ import type { TaskListFilters } from "@/features/tasks/types";
 import { BoardDndProvider } from "./board-dnd-provider";
 import { TagFilter } from "../tags/tag-filter";
 import { BoardTagsManagerDialog } from "../tags/board-tags-manager-dialog";
+import { useBoardRoom } from "@/features/realtime/hooks/useBoardRoom";
 
 interface DetailBoardProps {
   boardId: string;
@@ -54,6 +55,10 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
 
   const board = boardData?.data;
   const pagination = listsData?.pagination;
+  useBoardRoom(
+    boardId,
+    listsData?.data.map((list) => list.id) ?? [],
+  );
 
   // Pure derived state — sort on the fly from server payload. No effect,
   // no `setState` inside an effect; just memoize the sorted view.
