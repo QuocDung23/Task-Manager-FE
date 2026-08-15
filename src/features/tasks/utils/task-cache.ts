@@ -22,6 +22,19 @@ function matchesFilters(filters: TaskListFilters | undefined, task: TaskResponse
   if (filters.dueAfter && (!task.dueDate || task.dueDate < filters.dueAfter)) {
     return false;
   }
+
+  if (filters.tagIds && filters.tagIds.length > 0) {
+    const taskTagIds = new Set(task.tags?.map((t) => t.id) ?? []);
+    const hasAllTags = filters.tagIds.every((id) => taskTagIds.has(id));
+    const hasAnyTag = filters.tagIds.some((id) => taskTagIds.has(id));
+
+    if (filters.tagMode === "ALL") {
+      if (!hasAllTags) return false;
+    } else {
+      if (!hasAnyTag) return false;
+    }
+  }
+
   return true;
 }
 

@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
 import { useBoard } from "@/features/boards/hooks/useBoard";
@@ -13,6 +14,8 @@ import { TaskDetailProvider } from "../tasks/task-detail-provider";
 import { TaskScheduleFilter } from "../tasks/schedule/task-schedule-filter";
 import type { TaskListFilters } from "@/features/tasks/types";
 import { BoardDndProvider } from "./board-dnd-provider";
+import { TagFilter } from "../tags/tag-filter";
+import { BoardTagsManagerDialog } from "../tags/board-tags-manager-dialog";
 
 interface DetailBoardProps {
   boardId: string;
@@ -33,6 +36,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [taskFilters, setTaskFilters] = useState<TaskListFilters>({});
+  const [tagsManagerOpen, setTagsManagerOpen] = useState(false);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -65,7 +69,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
   }, [debouncedSearch, pagination, orderedLists.length]);
 
   const hasActiveFilters = (value: TaskListFilters) =>
-    Boolean(value.scheduleState || value.lockStatus || value.dueBefore || value.dueAfter);
+    Boolean(value.scheduleState || value.lockStatus || value.dueBefore || value.dueAfter || (value.tagIds && value.tagIds.length > 0));
 
   if (isLoadingBoard) {
     return (
@@ -155,6 +159,23 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
 
             <div className="flex items-center gap-2">
               <CreateListDialog boardId={boardId} />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setTagsManagerOpen(true)}
+                aria-label="Manage labels"
+                className="group h-9 gap-2 rounded-full border border-foreground/8 bg-card/70 px-3 text-[12.5px] font-medium text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,background-color,color,box-shadow] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/20 hover:bg-card hover:text-foreground focus-visible:border-accent/40 focus-visible:ring-4 focus-visible:ring-accent/15 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+              >
+                <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-primary transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
+                  <Tag
+                    className="size-3.5"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                </span>
+                Manage labels
+              </Button>
             </div>
           </div>
 
@@ -177,6 +198,11 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
             <TaskScheduleFilter
               filters={taskFilters}
               onChange={setTaskFilters}
+            />
+            <TagFilter
+              filters={taskFilters}
+              onChange={setTaskFilters}
+              boardId={boardId}
             />
           </div>
         </motion.div>
@@ -219,6 +245,11 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
       </div>
 
       <TaskDetail />
+      <BoardTagsManagerDialog
+        boardId={boardId}
+        open={tagsManagerOpen}
+        onOpenChange={setTagsManagerOpen}
+      />
     </TaskDetailProvider>
   );
 }

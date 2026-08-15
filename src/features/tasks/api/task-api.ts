@@ -10,6 +10,7 @@ import type {
   GetTaskCommentsParams,
   MoveTaskRequest,
   MoveTaskResponse,
+  ReplaceTaskTagsRequest,
   SetTaskScheduleRequest,
   TaskApiResponse,
   TaskComment,
@@ -32,6 +33,10 @@ function buildListParams(filters?: TaskListFilters): Record<string, string> {
   if (filters.lockStatus) params.lockStatus = filters.lockStatus;
   if (filters.dueBefore) params.dueBefore = filters.dueBefore;
   if (filters.dueAfter) params.dueAfter = filters.dueAfter;
+  if (filters.tagIds && filters.tagIds.length > 0) {
+    params.tagIds = [...new Set(filters.tagIds)].join(",");
+    if (filters.tagMode) params.tagMode = filters.tagMode;
+  }
   return params;
 }
 
@@ -219,6 +224,37 @@ export const taskApi = {
     const response = await axiosLocal.delete<
       ApiResponse<DeleteTaskCommentResponse>
     >(`/task/${taskId}/comments/${commentId}`);
+    return response.data;
+  },
+
+  replaceTags: async (
+    taskId: string,
+    data: ReplaceTaskTagsRequest,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.patch<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/tags`,
+      data,
+    );
+    return response.data;
+  },
+
+  attachTag: async (
+    taskId: string,
+    tagId: string,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.post<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/tags/${tagId}`,
+    );
+    return response.data;
+  },
+
+  detachTag: async (
+    taskId: string,
+    tagId: string,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.delete<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/tags/${tagId}`,
+    );
     return response.data;
   },
 };

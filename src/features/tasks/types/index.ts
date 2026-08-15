@@ -19,6 +19,14 @@ export type TaskStatusAction =
   | "CANCELLED"
   | (string & {});
 
+export type TaskTagFilterMode = "ANY" | "ALL";
+
+export type TaskTagSummary = {
+  id: string;
+  name: string;
+  color: string;
+};
+
 export type ReminderPresetId =
   | "AT_TIME"
   | "BEFORE_15"
@@ -46,6 +54,7 @@ export type TaskResponse = {
   scheduleState: TaskScheduleState;
   listId: string;
   assign: string[];
+  tags: TaskTagSummary[];
   status: TaskStatus;
   statusAction?: TaskStatusAction;
   createdAt: string;
@@ -77,6 +86,8 @@ export type ApiResponse<T> = {
 };
 
 export type TaskListFilters = {
+  tagIds?: string[];
+  tagMode?: TaskTagFilterMode;
   scheduleState?: TaskScheduleState;
   lockStatus?: TaskLockStatus;
   dueBefore?: string;
@@ -162,4 +173,8 @@ export type DeleteTaskCommentResponse = {
   isReply: boolean;
   parentCommentId: string | null;
   deletedReplyIds: string[];
+};
+
+export type ReplaceTaskTagsRequest = {
+  tagIds: string[];
 };

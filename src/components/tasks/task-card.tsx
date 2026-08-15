@@ -16,6 +16,7 @@ import type { TaskResponse } from "@/features/tasks/types";
 import { DeleteTaskDialog } from "./delete-task-dialog";
 import { AssigneeAvatarGroup } from "./assignee-avatar-group";
 import { TaskScheduleBadge } from "./schedule/task-schedule-badge";
+import { TaskTagBadge } from "../tags/task-tag-badge";
 
 type TaskCardProps = {
   task: TaskResponse;
@@ -76,6 +77,9 @@ export function TaskCard({
             {task.name}
           </p>
           <TaskScheduleBadge task={task} />
+          {(task.tags && task.tags.length > 0) && (
+            <TaskTagBadge tags={task.tags} />
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">

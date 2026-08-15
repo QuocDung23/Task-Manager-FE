@@ -4,7 +4,6 @@ import {
   ChevronDown,
   Check,
   Loader2,
-  Tag,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,8 @@ import { useBoardMembers } from "@/features/boards/hooks/useBoardMembers";
 import { UserAvatar } from "@/components/users/user-avatar";
 import { useTaskDetail } from "../use-task-detail";
 import { TaskScheduleChip } from "../schedule/task-schedule-chip";
+import { TaskTagsPicker } from "../../tags/task-tags-picker";
+import { TaskTagBadge } from "../../tags/task-tag-badge";
 
 type TaskDetailMetaBarProps = {
   task: TaskResponse;
@@ -46,44 +47,36 @@ export function TaskDetailMetaBar({
   return (
     <div
       aria-label="Task details"
-      className="grid grid-cols-2 gap-2 px-5 pb-4 pt-4 sm:grid-cols-4 sm:px-6"
+      className="px-5 pb-4 pt-4 sm:px-6"
     >
-      <LabelChip />
-      <TaskScheduleChip
-        task={task}
-        isUpdating={isUpdating}
-        onTaskUpdated={onTaskUpdated}
-      />
-      <AssignChip task={task} onTaskUpdated={onTaskUpdated} />
-      <StatusActionChip
-        task={task}
-        isUpdating={isUpdating}
-        onTaskUpdated={onTaskUpdated}
-      />
-    </div>
-  );
-}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <TaskTagsPicker
+          task={task}
+          isUpdating={isUpdating}
+          onTaskUpdated={onTaskUpdated}
+        />
+        <TaskScheduleChip
+          task={task}
+          isUpdating={isUpdating}
+          onTaskUpdated={onTaskUpdated}
+        />
+        <AssignChip task={task} onTaskUpdated={onTaskUpdated} />
+        <StatusActionChip
+          task={task}
+          isUpdating={isUpdating}
+          onTaskUpdated={onTaskUpdated}
+        />
+      </div>
 
-function LabelChip() {
-  return (
-    <button
-      type="button"
-      disabled
-      aria-label="Labels (coming soon)"
-      className="group flex h-15.5 min-w-0 cursor-not-allowed items-center gap-2.5 rounded-lg bg-background/40 px-3 text-left opacity-70 ring-1 ring-foreground/7"
-    >
-      <span className="grid size-8 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
-        <Tag className="size-4" strokeWidth={1.5} aria-hidden="true" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[10.5px] leading-4 text-muted-foreground">
-          Labels
-        </span>
-        <span className="block truncate text-[12.5px] font-medium leading-5 text-muted-foreground">
-          Empty
-        </span>
-      </span>
-    </button>
+      {task.tags?.length ? (
+        <div className="mt-3 flex min-w-0 items-center gap-4">
+          <span className="shrink-0 text-[11.5px] font-medium text-muted-foreground/75">
+            Labels
+          </span>
+          <TaskTagBadge tags={task.tags} maxVisible={4} />
+        </div>
+      ) : null}
+    </div>
   );
 }
 
