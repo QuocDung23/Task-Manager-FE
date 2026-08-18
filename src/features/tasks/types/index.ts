@@ -10,6 +10,7 @@ export type TaskScheduleState =
   | "done";
 
 export type TaskStatusAction =
+  | "BACKLOG"
   | "TODO"
   | "IN_PROGRESS"
   | "IN_REVIEW"

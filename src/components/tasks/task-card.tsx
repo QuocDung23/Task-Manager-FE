@@ -17,6 +17,7 @@ import { DeleteTaskDialog } from "./delete-task-dialog";
 import { AssigneeAvatarGroup } from "./assignee-avatar-group";
 import { TaskScheduleBadge } from "./schedule/task-schedule-badge";
 import { TaskTagBadge } from "../tags/task-tag-badge";
+import { TaskStatusActionPicker } from "./task-status-action-picker";
 
 type TaskCardProps = {
   task: TaskResponse;
@@ -72,6 +73,13 @@ export function TaskCard({
         {...dragHandleAttributes}
         {...dragHandleListeners}
       >
+        <div
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <TaskStatusActionPicker task={task} compact={true} />
+        </div>
+
         <div className="min-w-0 flex-1 space-y-1">
           <p className="line-clamp-2 min-w-0 text-[13px] leading-snug text-foreground">
             {task.name}

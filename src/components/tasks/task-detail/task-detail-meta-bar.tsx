@@ -32,6 +32,7 @@ import { useTaskDetail } from "../use-task-detail";
 import { TaskScheduleChip } from "../schedule/task-schedule-chip";
 import { TaskTagsPicker } from "../../tags/task-tags-picker";
 import { TaskTagBadge } from "../../tags/task-tag-badge";
+import { TaskStatusActionPicker } from "../task-status-action-picker";
 
 type TaskDetailMetaBarProps = {
   task: TaskResponse;
@@ -61,7 +62,7 @@ export function TaskDetailMetaBar({
           onTaskUpdated={onTaskUpdated}
         />
         <AssignChip task={task} onTaskUpdated={onTaskUpdated} />
-        <StatusActionChip
+        <TaskStatusActionPicker
           task={task}
           isUpdating={isUpdating}
           onTaskUpdated={onTaskUpdated}
@@ -288,7 +289,7 @@ function humanizeAction(value: TaskStatusAction | undefined): string {
   return getStatusActionMeta(value).label;
 }
 
-function StatusActionChip({
+export function StatusActionChip({
   task,
   isUpdating,
   onTaskUpdated,
