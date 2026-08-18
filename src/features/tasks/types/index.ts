@@ -10,15 +10,13 @@ export type TaskScheduleState =
   | "done";
 
 export type TaskStatusAction =
-  | "BACKLOG"
   | "TODO"
   | "IN_PROGRESS"
   | "IN_REVIEW"
   | "DONE"
   | "PAUSED"
   | "FIXED"
-  | "CANCELLED"
-  | (string & {});
+  | "CANCELLED";
 
 export type TaskTagFilterMode = "ANY" | "ALL";
 
@@ -57,7 +55,7 @@ export type TaskResponse = {
   assign: string[];
   tags: TaskTagSummary[];
   status: TaskStatus;
-  statusAction?: TaskStatusAction;
+  statusAction: TaskStatusAction;
   tagVersion: number;
   assignmentVersion: number;
   createdAt: string;
@@ -180,4 +178,8 @@ export type DeleteTaskCommentResponse = {
 
 export type ReplaceTaskTagsRequest = {
   tagIds: string[];
+};
+
+export type UpdateTaskStatusActionRequest = {
+  statusAction: TaskStatusAction;
 };

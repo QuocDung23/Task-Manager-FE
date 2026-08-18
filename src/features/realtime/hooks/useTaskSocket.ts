@@ -11,6 +11,7 @@ import {
 import { registerTagEventHandlers } from "../handlers/tag-event-handlers";
 import { registerAssignmentEventHandlers } from "../handlers/assignment-event-handlers";
 import { registerCreateEventHandlers } from "../handlers/create-event-handlers";
+import { registerStatusActionEventHandlers } from "../handlers/status-action-event-handlers";
 import {
   clearJoinedBoardRooms,
   rejoinBoardRooms,
@@ -29,7 +30,8 @@ const taskRoomRefcounts = new Map<string, number>();
 
 function emitTaskJoin(socket: TypedSocket, taskId: string): void {
   socket.emit("task:join", { taskId }, (response) => {
-    if (import.meta.env.DEV) console.debug("[realtime] task:join ack", taskId, response);
+    if (import.meta.env.DEV)
+      console.debug("[realtime] task:join ack", taskId, response);
     if (!response.success && response.code === "FORBIDDEN") {
       toast.error("You do not have permission to view this task.");
     }
@@ -55,8 +57,9 @@ function updateTaskFieldsAcrossCaches(
     },
   );
 
-  queryClient.setQueryData<TaskResponse | undefined>(taskKeys.detail(taskId), (old) =>
-    old ? { ...old, ...patch } : old,
+  queryClient.setQueryData<TaskResponse | undefined>(
+    taskKeys.detail(taskId),
+    (old) => (old ? { ...old, ...patch } : old),
   );
 }
 
@@ -83,7 +86,10 @@ export function rejoinTaskRooms(socket: TypedSocket): void {
   }
 }
 
-function taskFromPayload(payload: { taskId: string; task: TaskResponse }): TaskResponse {
+function taskFromPayload(payload: {
+  taskId: string;
+  task: TaskResponse;
+}): TaskResponse {
   return { ...payload.task, tagVersion: payload.task.tagVersion ?? 0 };
 }
 
@@ -91,18 +97,21 @@ export function registerTaskEventHandlers(
   socket: TypedSocket,
   queryClient: QueryClient,
 ): () => void {
-  const applyTaskPayload = (
-    payload: { taskId: string; task: TaskResponse },
-  ): void => {
+  const applyTaskPayload = (payload: {
+    taskId: string;
+    task: TaskResponse;
+  }): void => {
     const task = taskFromPayload(payload);
     if (task.id !== payload.taskId) return;
     applyCanonicalTaskSnapshot(queryClient, task, { source: "socket" });
   };
 
-  const handleScheduleUpdated: ServerToClientEvents["task:schedule_updated"] =
-    (payload) => applyTaskPayload(payload);
-  const handleRescheduled: ServerToClientEvents["task:rescheduled"] =
-    (payload) => applyTaskPayload(payload);
+  const handleScheduleUpdated: ServerToClientEvents["task:schedule_updated"] = (
+    payload,
+  ) => applyTaskPayload(payload);
+  const handleRescheduled: ServerToClientEvents["task:rescheduled"] = (
+    payload,
+  ) => applyTaskPayload(payload);
   const handleUnlocked: ServerToClientEvents["task:unlocked"] = (payload) => {
     applyTaskPayload(payload);
     toast.success("Task unlocked");
@@ -114,7 +123,9 @@ export function registerTaskEventHandlers(
       reminderAt: payload.reminderAt,
     });
   };
-  const handleOverdueLocked: ServerToClientEvents["task:overdue_locked"] = (payload) => {
+  const handleOverdueLocked: ServerToClientEvents["task:overdue_locked"] = (
+    payload,
+  ) => {
     updateTaskFieldsAcrossCaches(queryClient, payload.taskId, {
       scheduleState: "overdue_locked",
       lockStatus: payload.lockStatus,
@@ -124,8 +135,11 @@ export function registerTaskEventHandlers(
       isOverdue: true,
     });
   };
-  const handleNotification: ServerToClientEvents["notification:new"] = (payload) => {
-    if (payload.type.startsWith("TASK_")) toast(payload.title, { description: payload.body });
+  const handleNotification: ServerToClientEvents["notification:new"] = (
+    payload,
+  ) => {
+    if (payload.type.startsWith("TASK_"))
+      toast(payload.title, { description: payload.body });
   };
 
   socket.on("task:schedule_updated", handleScheduleUpdated);
@@ -153,7 +167,9 @@ export function useAutoJoinVisibleTaskRooms(): void {
     const socket = getSocket();
     const reconcile = (): void => {
       const visibleTaskIds = new Set<string>();
-      for (const entry of queryClient.getQueryCache().findAll({ queryKey: taskKeys.lists() })) {
+      for (const entry of queryClient
+        .getQueryCache()
+        .findAll({ queryKey: taskKeys.lists() })) {
         const data = entry.state.data as TaskApiResponse | undefined;
         for (const task of data?.data ?? []) visibleTaskIds.add(task.id);
       }
@@ -171,7 +187,8 @@ export function useAutoJoinVisibleTaskRooms(): void {
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       const key = event.query?.queryKey;
       if (!key || key.length < listsPrefix.length) return;
-      if (listsPrefix.every((segment, index) => key[index] === segment)) reconcile();
+      if (listsPrefix.every((segment, index) => key[index] === segment))
+        reconcile();
     });
 
     return () => {
@@ -189,10 +206,23 @@ export function useGlobalRealtime(): void {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const socket = getSocket();
-    const unregisterTaskHandlers = registerTaskEventHandlers(socket, queryClient);
+    const unregisterTaskHandlers = registerTaskEventHandlers(
+      socket,
+      queryClient,
+    );
     const unregisterTagHandlers = registerTagEventHandlers(socket, queryClient);
-    const unregisterAssignmentHandlers = registerAssignmentEventHandlers(socket, queryClient);
-    const unregisterCreateHandlers = registerCreateEventHandlers(socket, queryClient);
+    const unregisterAssignmentHandlers = registerAssignmentEventHandlers(
+      socket,
+      queryClient,
+    );
+    const unregisterCreateHandlers = registerCreateEventHandlers(
+      socket,
+      queryClient,
+    );
+    const unregisterStatusActionHandlers = registerStatusActionEventHandlers(
+      socket,
+      queryClient,
+    );
     const onConnect = (): void => {
       rejoinTaskRooms(socket);
       rejoinBoardRooms(socket);
@@ -231,6 +261,7 @@ export function useGlobalRealtime(): void {
       unregisterTagHandlers();
       unregisterAssignmentHandlers();
       unregisterCreateHandlers();
+      unregisterStatusActionHandlers();
     };
   }, [queryClient]);
 }
@@ -244,7 +275,8 @@ export function useTaskSocket(taskId: string | null): void {
     joinedTaskIdRef.current = taskId;
     joinTaskRoom(socket, taskId);
     return () => {
-      if (joinedTaskIdRef.current) leaveTaskRoom(socket, joinedTaskIdRef.current);
+      if (joinedTaskIdRef.current)
+        leaveTaskRoom(socket, joinedTaskIdRef.current);
       joinedTaskIdRef.current = null;
     };
   }, [taskId]);

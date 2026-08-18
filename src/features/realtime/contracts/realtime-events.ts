@@ -1,4 +1,8 @@
-import type { TaskComment, TaskResponse } from "@/features/tasks/types";
+import type {
+  TaskComment,
+  TaskResponse,
+  TaskStatusAction,
+} from "@/features/tasks/types";
 import type { TagResponse } from "@/features/tags/types";
 import type { ListResponse } from "@/features/lists/types";
 
@@ -33,6 +37,13 @@ export type TaskAssignmentsUpdatedPayload = RealtimeEnvelope<{
   task: TaskResponse;
 }>;
 
+export type TaskStatusActionUpdatedPayload = RealtimeEnvelope<{
+  boardId: string;
+  taskId: string;
+  task: TaskResponse;
+  statusAction: TaskStatusAction;
+}>;
+
 export type BoardTagPayload = RealtimeEnvelope<{
   boardId: string;
   tag: TagResponse;
@@ -49,13 +60,19 @@ export type ListCreatedPayload = RealtimeEnvelope<{
   list: ListResponse;
 }>;
 
-export type TaskCommentCreatedPayload = { taskId: string; comment: TaskComment };
+export type TaskCommentCreatedPayload = {
+  taskId: string;
+  comment: TaskComment;
+};
 export type TaskCommentRepliedPayload = {
   taskId: string;
   parentCommentId: string;
   reply: TaskComment;
 };
-export type TaskCommentUpdatedPayload = { taskId: string; comment: TaskComment };
+export type TaskCommentUpdatedPayload = {
+  taskId: string;
+  comment: TaskComment;
+};
 export type TaskCommentReplyUpdatedPayload = {
   taskId: string;
   parentCommentId: string;
@@ -78,10 +95,17 @@ export type ServerToClientEvents = {
   "task:comment_created": (payload: TaskCommentCreatedPayload) => void;
   "task:comment_replied": (payload: TaskCommentRepliedPayload) => void;
   "task:comment_updated": (payload: TaskCommentUpdatedPayload) => void;
-  "task:comment_reply_updated": (payload: TaskCommentReplyUpdatedPayload) => void;
+  "task:comment_reply_updated": (
+    payload: TaskCommentReplyUpdatedPayload,
+  ) => void;
   "task:comment_deleted": (payload: TaskCommentDeletedPayload) => void;
-  "task:comment_reply_deleted": (payload: TaskCommentReplyDeletedPayload) => void;
-  "task:schedule_updated": (payload: { taskId: string; task: TaskResponse }) => void;
+  "task:comment_reply_deleted": (
+    payload: TaskCommentReplyDeletedPayload,
+  ) => void;
+  "task:schedule_updated": (payload: {
+    taskId: string;
+    task: TaskResponse;
+  }) => void;
   "task:rescheduled": (payload: { taskId: string; task: TaskResponse }) => void;
   "task:unlocked": (payload: { taskId: string; task: TaskResponse }) => void;
   "task:due_soon": (payload: {
@@ -97,6 +121,9 @@ export type ServerToClientEvents = {
   }) => void;
   "task:tags_updated": (payload: TaskTagsUpdatedPayload) => void;
   "task:assignments_updated": (payload: TaskAssignmentsUpdatedPayload) => void;
+  "task:status_action_updated": (
+    payload: TaskStatusActionUpdatedPayload,
+  ) => void;
   "task:created": (payload: TaskCreatedPayload) => void;
   "list:created": (payload: ListCreatedPayload) => void;
   "board:tag_created": (payload: BoardTagPayload) => void;

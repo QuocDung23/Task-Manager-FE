@@ -84,8 +84,10 @@ export function TaskCard({
           <p className="line-clamp-2 min-w-0 text-[13px] leading-snug text-foreground">
             {task.name}
           </p>
-          <TaskScheduleBadge task={task} />
-          {(task.tags && task.tags.length > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <TaskScheduleBadge task={task} />
+          </div>
+          {task.tags && task.tags.length > 0 && (
             <TaskTagBadge tags={task.tags} />
           )}
         </div>

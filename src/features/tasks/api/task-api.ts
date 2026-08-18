@@ -19,6 +19,7 @@ import type {
   TaskResponse,
   UnlockTaskRequest,
   UpdateTaskCommentRequest,
+  UpdateTaskStatusActionRequest,
 } from "../types";
 
 export type UpdateTaskRequest = {
@@ -132,6 +133,17 @@ export const taskApi = {
   ): Promise<ApiResponse<TaskResponse>> => {
     const response = await axiosLocal.patch<ApiResponse<TaskResponse>>(
       `/task/${taskId}/reschedule`,
+      data,
+    );
+    return response.data;
+  },
+
+  updateStatusAction: async (
+    taskId: string,
+    data: UpdateTaskStatusActionRequest,
+  ): Promise<ApiResponse<TaskResponse>> => {
+    const response = await axiosLocal.patch<ApiResponse<TaskResponse>>(
+      `/task/${taskId}/status-action`,
       data,
     );
     return response.data;

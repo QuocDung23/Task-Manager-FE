@@ -19,7 +19,7 @@ export const REMINDER_PRESETS: ReadonlyArray<{
   { id: "CUSTOM", label: "Custom", description: "Pick a custom date and time", minutes: null },
 ];
 
-const TERMINAL_STATUS_ACTIONS = new Set<string>(["DONE", "CANCELLED", "COMPLETED", "ARCHIVED"]);
+const TERMINAL_STATUS_ACTIONS = new Set<string>(["DONE", "CANCELLED"]);
 
 export function isTerminalTask(task: Pick<TaskResponse, "statusAction" | "scheduleState">): boolean {
   if (task.scheduleState === "done") return true;

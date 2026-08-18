@@ -1,11 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  Activity,
-  ChevronDown,
-  Check,
-  Loader2,
-  Users,
-} from "lucide-react";
+import { Activity, ChevronDown, Check, Loader2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -13,11 +7,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isTaskLocked, isTerminalTask } from "@/features/tasks/utils/task-schedule";
-import type {
-  TaskResponse,
-  TaskStatusAction,
-} from "@/features/tasks/types";
+import {
+  isTaskLocked,
+  isTerminalTask,
+} from "@/features/tasks/utils/task-schedule";
+import {
+  TASK_STATUS_ACTION_VALUES,
+  STATUS_ACTION_META,
+  isOptionDisabled,
+  isKnownTaskStatusAction,
+  getStatusActionMeta as resolveStatusMeta,
+  type StatusActionMeta,
+} from "@/features/tasks/utils/status-action";
+import type { TaskResponse, TaskStatusAction } from "@/features/tasks/types";
 import {
   STATUS_ACTION_LABEL,
   STATUS_ACTION_TONE,
@@ -26,6 +28,7 @@ import {
 } from "./task-detail-status";
 import { useAssignTask } from "@/features/tasks/hooks/useAssignTask";
 import { useUnassignTask } from "@/features/tasks/hooks/useUnassignTask";
+import { useUpdateTaskStatusAction } from "@/features/tasks/hooks/useUpdateTaskStatusAction";
 import { useBoardMembers } from "@/features/boards/hooks/useBoardMembers";
 import { UserAvatar } from "@/components/users/user-avatar";
 import { useTaskDetail } from "../use-task-detail";
@@ -46,10 +49,7 @@ export function TaskDetailMetaBar({
   onTaskUpdated,
 }: TaskDetailMetaBarProps) {
   return (
-    <div
-      aria-label="Task details"
-      className="px-5 pb-4 pt-4 sm:px-6"
-    >
+    <div aria-label="Task details" className="px-5 pb-4 pt-4 sm:px-6">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <TaskTagsPicker
           task={task}
@@ -268,22 +268,18 @@ type StatusActionEntry = {
   label: string;
   description: string;
   tone: StatusActionTone;
+  meta: StatusActionMeta;
 };
 
-const STATUS_ACTIONS: StatusActionEntry[] = [
-  { value: "TODO", label: STATUS_ACTION_LABEL.TODO, description: "Not started yet.", tone: STATUS_ACTION_TONE.TODO },
-  { value: "IN_PROGRESS", label: STATUS_ACTION_LABEL.IN_PROGRESS, description: "Actively being worked on.", tone: STATUS_ACTION_TONE.IN_PROGRESS },
-  { value: "IN_REVIEW", label: STATUS_ACTION_LABEL.IN_REVIEW, description: "Awaiting feedback or approval.", tone: STATUS_ACTION_TONE.IN_REVIEW },
-  { value: "DONE", label: STATUS_ACTION_LABEL.DONE, description: "Work is finished.", tone: STATUS_ACTION_TONE.DONE },
-  { value: "PAUSED", label: STATUS_ACTION_LABEL.PAUSED, description: "Work is temporarily halted.", tone: STATUS_ACTION_TONE.PAUSED },
-  { value: "FIXED", label: STATUS_ACTION_LABEL.FIXED, description: "A reported issue has been resolved.", tone: STATUS_ACTION_TONE.FIXED },
-  { value: "CANCELLED", label: STATUS_ACTION_LABEL.CANCELLED, description: "Work will not continue.", tone: STATUS_ACTION_TONE.CANCELLED },
-  { value: "ARCHIVED", label: STATUS_ACTION_LABEL.ARCHIVED, description: "Hide the task from active work.", tone: STATUS_ACTION_TONE.ARCHIVED },
-  { value: "RESTORED", label: STATUS_ACTION_LABEL.RESTORED, description: "Bring a task back to active state.", tone: STATUS_ACTION_TONE.RESTORED },
-  { value: "CREATED", label: STATUS_ACTION_LABEL.CREATED, description: "Task was just created.", tone: STATUS_ACTION_TONE.CREATED },
-  { value: "UPDATED", label: STATUS_ACTION_LABEL.UPDATED, description: "Mark a recent edit.", tone: STATUS_ACTION_TONE.UPDATED },
-  { value: "DELETED", label: STATUS_ACTION_LABEL.DELETED, description: "Mark the task as removed.", tone: STATUS_ACTION_TONE.DELETED },
-];
+const STATUS_ACTIONS: StatusActionEntry[] = TASK_STATUS_ACTION_VALUES.map(
+  (value) => ({
+    value,
+    label: STATUS_ACTION_LABEL[value],
+    description: STATUS_ACTION_META[value].description,
+    tone: STATUS_ACTION_TONE[value],
+    meta: STATUS_ACTION_META[value],
+  }),
+);
 
 function humanizeAction(value: TaskStatusAction | undefined): string {
   return getStatusActionMeta(value).label;
@@ -304,21 +300,42 @@ export function StatusActionChip({
   const currentEntry = STATUS_ACTIONS.find(
     (option) => option.value === task.statusAction,
   );
-  const isBusy = isUpdating || pendingAction !== null;
+  const overdueLocked = task.lockStatus === "OVERDUE_LOCKED";
+
+  const { mutate: updateStatusAction, isPending } = useUpdateTaskStatusAction();
+  const isMutationPending = isPending;
+  const isBusy = isUpdating || isMutationPending || pendingAction !== null;
 
   const selectAction = (next: TaskStatusAction) => {
-    if (isBusy || next === task.statusAction) {
+    if (!isKnownTaskStatusAction(next)) return;
+    if (isBusy) {
       setOpen(false);
       return;
     }
+    if (next === task.statusAction) {
+      setOpen(false);
+      return;
+    }
+
     setPendingAction(next);
-    // Optimistic local update only — no backend endpoint wired up yet.
-    onTaskUpdated({
-      ...task,
-      statusAction: next,
-    });
-    setPendingAction(null);
-    setOpen(false);
+    updateStatusAction(
+      {
+        taskId: task.id,
+        listId: task.listId,
+        statusAction: next,
+      },
+      {
+        onSuccess: (response) => {
+          onTaskUpdated(response.data);
+          setOpen(false);
+          setPendingAction(null);
+        },
+        onError: () => {
+          setPendingAction(null);
+          // Popover stays open so the user can read the toast and retry.
+        },
+      },
+    );
   };
 
   return (
@@ -327,19 +344,18 @@ export function StatusActionChip({
         <button
           type="button"
           disabled={terminal}
+          aria-busy={isBusy || undefined}
           className="group flex h-15.5 min-w-0 items-center gap-2.5 rounded-lg bg-background/80 px-3 text-left outline-none ring-1 ring-foreground/7 transition-[background-color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-background hover:ring-foreground/12 focus-visible:ring-3 focus-visible:ring-ring/30 active:scale-[0.985] data-[state=open]:bg-background data-[state=open]:ring-foreground/15 disabled:cursor-default disabled:opacity-70"
           aria-label={`Change status action. Currently ${currentLabel}`}
         >
           <span
             className={`grid size-8 shrink-0 place-items-center rounded-md ${
-              currentEntry ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+              currentEntry
+                ? "bg-primary/10 text-primary"
+                : "bg-muted text-muted-foreground"
             }`}
           >
-            <Activity
-              className="size-4"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
+            <Activity className="size-4" strokeWidth={1.5} aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[10.5px] leading-4 text-muted-foreground">
@@ -372,7 +388,9 @@ export function StatusActionChip({
               Status action
             </h3>
             <p className="mt-0.5 text-[11.5px] leading-4 text-muted-foreground">
-              Pick the action that best describes the current state.
+              {overdueLocked
+                ? "Task is overdue. Only marking it done is allowed."
+                : "Pick the action that best describes the current state."}
             </p>
           </div>
           <div className="max-h-72 overflow-y-auto border-t border-foreground/7 p-1.5">
@@ -380,6 +398,8 @@ export function StatusActionChip({
               {STATUS_ACTIONS.map((option) => {
                 const selected = option.value === task.statusAction;
                 const pending = pendingAction === option.value;
+                const disabled = isBusy || isOptionDisabled(task, option.value);
+                const Icon = option.meta.icon;
                 return (
                   <li key={option.value}>
                     <button
@@ -387,11 +407,35 @@ export function StatusActionChip({
                       role="radio"
                       aria-checked={selected}
                       onClick={() => selectAction(option.value)}
-                      disabled={isBusy}
-                      className="flex w-full items-start gap-2.5 rounded-md px-2 py-1.5 text-left outline-none transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 active:scale-[0.99] disabled:cursor-wait disabled:opacity-60"
+                      disabled={disabled}
+                      aria-disabled={disabled || undefined}
+                      title={
+                        overdueLocked && option.value !== "DONE"
+                          ? "Reschedule first or mark done."
+                          : undefined
+                      }
+                      className="flex w-full items-start gap-2.5 rounded-md px-2 py-1.5 text-left outline-none transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <span
-                        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-md ring-1 transition-[background-color,color,box-shadow] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-md ${
+                          selected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                        aria-hidden="true"
+                      >
+                        <Icon className="size-3.5" weight="light" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[12.5px] text-foreground/85">
+                          {option.label}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">
+                          {option.description}
+                        </span>
+                      </span>
+                      <span
+                        className={`grid size-5 shrink-0 place-items-center rounded-md ring-1 transition-[background-color,color,box-shadow] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                           selected
                             ? "bg-primary text-primary-foreground ring-primary"
                             : "bg-background text-transparent ring-foreground/15"
@@ -403,14 +447,6 @@ export function StatusActionChip({
                         ) : (
                           <Check className="size-3" strokeWidth={2} />
                         )}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[12.5px] text-foreground/85">
-                          {option.label}
-                        </span>
-                        <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">
-                          {option.description}
-                        </span>
                       </span>
                     </button>
                   </li>
@@ -433,3 +469,5 @@ export function StatusActionChip({
     </Popover>
   );
 }
+
+void resolveStatusMeta;
