@@ -1,5 +1,6 @@
 import type { TaskComment, TaskResponse } from "@/features/tasks/types";
 import type { TagResponse } from "@/features/tags/types";
+import type { ListResponse } from "@/features/lists/types";
 
 export type RealtimeAckCode =
   | "INVALID_ID"
@@ -35,6 +36,17 @@ export type TaskAssignmentsUpdatedPayload = RealtimeEnvelope<{
 export type BoardTagPayload = RealtimeEnvelope<{
   boardId: string;
   tag: TagResponse;
+}>;
+
+export type TaskCreatedPayload = RealtimeEnvelope<{
+  boardId: string;
+  listId: string;
+  task: TaskResponse;
+}>;
+
+export type ListCreatedPayload = RealtimeEnvelope<{
+  boardId: string;
+  list: ListResponse;
 }>;
 
 export type TaskCommentCreatedPayload = { taskId: string; comment: TaskComment };
@@ -85,6 +97,8 @@ export type ServerToClientEvents = {
   }) => void;
   "task:tags_updated": (payload: TaskTagsUpdatedPayload) => void;
   "task:assignments_updated": (payload: TaskAssignmentsUpdatedPayload) => void;
+  "task:created": (payload: TaskCreatedPayload) => void;
+  "list:created": (payload: ListCreatedPayload) => void;
   "board:tag_created": (payload: BoardTagPayload) => void;
   "board:tag_updated": (payload: BoardTagPayload) => void;
   "board:tag_deleted": (payload: BoardTagPayload) => void;

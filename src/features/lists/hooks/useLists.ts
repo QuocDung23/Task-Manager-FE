@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import type { ListResponse, ListStatus } from "../types";
+import type { ListStatus } from "../types";
 import { listApi } from "../api/list-api";
+import { listKeys } from "../utils/list-query-keys";
 
 export type PaginatedListsResponse = {
   success: boolean;
@@ -21,7 +22,7 @@ export const useLists = (
   status?: ListStatus,
 ) => {
   return useQuery<PaginatedListsResponse>({
-    queryKey: ["lists", boardId, page, limit, name, status],
+    queryKey: listKeys.board(boardId, page, limit, name, status),
     queryFn: () => listApi.getAllByBoardId(boardId, page, limit, name, status),
   });
 };

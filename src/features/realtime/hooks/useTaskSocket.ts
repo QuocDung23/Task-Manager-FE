@@ -10,6 +10,7 @@ import {
 } from "../socket";
 import { registerTagEventHandlers } from "../handlers/tag-event-handlers";
 import { registerAssignmentEventHandlers } from "../handlers/assignment-event-handlers";
+import { registerCreateEventHandlers } from "../handlers/create-event-handlers";
 import {
   clearJoinedBoardRooms,
   rejoinBoardRooms,
@@ -191,6 +192,7 @@ export function useGlobalRealtime(): void {
     const unregisterTaskHandlers = registerTaskEventHandlers(socket, queryClient);
     const unregisterTagHandlers = registerTagEventHandlers(socket, queryClient);
     const unregisterAssignmentHandlers = registerAssignmentEventHandlers(socket, queryClient);
+    const unregisterCreateHandlers = registerCreateEventHandlers(socket, queryClient);
     const onConnect = (): void => {
       rejoinTaskRooms(socket);
       rejoinBoardRooms(socket);
@@ -228,6 +230,7 @@ export function useGlobalRealtime(): void {
       unregisterTaskHandlers();
       unregisterTagHandlers();
       unregisterAssignmentHandlers();
+      unregisterCreateHandlers();
     };
   }, [queryClient]);
 }

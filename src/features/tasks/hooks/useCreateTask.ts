@@ -2,7 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
 import { taskKeys } from "../utils/task-query-keys";
-import type { CreateTaskRequest } from "../types";
+import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
+import type { CreateTaskRequest, TaskResponse } from "../types";
 import type { ApiError } from "@/lib/api-error";
 
 export const useCreateTask = (listId: string) => {
@@ -10,9 +11,10 @@ export const useCreateTask = (listId: string) => {
 
   return useMutation({
     mutationFn: (data: CreateTaskRequest) => taskApi.create(listId, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
       toast.success("Create Task Successfully");
-      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+      const task: TaskResponse = response.data;
+      applyCanonicalTaskSnapshot(queryClient, task, { source: "http" });
     },
     onError: (error: ApiError) => {
       toast.error(error.response?.data?.message || "Create Task Failed");
