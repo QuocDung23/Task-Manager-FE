@@ -26,6 +26,12 @@ export type TaskTagsUpdatedPayload = RealtimeEnvelope<{
   task: TaskResponse;
 }>;
 
+export type TaskAssignmentsUpdatedPayload = RealtimeEnvelope<{
+  boardId: string;
+  taskId: string;
+  task: TaskResponse;
+}>;
+
 export type BoardTagPayload = RealtimeEnvelope<{
   boardId: string;
   tag: TagResponse;
@@ -78,6 +84,7 @@ export type ServerToClientEvents = {
     lockStatus: "OVERDUE_LOCKED" | "MANUAL_LOCKED" | "UNLOCKED";
   }) => void;
   "task:tags_updated": (payload: TaskTagsUpdatedPayload) => void;
+  "task:assignments_updated": (payload: TaskAssignmentsUpdatedPayload) => void;
   "board:tag_created": (payload: BoardTagPayload) => void;
   "board:tag_updated": (payload: BoardTagPayload) => void;
   "board:tag_deleted": (payload: BoardTagPayload) => void;

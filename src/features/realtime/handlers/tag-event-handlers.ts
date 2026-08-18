@@ -4,24 +4,12 @@ import type { TaskApiResponse, TaskResponse, TaskTagSummary } from "@/features/t
 import { applyCanonicalTaskSnapshot } from "@/features/tasks/utils/task-cache";
 import { taskKeys } from "@/features/tasks/utils/task-query-keys";
 import { tagKeys } from "@/features/tags/utils/tag-query-keys";
+import { rememberEvent } from "../utils/event-dedupe";
 import type {
   BoardTagPayload,
   TaskTagsUpdatedPayload,
 } from "../contracts/realtime-events";
 import type { TypedSocket } from "../socket";
-
-const MAX_EVENT_IDS = 512;
-const handledEventIds = new Set<string>();
-
-function rememberEvent(eventId: string): boolean {
-  if (handledEventIds.has(eventId)) return false;
-  handledEventIds.add(eventId);
-  if (handledEventIds.size > MAX_EVENT_IDS) {
-    const oldest = handledEventIds.values().next().value;
-    if (oldest) handledEventIds.delete(oldest);
-  }
-  return true;
-}
 
 function isTag(value: unknown): value is TagResponse {
   if (!value || typeof value !== "object") return false;

@@ -1,19 +1,22 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type {
-  TaskApiResponse,
-  TaskListFilters,
-  TaskResponse,
-} from "../types";
+import type { TaskApiResponse, TaskListFilters, TaskResponse } from "../types";
 import { taskKeys } from "./task-query-keys";
 
 type TaskListCache = TaskApiResponse | undefined;
 
-function matchesFilters(filters: TaskListFilters | undefined, task: TaskResponse): boolean {
+function matchesFilters(
+  filters: TaskListFilters | undefined,
+  task: TaskResponse,
+): boolean {
   if (!filters) return true;
-  if (filters.scheduleState && task.scheduleState !== filters.scheduleState) return false;
-  if (filters.lockStatus && task.lockStatus !== filters.lockStatus) return false;
-  if (filters.dueBefore && (!task.dueDate || task.dueDate > filters.dueBefore)) return false;
-  if (filters.dueAfter && (!task.dueDate || task.dueDate < filters.dueAfter)) return false;
+  if (filters.scheduleState && task.scheduleState !== filters.scheduleState)
+    return false;
+  if (filters.lockStatus && task.lockStatus !== filters.lockStatus)
+    return false;
+  if (filters.dueBefore && (!task.dueDate || task.dueDate > filters.dueBefore))
+    return false;
+  if (filters.dueAfter && (!task.dueDate || task.dueDate < filters.dueAfter))
+    return false;
 
   if (filters.tagIds && filters.tagIds.length > 0) {
     const taskTagIds = new Set(task.tags.map((tag) => tag.id));
@@ -24,14 +27,25 @@ function matchesFilters(filters: TaskListFilters | undefined, task: TaskResponse
   return true;
 }
 
-function mergeTaskSnapshot(current: TaskResponse | undefined, incoming: TaskResponse): TaskResponse {
-  if (!current || incoming.tagVersion >= current.tagVersion) return incoming;
-  return {
-    ...current,
-    ...incoming,
-    tags: current.tags,
-    tagVersion: current.tagVersion,
-  };
+function mergeTaskSnapshot(
+  current: TaskResponse | undefined,
+  incoming: TaskResponse,
+): TaskResponse {
+  const merged = { ...current, ...incoming };
+
+  // Protect tags independently using tagVersion
+  if (current && incoming.tagVersion < current.tagVersion) {
+    merged.tags = current.tags;
+    merged.tagVersion = current.tagVersion;
+  }
+
+  // Protect assignments independently using assignmentVersion
+  if (current && incoming.assignmentVersion < current.assignmentVersion) {
+    merged.assign = current.assign;
+    merged.assignmentVersion = current.assignmentVersion;
+  }
+
+  return merged;
 }
 
 function updatePagination(
@@ -43,7 +57,10 @@ function updatePagination(
   return {
     ...pagination,
     totalItems,
-    totalPages: Math.max(1, Math.ceil(totalItems / Math.max(1, pagination.limit))),
+    totalPages: Math.max(
+      1,
+      Math.ceil(totalItems / Math.max(1, pagination.limit)),
+    ),
   };
 }
 
@@ -60,14 +77,22 @@ function replaceTaskInList(
 
   if (currentIndex < 0) {
     if (!shouldInclude) return old;
-    const data = [...old.data, task].sort((left, right) => left.orderTask - right.orderTask);
+    const data = [...old.data, task].sort(
+      (left, right) => left.orderTask - right.orderTask,
+    );
     return { ...old, data, pagination: updatePagination(old.pagination, 1) };
   }
 
   if (!shouldInclude) {
-    const occurrences = old.data.filter((item) => item.id === incoming.id).length;
+    const occurrences = old.data.filter(
+      (item) => item.id === incoming.id,
+    ).length;
     const data = old.data.filter((item) => item.id !== incoming.id);
-    return { ...old, data, pagination: updatePagination(old.pagination, -occurrences) };
+    return {
+      ...old,
+      data,
+      pagination: updatePagination(old.pagination, -occurrences),
+    };
   }
 
   const occurrences = old.data.filter((item) => item.id === incoming.id).length;
@@ -86,7 +111,8 @@ function isTaskListEntry(key: readonly unknown[]): boolean {
 
 function extractFilters(key: readonly unknown[]): TaskListFilters | undefined {
   const candidate = key[key.length - 1];
-  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return undefined;
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate))
+    return undefined;
   return candidate as TaskListFilters;
 }
 
@@ -99,8 +125,12 @@ export function applyCanonicalTaskSnapshot(
   const canonicalTask: TaskResponse = {
     ...task,
     tagVersion: typeof task.tagVersion === "number" ? task.tagVersion : 0,
+    assignmentVersion:
+      typeof task.assignmentVersion === "number" ? task.assignmentVersion : 0,
   };
-  const queries = queryClient.getQueryCache().findAll({ queryKey: taskKeys.lists() });
+  const queries = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: taskKeys.lists() });
   for (const entry of queries) {
     const key = entry.queryKey;
     if (!isTaskListEntry(key) || key[2] !== canonicalTask.listId) continue;
@@ -109,7 +139,9 @@ export function applyCanonicalTaskSnapshot(
     );
   }
 
-  const currentDetail = queryClient.getQueryData<TaskResponse>(taskKeys.detail(canonicalTask.id));
+  const currentDetail = queryClient.getQueryData<TaskResponse>(
+    taskKeys.detail(canonicalTask.id),
+  );
   queryClient.setQueryData<TaskResponse>(
     taskKeys.detail(canonicalTask.id),
     mergeTaskSnapshot(currentDetail, canonicalTask),
@@ -118,8 +150,13 @@ export function applyCanonicalTaskSnapshot(
 
 export const replaceTaskAcrossCaches = applyCanonicalTaskSnapshot;
 
-export function removeTaskAcrossCaches(queryClient: QueryClient, taskId: string): void {
-  const queries = queryClient.getQueryCache().findAll({ queryKey: taskKeys.lists() });
+export function removeTaskAcrossCaches(
+  queryClient: QueryClient,
+  taskId: string,
+): void {
+  const queries = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: taskKeys.lists() });
   for (const entry of queries) {
     const key = entry.queryKey;
     if (!isTaskListEntry(key)) continue;

@@ -89,6 +89,20 @@ function PickerBody({
     [currentAssignIds],
   );
 
+  useEffect(() => {
+    setPendingIds((current) => {
+      const next = new Set(current);
+      let changed = false;
+      for (const id of next) {
+        if (currentSet.has(id)) {
+          next.delete(id);
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [currentSet]);
+
   const sortedMembers = useMemo(() => {
     return [...members].sort((a, b) => {
       const aAssigned = currentSet.has(a.id);
@@ -135,7 +149,11 @@ function PickerBody({
     <>
       <DialogHeader className="flex-row items-start gap-3 space-y-0 text-left">
         <span className="grid size-9 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
-          <ListChecks className="size-4" strokeWidth={1.75} aria-hidden="true" />
+          <ListChecks
+            className="size-4"
+            strokeWidth={1.75}
+            aria-hidden="true"
+          />
         </span>
         <div className="min-w-0 flex-1 space-y-1">
           <DialogTitle>Add assignees</DialogTitle>

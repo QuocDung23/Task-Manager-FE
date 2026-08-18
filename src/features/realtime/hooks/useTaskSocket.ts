@@ -9,6 +9,7 @@ import {
   type TypedSocket,
 } from "../socket";
 import { registerTagEventHandlers } from "../handlers/tag-event-handlers";
+import { registerAssignmentEventHandlers } from "../handlers/assignment-event-handlers";
 import {
   clearJoinedBoardRooms,
   rejoinBoardRooms,
@@ -189,6 +190,7 @@ export function useGlobalRealtime(): void {
     const socket = getSocket();
     const unregisterTaskHandlers = registerTaskEventHandlers(socket, queryClient);
     const unregisterTagHandlers = registerTagEventHandlers(socket, queryClient);
+    const unregisterAssignmentHandlers = registerAssignmentEventHandlers(socket, queryClient);
     const onConnect = (): void => {
       rejoinTaskRooms(socket);
       rejoinBoardRooms(socket);
@@ -225,6 +227,7 @@ export function useGlobalRealtime(): void {
       socket.off("disconnect", onDisconnect);
       unregisterTaskHandlers();
       unregisterTagHandlers();
+      unregisterAssignmentHandlers();
     };
   }, [queryClient]);
 }

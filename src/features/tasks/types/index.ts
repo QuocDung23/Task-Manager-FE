@@ -58,6 +58,7 @@ export type TaskResponse = {
   status: TaskStatus;
   statusAction?: TaskStatusAction;
   tagVersion: number;
+  assignmentVersion: number;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;

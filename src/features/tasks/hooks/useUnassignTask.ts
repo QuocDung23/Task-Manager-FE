@@ -1,10 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
-import {
-  removeTaskAcrossCaches,
-  applyCanonicalTaskSnapshot,
-} from "../utils/task-cache";
+import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
+import { taskKeys } from "../utils/task-query-keys";
 import type { ApiError } from "@/lib/api-error";
 
 type UnassignTaskVariables = {
@@ -39,7 +37,12 @@ export const useUnassignTask = () => {
 
       if (status === 404) {
         toast.error("Assignee was already removed.");
-        removeTaskAcrossCaches(queryClient, variables.taskId);
+        void queryClient.invalidateQueries({
+          queryKey: taskKeys.detail(variables.taskId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: taskKeys.list(variables.listId),
+        });
         return;
       }
       if (status === 403) {
