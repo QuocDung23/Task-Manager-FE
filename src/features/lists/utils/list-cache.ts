@@ -102,3 +102,64 @@ export function applyCreatedList(
     );
   }
 }
+
+/**
+ * Replace an arbitrary subset of lists (matched by id) inside every cached
+ * list query of the same board. Only the provided ids are touched; lists
+ * missing from the snapshot are dropped. The result is sorted by `order`
+ * so the UI can render straight from the cache.
+ *
+ * If the cache for a given query is too narrow to confidently replace (e.g.
+ * paginated page that does not contain all snapshot ids), the caller can
+ * pass `fallbackToInvalidate: true` to mark those queries as stale instead.
+ */
+export function applyCanonicalListBoardSnapshot(
+  queryClient: QueryClient,
+  boardId: string,
+  snapshot: ListResponse[],
+): "applied" | "invalidated" {
+  const snapshotById = new Map(snapshot.map((list) => [list.id, list]));
+  const snapshotIds = new Set(snapshotById.keys());
+
+  const queries = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: listKeys.boardPrefix(boardId) });
+
+  if (queries.length === 0) return "applied";
+
+  let invalidated = false;
+  for (const entry of queries) {
+    const key = entry.queryKey;
+    queryClient.setQueryData<ListCache>(key, (old) => {
+      if (!old) return old;
+
+      // Pagination: nếu query có totalItems > old.data.length thì đây
+      // là một trang cụ thể và ta không có view đầy đủ => invalidate.
+      if (old.pagination && old.pagination.totalItems > old.data.length) {
+        invalidated = true;
+        return old;
+      }
+
+      const filters = extractFilters(key);
+      const presentIds = new Set(old.data.map((list) => list.id));
+      const locallyCovered = [...snapshotIds].every((id) => presentIds.has(id));
+
+      if (!locallyCovered) {
+        // Cache partial so cannot guarantee canonical replace without
+        // missing entries from other pages; mark invalid.
+        invalidated = true;
+        return old;
+      }
+
+      const next = old.data
+        .map((list) => snapshotById.get(list.id) ?? list)
+        .filter(
+          (list) => snapshotIds.has(list.id) && matchesFilters(filters, list),
+        );
+      next.sort((left, right) => left.order - right.order);
+      return { ...old, data: next };
+    });
+  }
+
+  return invalidated ? "invalidated" : "applied";
+}

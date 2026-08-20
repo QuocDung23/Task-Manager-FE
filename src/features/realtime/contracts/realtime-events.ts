@@ -60,6 +60,23 @@ export type ListCreatedPayload = RealtimeEnvelope<{
   list: ListResponse;
 }>;
 
+export type BoardListsReorderedPayload = RealtimeEnvelope<{
+  boardId: string;
+  orderVersion: number;
+  lists: ListResponse[];
+}>;
+
+export type BoardTasksReorderedPayload = RealtimeEnvelope<{
+  boardId: string;
+  orderVersion: number;
+  taskId: string;
+  sourceListId: string;
+  targetListId: string;
+  movedTask: TaskResponse;
+  sourceTasks: TaskResponse[];
+  targetTasks: TaskResponse[];
+}>;
+
 export type TaskCommentCreatedPayload = {
   taskId: string;
   comment: TaskComment;
@@ -126,6 +143,8 @@ export type ServerToClientEvents = {
   ) => void;
   "task:created": (payload: TaskCreatedPayload) => void;
   "list:created": (payload: ListCreatedPayload) => void;
+  "board:lists_reordered": (payload: BoardListsReorderedPayload) => void;
+  "board:tasks_reordered": (payload: BoardTasksReorderedPayload) => void;
   "board:tag_created": (payload: BoardTagPayload) => void;
   "board:tag_updated": (payload: BoardTagPayload) => void;
   "board:tag_deleted": (payload: BoardTagPayload) => void;

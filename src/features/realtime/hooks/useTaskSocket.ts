@@ -12,6 +12,8 @@ import { registerTagEventHandlers } from "../handlers/tag-event-handlers";
 import { registerAssignmentEventHandlers } from "../handlers/assignment-event-handlers";
 import { registerCreateEventHandlers } from "../handlers/create-event-handlers";
 import { registerStatusActionEventHandlers } from "../handlers/status-action-event-handlers";
+import { registerListOrderEventHandlers } from "../handlers/list-order-event-handlers";
+import { registerTaskOrderEventHandlers } from "../handlers/task-order-event-handlers";
 import {
   clearJoinedBoardRooms,
   rejoinBoardRooms,
@@ -223,6 +225,14 @@ export function useGlobalRealtime(): void {
       socket,
       queryClient,
     );
+    const unregisterListOrderHandlers = registerListOrderEventHandlers(
+      socket,
+      queryClient,
+    );
+    const unregisterTaskOrderHandlers = registerTaskOrderEventHandlers(
+      socket,
+      queryClient,
+    );
     const onConnect = (): void => {
       rejoinTaskRooms(socket);
       rejoinBoardRooms(socket);
@@ -262,6 +272,8 @@ export function useGlobalRealtime(): void {
       unregisterAssignmentHandlers();
       unregisterCreateHandlers();
       unregisterStatusActionHandlers();
+      unregisterListOrderHandlers();
+      unregisterTaskOrderHandlers();
     };
   }, [queryClient]);
 }

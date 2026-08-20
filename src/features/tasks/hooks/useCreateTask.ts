@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
-import { taskKeys } from "../utils/task-query-keys";
 import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
 import type { CreateTaskRequest, TaskResponse } from "../types";
 import type { ApiError } from "@/lib/api-error";

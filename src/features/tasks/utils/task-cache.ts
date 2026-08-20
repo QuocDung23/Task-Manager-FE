@@ -116,6 +116,65 @@ function extractFilters(key: readonly unknown[]): TaskListFilters | undefined {
   return candidate as TaskListFilters;
 }
 
+/**
+ * Replace the tasks of a single list inside every cached task query that
+ * targets `listId`. Tasks are filtered against the query's filter and
+ * re-sorted by `orderTask`. Tasks absent from the snapshot are removed
+ * from that query (server is the canonical source). For paginated or
+ * filtered queries that may not contain every task id, pass
+ * `fallbackToInvalidate: true` to mark them stale instead.
+ */
+export function applyCanonicalListTaskSnapshot(
+  queryClient: QueryClient,
+  listId: string,
+  tasks: TaskResponse[],
+  options: { fallbackInvalidate?: boolean } = {},
+): "applied" | "invalidated" {
+  const taskIds = new Set(tasks.map((task) => task.id));
+  const queries = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: taskKeys.lists() });
+
+  if (queries.length === 0) return "applied";
+
+  let invalidated = false;
+
+  for (const entry of queries) {
+    const key = entry.queryKey;
+    if (!isTaskListEntry(key) || key[2] !== listId) continue;
+
+    queryClient.setQueryData<TaskListCache>(key, (old) => {
+      if (!old) return old;
+
+      const filters = extractFilters(key);
+      const presentIds = new Set(old.data.map((task) => task.id));
+      const locallyCovered = [...taskIds].every((id) => presentIds.has(id));
+
+      if (!locallyCovered) {
+        if (options.fallbackInvalidate !== false) invalidated = true;
+        return old;
+      }
+
+      const filtered = tasks.filter((task) => matchesFilters(filters, task));
+      const sorted = [...filtered].sort(
+        (left, right) => left.orderTask - right.orderTask,
+      );
+
+      const removedCount = old.data.filter(
+        (task) => !taskIds.has(task.id),
+      ).length;
+      const nextPagination = updatePagination(
+        old.pagination,
+        sorted.length - (old.data.length - removedCount),
+      );
+
+      return { ...old, data: sorted, pagination: nextPagination };
+    });
+  }
+
+  return invalidated ? "invalidated" : "applied";
+}
+
 export function applyCanonicalTaskSnapshot(
   queryClient: QueryClient,
   task: TaskResponse,

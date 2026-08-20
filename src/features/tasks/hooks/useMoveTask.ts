@@ -2,7 +2,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
 import { taskKeys } from "../utils/task-query-keys";
-import type { TaskApiResponse } from "../types";
+import type {
+  ApiResponse,
+  MoveTaskResponse,
+  TaskApiResponse,
+  TaskResponse,
+} from "../types";
+import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
 
 export type MoveTaskVariables = {
   taskId: string;
@@ -11,78 +17,87 @@ export type MoveTaskVariables = {
   orderedTaskIds: string[];
 };
 
-function updateListCache(
-  queryClient: ReturnType<typeof useQueryClient>,
-  listId: string,
-  tasks: TaskResponseFromCache[],
-): void {
-  queryClient.setQueryData<TaskApiResponse>(
-    taskKeys.list(listId),
-    (old) => (old ? { ...old, data: tasks } : old),
-  );
-}
-
-type TaskResponseFromCache = TaskApiResponse["data"][number];
-
-function normalizeTasks(listId: string, tasks: TaskResponseFromCache[]) {
-  return tasks.map((task, index) => ({
-    ...task,
-    listId,
-    orderTask: index,
-  }));
-}
+type MoveTaskError = Error & {
+  response?: { status?: number; data?: { message?: string } };
+};
 
 export const useMoveTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    Awaited<ReturnType<typeof taskApi.move>>,
-    Error,
+    ApiResponse<MoveTaskResponse>,
+    MoveTaskError,
     MoveTaskVariables
   >({
-    mutationFn: ({ taskId, ...data }: MoveTaskVariables) =>
-      taskApi.move(taskId, data),
+    mutationFn: ({ taskId, ...data }) => taskApi.move(taskId, data),
     onSuccess: (response, variables) => {
       const { sourceListId, targetListId } = variables;
-      const moved = response.data.movedTask;
-      const normalizedSource = normalizeTasks(
-        sourceListId,
-        response.data.sourceTasks,
-      );
-      const normalizedTarget = normalizeTasks(
-        targetListId,
-        response.data.targetTasks,
-      );
-
-      if (sourceListId === targetListId) {
-        updateListCache(queryClient, sourceListId, normalizedSource);
-        queryClient.invalidateQueries({
-          queryKey: taskKeys.list(sourceListId),
-          refetchType: "none",
-        });
-      } else {
-        updateListCache(queryClient, sourceListId, normalizedSource);
-        updateListCache(queryClient, targetListId, normalizedTarget);
-        queryClient.invalidateQueries({
-          queryKey: taskKeys.list(sourceListId),
-          refetchType: "none",
-        });
-        queryClient.invalidateQueries({
-          queryKey: taskKeys.list(targetListId),
-          refetchType: "none",
-        });
+      const data = response?.data;
+      if (!data) {
+        // Phòng trường hợp response malformed; invalidate để refetch.
+        invalidateBothLists(queryClient, sourceListId, targetListId);
+        return;
       }
 
-      queryClient.setQueriesData<TaskApiResponse | undefined>(
-        { queryKey: taskKeys.detail(moved.id) },
-        () => ({ success: true, data: [moved] }),
-      );
+      const moved = data.movedTask;
+      const isSameList = sourceListId === targetListId;
+
+      if (!isSameList) {
+        replaceListTasks(queryClient, sourceListId, data.sourceTasks);
+      }
+      replaceListTasks(queryClient, targetListId, data.targetTasks);
+
+      // Update task detail snapshot (chứa listId/orderTask canonical mới).
+      applyCanonicalTaskSnapshot(queryClient, moved as TaskResponse, {
+        source: "http",
+      });
     },
-    onError: (error: unknown) => {
-      const err = error as { response?: { data?: { message?: string } } };
+    onError: (error, variables) => {
+      const status = error.response?.status;
+      // 400/403/404: invalidate related list queries để refetch canonical state.
+      if (status === 400 || status === 403 || status === 404) {
+        invalidateBothLists(
+          queryClient,
+          variables.sourceListId,
+          variables.targetListId,
+        );
+      }
       toast.error(
-        err.response?.data?.message || "Failed to move task. Please try again.",
+        error.response?.data?.message ||
+          "Failed to move task. Please try again.",
       );
     },
   });
 };
+
+function replaceListTasks(
+  queryClient: ReturnType<typeof useQueryClient>,
+  listId: string,
+  tasks: TaskResponse[],
+): void {
+  // Lưu canonical vào query key mặc định (no filter) để BoardDndProvider
+  // đọc được ngay. Với các query có filter, để handler realtime hoặc
+  // invalidate tự xử lý để tránh sai lệch filter.
+  queryClient.setQueryData<TaskApiResponse>(taskKeys.list(listId), (old) => {
+    if (!old) return old;
+    const sorted = [...tasks].sort(
+      (left, right) => left.orderTask - right.orderTask,
+    );
+    return { ...old, data: sorted };
+  });
+  void queryClient.invalidateQueries({
+    queryKey: taskKeys.list(listId),
+    refetchType: "none",
+  });
+}
+
+function invalidateBothLists(
+  queryClient: ReturnType<typeof useQueryClient>,
+  sourceListId: string,
+  targetListId: string,
+): void {
+  void queryClient.invalidateQueries({ queryKey: taskKeys.list(sourceListId) });
+  if (sourceListId !== targetListId) {
+    void queryClient.invalidateQueries({ queryKey: taskKeys.list(targetListId) });
+  }
+}

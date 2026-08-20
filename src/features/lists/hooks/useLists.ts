@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { ListStatus } from "../types";
+import type { ListResponse, ListStatus } from "../types";
 import { listApi } from "../api/list-api";
 import { listKeys } from "../utils/list-query-keys";
 
