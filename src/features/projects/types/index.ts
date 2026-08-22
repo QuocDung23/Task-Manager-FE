@@ -8,9 +8,13 @@ export type ProjectResponse = {
   id: string;
   name: string;
   description?: string;
+  userId: string;
+  role?: string;
+  status?: "ACTIVE" | "INACTIVE";
   members?: ProjectMemberUser[];
   boardCount?: number;
   _count?: { boards?: number };
+  totalMembers?: number;
 };
 
 export type ProjectMemberUser = {
@@ -18,6 +22,24 @@ export type ProjectMemberUser = {
   name: string;
   email: string;
   avatar?: string | null;
+};
+
+export type ProjectMemberResponse = {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  avatar?: string | null;
+  projectId: string;
+  roleId: string;
+  role: string;
+  status: "ACTIVE" | "INACTIVE";
+  createdAt: string;
+};
+
+export type ProjectMemberListResponse = {
+  members: ProjectMemberResponse[];
+  totalMembers: number;
 };
 
 export type ProjectRequest = {

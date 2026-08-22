@@ -5,6 +5,10 @@ import type {
 } from "@/features/tasks/types";
 import type { TagResponse } from "@/features/tags/types";
 import type { ListResponse } from "@/features/lists/types";
+import type {
+  ProjectResponse,
+  ProjectMemberResponse,
+} from "@/features/projects/types";
 
 export type RealtimeAckCode =
   | "INVALID_ID"
@@ -47,6 +51,35 @@ export type TaskStatusActionUpdatedPayload = RealtimeEnvelope<{
 export type BoardTagPayload = RealtimeEnvelope<{
   boardId: string;
   tag: TagResponse;
+}>;
+
+export type ProjectCreatedPayload = RealtimeEnvelope<{
+  project: ProjectResponse;
+}>;
+
+export type ProjectUpdatedPayload = RealtimeEnvelope<{
+  project: ProjectResponse;
+}>;
+
+export type ProjectDeletedPayload = RealtimeEnvelope<{
+  projectId: string;
+  project: ProjectResponse;
+}>;
+
+export type ProjectMemberAddedPayload = RealtimeEnvelope<{
+  projectId: string;
+  member: ProjectMemberResponse;
+}>;
+
+export type ProjectMemberRemovedPayload = RealtimeEnvelope<{
+  projectId: string;
+  memberId: string;
+  userId: string;
+}>;
+
+export type ProjectMemberRoleUpdatedPayload = RealtimeEnvelope<{
+  projectId: string;
+  member: ProjectMemberResponse;
 }>;
 
 export type TaskCreatedPayload = RealtimeEnvelope<{
@@ -148,6 +181,14 @@ export type ServerToClientEvents = {
   "board:tag_created": (payload: BoardTagPayload) => void;
   "board:tag_updated": (payload: BoardTagPayload) => void;
   "board:tag_deleted": (payload: BoardTagPayload) => void;
+  "project:created": (payload: ProjectCreatedPayload) => void;
+  "project:updated": (payload: ProjectUpdatedPayload) => void;
+  "project:deleted": (payload: ProjectDeletedPayload) => void;
+  "project:member_added": (payload: ProjectMemberAddedPayload) => void;
+  "project:member_removed": (payload: ProjectMemberRemovedPayload) => void;
+  "project:member_role_updated": (
+    payload: ProjectMemberRoleUpdatedPayload,
+  ) => void;
   "notification:new": (payload: {
     type: string;
     title: string;
@@ -171,6 +212,14 @@ export type ClientToServerEvents = {
   ) => void;
   "board:leave": (
     payload: { boardId: string },
+    ack?: (response: RealtimeAck) => void,
+  ) => void;
+  "project:join": (
+    payload: { projectId: string },
+    ack?: (response: RealtimeAck) => void,
+  ) => void;
+  "project:leave": (
+    payload: { projectId: string },
     ack?: (response: RealtimeAck) => void,
   ) => void;
 };

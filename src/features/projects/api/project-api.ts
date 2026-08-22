@@ -3,6 +3,8 @@ import type {
   AddProjectMemberRequest,
   AddProjectMemberResponse,
   ApiResponse,
+  ProjectMemberListResponse,
+  ProjectMemberResponse,
   ProjectRequest,
   ProjectResponse,
 } from "../types";
@@ -64,6 +66,33 @@ export const projectApi = {
     const response = await axiosLocal.post<
       ApiResponse<AddProjectMemberResponse>
     >(`/project/${projectId}/members`, data);
+    return response.data;
+  },
+  getMembers: async (
+    projectId: string,
+  ): Promise<ApiResponse<ProjectMemberListResponse>> => {
+    const response = await axiosLocal.get<
+      ApiResponse<ProjectMemberListResponse>
+    >(`/project/${projectId}/members`);
+    return response.data;
+  },
+  updateMemberRole: async (
+    projectId: string,
+    memberId: string,
+    data: { roleId: string },
+  ): Promise<ApiResponse<ProjectMemberResponse>> => {
+    const response = await axiosLocal.patch<
+      ApiResponse<ProjectMemberResponse>
+    >(`/project/${projectId}/members/${memberId}`, data);
+    return response.data;
+  },
+  removeMember: async (
+    projectId: string,
+    memberId: string,
+  ): Promise<ApiResponse<ProjectMemberResponse>> => {
+    const response = await axiosLocal.delete<
+      ApiResponse<ProjectMemberResponse>
+    >(`/project/${projectId}/members/${memberId}`);
     return response.data;
   },
 };

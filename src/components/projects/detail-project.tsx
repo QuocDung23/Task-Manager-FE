@@ -7,6 +7,7 @@ import { useBoards } from "@/features/boards/hooks/useBoards";
 import { useBoardListCounts } from "@/features/boards/hooks/useBoardListCounts";
 import { useBoardsMembers } from "@/features/boards/hooks/useBoardsMembers";
 import { useEditTitleProject } from "@/features/projects/hooks/useEditTitleProject";
+import { useProjectRoom } from "@/features/realtime/hooks/useProjectRoom";
 import { HeaderLayout } from "@/layouts/header-layout";
 import { PaginationLayout } from "@/layouts/pagination-layout";
 import { Card } from "../ui/card";
@@ -48,6 +49,11 @@ export function DetailProject() {
 
   const { editing, setEditing, title, setTitle, handleSave, handleKeyBoard } =
     useEditTitleProject(projectId ?? "", initialProjectName || "Project");
+
+  // Refcount join `project:{projectId}` socket room khi mở trang chi tiết.
+  // Khi ack thành công sẽ refetch detail + members + boards list qua
+  // reconcile handler đã đăng ký trong `useProjectRoom`.
+  useProjectRoom(projectId ?? null);
 
   const {
     data: responseData,

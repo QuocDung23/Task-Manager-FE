@@ -14,11 +14,17 @@ import { registerCreateEventHandlers } from "../handlers/create-event-handlers";
 import { registerStatusActionEventHandlers } from "../handlers/status-action-event-handlers";
 import { registerListOrderEventHandlers } from "../handlers/list-order-event-handlers";
 import { registerTaskOrderEventHandlers } from "../handlers/task-order-event-handlers";
+import { registerProjectEventHandlers } from "../handlers/project-event-handlers";
 import {
   clearJoinedBoardRooms,
   rejoinBoardRooms,
   resetBoardRooms,
 } from "../rooms/board-room-registry";
+import {
+  clearJoinedProjectRooms,
+  rejoinProjectRooms,
+  resetProjectRooms,
+} from "../rooms/project-room-registry";
 import type { ServerToClientEvents } from "../contracts/realtime-events";
 import { applyCanonicalTaskSnapshot } from "@/features/tasks/utils/task-cache";
 import { taskKeys } from "@/features/tasks/utils/task-query-keys";
@@ -233,11 +239,19 @@ export function useGlobalRealtime(): void {
       socket,
       queryClient,
     );
+    const unregisterProjectHandlers = registerProjectEventHandlers(
+      socket,
+      queryClient,
+    );
     const onConnect = (): void => {
       rejoinTaskRooms(socket);
       rejoinBoardRooms(socket);
+      rejoinProjectRooms(socket);
     };
-    const onDisconnect = (): void => clearJoinedBoardRooms();
+    const onDisconnect = (): void => {
+      clearJoinedBoardRooms();
+      clearJoinedProjectRooms();
+    };
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
 
@@ -250,6 +264,7 @@ export function useGlobalRealtime(): void {
       } else if (!hasToken && hasTokenRef.current) {
         disconnectSocket();
         resetBoardRooms();
+        resetProjectRooms();
         hasTokenRef.current = false;
       } else if (hasToken && !socket.connected) {
         refreshSocketAuth();
@@ -274,6 +289,7 @@ export function useGlobalRealtime(): void {
       unregisterStatusActionHandlers();
       unregisterListOrderHandlers();
       unregisterTaskOrderHandlers();
+      unregisterProjectHandlers();
     };
   }, [queryClient]);
 }

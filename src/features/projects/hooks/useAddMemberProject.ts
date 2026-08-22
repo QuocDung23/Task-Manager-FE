@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { projectApi } from "../api/project-api";
-import type { AddProjectMemberRequest } from "../types";
+import type { AddProjectMemberRequest, ProjectMemberResponse } from "../types";
 import { toast } from "sonner";
 import type { ApiError } from "@/lib/api-error";
+import { applyProjectMemberAdded } from "../utils/project-cache";
+import { projectKeys } from "../utils/project-query-keys";
 
 export const useAddMemberProject = () => {
   const queryClient = useQueryClient();
@@ -15,11 +17,16 @@ export const useAddMemberProject = () => {
       projectId: string;
       data: AddProjectMemberRequest;
     }) => projectApi.addMember(projectId, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (response, variables) => {
       toast.success("Add Member Successfully");
-      queryClient.invalidateQueries({
-        queryKey: ["project-member", variables.projectId],
-      });
+      const member = response?.data as ProjectMemberResponse | undefined;
+      if (member?.id && member.projectId) {
+        applyProjectMemberAdded(queryClient, member);
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: projectKeys.members(variables.projectId),
+        });
+      }
     },
     onError: (error: ApiError) => {
       const errorMessage = error.response?.data?.message || "Add Member Failed";
