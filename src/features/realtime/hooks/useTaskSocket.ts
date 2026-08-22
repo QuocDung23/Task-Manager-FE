@@ -15,6 +15,7 @@ import { registerStatusActionEventHandlers } from "../handlers/status-action-eve
 import { registerListOrderEventHandlers } from "../handlers/list-order-event-handlers";
 import { registerTaskOrderEventHandlers } from "../handlers/task-order-event-handlers";
 import { registerProjectEventHandlers } from "../handlers/project-event-handlers";
+import { registerBoardEventHandlers } from "../handlers/board-event-handlers";
 import {
   clearJoinedBoardRooms,
   rejoinBoardRooms,
@@ -243,6 +244,10 @@ export function useGlobalRealtime(): void {
       socket,
       queryClient,
     );
+    const unregisterBoardHandlers = registerBoardEventHandlers(
+      socket,
+      queryClient,
+    );
     const onConnect = (): void => {
       rejoinTaskRooms(socket);
       rejoinBoardRooms(socket);
@@ -290,6 +295,7 @@ export function useGlobalRealtime(): void {
       unregisterListOrderHandlers();
       unregisterTaskOrderHandlers();
       unregisterProjectHandlers();
+      unregisterBoardHandlers();
     };
   }, [queryClient]);
 }

@@ -90,4 +90,15 @@ export const boardApi = {
     );
     return response.data;
   },
+  updateMemberRole: async (
+    boardId: string,
+    userId: string,
+    roleId: string,
+  ): Promise<ApiResponse<BoardMemberUser>> => {
+    const response = await axiosLocal.patch<ApiResponse<BoardMemberUser>>(
+      `/board/${boardId}/members/${userId}/role`,
+      { roleId },
+    );
+    return response.data;
+  },
 };

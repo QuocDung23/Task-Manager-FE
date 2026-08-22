@@ -1,6 +1,8 @@
 import { useQueries } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 
 import { boardApi } from "../api/board-api";
+import { boardKeys } from "../utils/board-query-keys";
 import type { BoardMemberUser, BoardResponse } from "../types";
 
 /**
@@ -9,21 +11,28 @@ import type { BoardMemberUser, BoardResponse } from "../types";
  * Pattern giống `useProjectBoardCounts`: chỉ gọi query cho các board
  * trong trang hiện tại, dùng `useQueries` để giữ Rules of Hooks.
  *
- * Stale time dài (60s) vì membership ít khi đổi trong một phiên mở grid.
  */
 export function useBoardsMembers(boards: BoardResponse[]) {
   const queries = useQueries({
     queries: boards.map((board) => ({
-      queryKey: ["board-members", board.id] as const,
-      queryFn: async () => {
+      queryKey: boardKeys.members(board.id),
+      queryFn: async (): Promise<BoardMemberUser[]> => {
         try {
           const res = await boardApi.getMembers(board.id);
           return res.data;
-        } catch {
-          return [] as BoardMemberUser[];
+        } catch (error) {
+          const status = (error as AxiosError)?.response?.status;
+          if (status === 403) {
+            return [];
+          }
+          throw error;
         }
       },
       staleTime: 60_000,
+      retry: (failureCount: number, error: AxiosError): boolean => {
+        if (error.response?.status === 403) return false;
+        return failureCount < 2;
+      },
     })),
   });
 

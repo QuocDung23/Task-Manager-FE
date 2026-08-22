@@ -5,6 +5,7 @@ import type {
 } from "@/features/tasks/types";
 import type { TagResponse } from "@/features/tags/types";
 import type { ListResponse } from "@/features/lists/types";
+import type { BoardMemberUser, BoardResponse } from "@/features/boards/types";
 import type {
   ProjectResponse,
   ProjectMemberResponse,
@@ -51,6 +52,42 @@ export type TaskStatusActionUpdatedPayload = RealtimeEnvelope<{
 export type BoardTagPayload = RealtimeEnvelope<{
   boardId: string;
   tag: TagResponse;
+}>;
+
+export type BoardCreatedPayload = RealtimeEnvelope<{
+  projectId: string;
+  board: BoardResponse;
+}>;
+
+export type BoardUpdatedPayload = RealtimeEnvelope<{
+  projectId: string;
+  boardId: string;
+  board: BoardResponse;
+}>;
+
+export type BoardDeletedPayload = RealtimeEnvelope<{
+  projectId: string;
+  boardId: string;
+  board: BoardResponse;
+}>;
+
+export type BoardMemberAddedPayload = RealtimeEnvelope<{
+  projectId: string;
+  boardId: string;
+  member: BoardMemberUser;
+}>;
+
+export type BoardMemberRemovedPayload = RealtimeEnvelope<{
+  projectId: string;
+  boardId: string;
+  memberId: string;
+  userId: string;
+}>;
+
+export type BoardMemberRoleUpdatedPayload = RealtimeEnvelope<{
+  projectId: string;
+  boardId: string;
+  member: BoardMemberUser;
 }>;
 
 export type ProjectCreatedPayload = RealtimeEnvelope<{
@@ -181,6 +218,12 @@ export type ServerToClientEvents = {
   "board:tag_created": (payload: BoardTagPayload) => void;
   "board:tag_updated": (payload: BoardTagPayload) => void;
   "board:tag_deleted": (payload: BoardTagPayload) => void;
+  "board:created": (payload: BoardCreatedPayload) => void;
+  "board:updated": (payload: BoardUpdatedPayload) => void;
+  "board:deleted": (payload: BoardDeletedPayload) => void;
+  "board:member_added": (payload: BoardMemberAddedPayload) => void;
+  "board:member_removed": (payload: BoardMemberRemovedPayload) => void;
+  "board:member_role_updated": (payload: BoardMemberRoleUpdatedPayload) => void;
   "project:created": (payload: ProjectCreatedPayload) => void;
   "project:updated": (payload: ProjectUpdatedPayload) => void;
   "project:deleted": (payload: ProjectDeletedPayload) => void;

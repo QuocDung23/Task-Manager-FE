@@ -1,19 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { boardApi } from "../api/board-api";
+import { boardKeys } from "../utils/board-query-keys";
 import type { BoardMemberUser } from "../types";
 
 /**
  * Lấy danh sách active members của 1 board.
  *
  * Stale time dài (60s) vì danh sách board member ít khi thay đổi trong 1 phiên
- * mở task detail. Refetch khi user thực hiện add/remove member khỏi board.
+ * mở task detail. Refetch khi user thực hiện add/remove member khỏi board hoặc
+ * khi socket event `board:member_*` mutate cache.
  */
 export const useBoardMembers = (
   boardId: string | null | undefined,
   options?: { enabled?: boolean },
 ) => {
   return useQuery<BoardMemberUser[]>({
-    queryKey: ["board-members", boardId],
+    queryKey: boardKeys.members(boardId ?? ""),
     queryFn: async () => {
       if (!boardId) return [];
       const res = await boardApi.getMembers(boardId);

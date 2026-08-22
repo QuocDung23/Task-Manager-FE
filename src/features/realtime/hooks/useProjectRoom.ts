@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { projectKeys } from "@/features/projects/utils/project-query-keys";
+import { boardKeys } from "@/features/boards/utils/board-query-keys";
 import {
   acquireProjectRoom,
   releaseProjectRoom,
   setProjectRoomReconcileHandler,
 } from "../rooms/project-room-registry";
+import type { BoardResponse } from "@/features/boards/types";
 
 /**
  * Refcount join `project:{projectId}` socket room cho trang chi tiết project.
@@ -13,9 +15,7 @@ import {
  * Khi ack thành công sẽ gọi reconcile handler đã đăng ký để refetch
  * detail + members + boards list (cùng pattern với useBoardRoom).
  */
-export function useProjectRoom(
-  projectId: string | null | undefined,
-): void {
+export function useProjectRoom(projectId: string | null | undefined): void {
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -29,13 +29,27 @@ export function useProjectRoom(
         queryKey: projectKeys.members(projectId),
       });
       void queryClient.invalidateQueries({
-        queryKey: ["boards", projectId],
+        queryKey: boardKeys.lists(),
       });
-      // board-keys có scope project này cũng cần invalidate để board list
-      // và các board members liên quan được làm mới.
-      void queryClient.invalidateQueries({
-        queryKey: ["board-members"],
-      });
+
+      const boardIds = new Set<string>();
+      for (const query of queryClient
+        .getQueryCache()
+        .findAll({ queryKey: boardKeys.lists() })) {
+        const cache = query.state.data as
+          | { data?: BoardResponse[] }
+          | undefined;
+        for (const board of cache?.data ?? []) {
+          if (board?.id && board.projectId === projectId) {
+            boardIds.add(board.id);
+          }
+        }
+      }
+      for (const boardId of boardIds) {
+        void queryClient.invalidateQueries({
+          queryKey: boardKeys.members(boardId),
+        });
+      }
     });
 
     return () => {

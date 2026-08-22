@@ -18,7 +18,9 @@ export interface UseBoardListCountsResult {
  * Boards nào có dữ liệu đếm sẵn ở payload (eg. `board.listCount`) thì hook trả
  * về giá trị đó trước khi gọi API, không query lại.
  */
-export function resolveBoardListCount(board: BoardResponse): number | undefined {
+export function resolveBoardListCount(
+  board: BoardResponse,
+): number | undefined {
   if (typeof board.listCount === "number") return board.listCount;
   if (board._count?.lists !== undefined) return board._count.lists;
   return undefined;
@@ -27,14 +29,12 @@ export function resolveBoardListCount(board: BoardResponse): number | undefined 
 export function useBoardListCounts(
   boards: BoardResponse[],
 ): UseBoardListCountsResult {
-  const misses = boards.filter(
-    (b) => resolveBoardListCount(b) === undefined,
-  );
+  const misses = boards.filter((b) => resolveBoardListCount(b) === undefined);
 
   const queries = useQueries({
     queries: misses.map((board) => ({
       queryKey: ["board-list-count", board.id] as const,
-      queryFn: async () => {
+      queryFn: async (): Promise<number> => {
         try {
           const res = await listApi.getAllByBoardId(board.id, 1, 1);
           return res.pagination?.totalItems ?? 0;
@@ -43,6 +43,12 @@ export function useBoardListCounts(
         }
       },
       staleTime: 60_000,
+      retry: (failureCount: number, error: unknown): boolean => {
+        const status = (error as { response?: { status?: number } })?.response
+          ?.status;
+        if (status === 403) return false;
+        return failureCount < 2;
+      },
     })),
   });
 
@@ -54,8 +60,7 @@ export function useBoardListCounts(
     return queries[idx]?.data;
   };
 
-  const isLoading =
-    misses.length > 0 && queries.some((q) => q.isLoading);
+  const isLoading = misses.length > 0 && queries.some((q) => q.isLoading);
 
   return { getCount, isLoading };
 }

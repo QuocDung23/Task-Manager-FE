@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { boardApi } from "../api/board-api";
+import { boardKeys } from "../utils/board-query-keys";
 
 export const useBoards = (
   projectId: string,
@@ -8,7 +9,7 @@ export const useBoards = (
   name?: string,
 ) => {
   return useQuery({
-    queryKey: ["boards", projectId, page, limit, name],
+    queryKey: boardKeys.list(projectId, page, limit, name),
     queryFn: () => boardApi.getAllByProjectId(projectId, page, limit, name),
     enabled: Boolean(projectId.trim()),
     retry: false,
