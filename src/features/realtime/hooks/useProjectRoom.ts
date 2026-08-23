@@ -28,14 +28,12 @@ export function useProjectRoom(projectId: string | null | undefined): void {
       void queryClient.invalidateQueries({
         queryKey: projectKeys.members(projectId),
       });
-      void queryClient.invalidateQueries({
-        queryKey: boardKeys.lists(),
-      });
 
       const boardIds = new Set<string>();
-      for (const query of queryClient
-        .getQueryCache()
-        .findAll({ queryKey: boardKeys.lists() })) {
+      for (const query of queryClient.getQueryCache().findAll({
+        queryKey: boardKeys.lists(),
+        predicate: (q) => q.queryKey[2] === projectId,
+      })) {
         const cache = query.state.data as
           | { data?: BoardResponse[] }
           | undefined;
@@ -44,6 +42,7 @@ export function useProjectRoom(projectId: string | null | undefined): void {
             boardIds.add(board.id);
           }
         }
+        void queryClient.invalidateQueries({ queryKey: query.queryKey });
       }
       for (const boardId of boardIds) {
         void queryClient.invalidateQueries({

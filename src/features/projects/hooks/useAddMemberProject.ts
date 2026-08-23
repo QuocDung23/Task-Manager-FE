@@ -1,10 +1,27 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { projectApi } from "../api/project-api";
-import type { AddProjectMemberRequest, ProjectMemberResponse } from "../types";
+import type {
+  AddProjectMemberRequest,
+  AddProjectMemberResponse,
+  ProjectMemberResponse,
+} from "../types";
 import { toast } from "sonner";
 import type { ApiError } from "@/lib/api-error";
 import { applyProjectMemberAdded } from "../utils/project-cache";
 import { projectKeys } from "../utils/project-query-keys";
+
+function isFullProjectMember(value: unknown): value is ProjectMemberResponse {
+  if (!value || typeof value !== "object") return false;
+  const member = value as Partial<ProjectMemberResponse>;
+  return (
+    typeof member.id === "string" &&
+    typeof member.userId === "string" &&
+    typeof member.projectId === "string" &&
+    typeof member.roleId === "string" &&
+    typeof member.name === "string" &&
+    typeof member.email === "string"
+  );
+}
 
 export const useAddMemberProject = () => {
   const queryClient = useQueryClient();
@@ -19,11 +36,14 @@ export const useAddMemberProject = () => {
     }) => projectApi.addMember(projectId, data),
     onSuccess: (response, variables) => {
       toast.success("Add Member Successfully");
-      const member = response?.data as ProjectMemberResponse | undefined;
-      if (member?.id && member.projectId) {
-        applyProjectMemberAdded(queryClient, member);
+      const raw = response?.data as
+        | ProjectMemberResponse
+        | AddProjectMemberResponse
+        | undefined;
+      if (raw && isFullProjectMember(raw)) {
+        applyProjectMemberAdded(queryClient, raw);
       } else {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: projectKeys.members(variables.projectId),
         });
       }

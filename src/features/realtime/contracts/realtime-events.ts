@@ -105,6 +105,7 @@ export type ProjectDeletedPayload = RealtimeEnvelope<{
 
 export type ProjectMemberAddedPayload = RealtimeEnvelope<{
   projectId: string;
+  project: ProjectResponse;
   member: ProjectMemberResponse;
 }>;
 

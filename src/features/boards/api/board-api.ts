@@ -12,6 +12,7 @@ export const boardApi = {
     page: number = 1,
     limit: number = 12,
     name?: string,
+    sort?: string,
   ): Promise<ApiResponse<BoardResponse[]>> => {
     const response = await axiosLocal.get<ApiResponse<BoardResponse[]>>(
       "/board",
@@ -21,6 +22,7 @@ export const boardApi = {
           page,
           limit,
           name: name || undefined,
+          sort: sort || undefined,
         },
       },
     );

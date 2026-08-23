@@ -30,6 +30,7 @@ import type { ServerToClientEvents } from "../contracts/realtime-events";
 import { applyCanonicalTaskSnapshot } from "@/features/tasks/utils/task-cache";
 import { taskKeys } from "@/features/tasks/utils/task-query-keys";
 import type { TaskApiResponse, TaskResponse } from "@/features/tasks/types";
+import { projectKeys } from "@/features/projects/utils/project-query-keys";
 import {
   AUTH_TOKEN_CHANGED_EVENT,
   authStorage,
@@ -252,6 +253,7 @@ export function useGlobalRealtime(): void {
       rejoinTaskRooms(socket);
       rejoinBoardRooms(socket);
       rejoinProjectRooms(socket);
+      void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
     };
     const onDisconnect = (): void => {
       clearJoinedBoardRooms();

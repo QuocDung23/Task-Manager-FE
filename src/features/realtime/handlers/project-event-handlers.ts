@@ -9,6 +9,8 @@ import type {
 } from "../contracts/realtime-events";
 import type { TypedSocket } from "../socket";
 import { rememberEvent } from "../utils/event-dedupe";
+import { getCurrentUserId } from "../utils/current-user-id";
+import { notifyProjectDeleted } from "../utils/project-deletion-events";
 import {
   applyProjectCreated,
   applyProjectDeleted,
@@ -60,13 +62,17 @@ function isProjectMemberAddedPayload(
   if (!value || typeof value !== "object") return false;
   const payload = value as Partial<ProjectMemberAddedPayload>;
   const member = payload.data?.member;
+  const project = payload.data?.project;
   return (
     typeof payload.eventId === "string" &&
     typeof payload.data?.projectId === "string" &&
     typeof member?.id === "string" &&
     typeof member?.userId === "string" &&
     typeof member?.projectId === "string" &&
-    member.projectId === payload.data.projectId
+    member.projectId === payload.data.projectId &&
+    typeof project?.id === "string" &&
+    typeof project?.userId === "string" &&
+    project.id === payload.data.projectId
   );
 }
 
@@ -118,12 +124,21 @@ export function registerProjectEventHandlers(
     if (!isProjectDeletedPayload(payload)) return;
     if (!rememberEvent(payload.eventId)) return;
     applyProjectDeleted(queryClient, payload.data.projectId);
+    notifyProjectDeleted(payload.data.projectId);
   };
 
   const handleMemberAdded = (payload: ProjectMemberAddedPayload): void => {
     if (!isProjectMemberAddedPayload(payload)) return;
     if (!rememberEvent(payload.eventId)) return;
     applyProjectMemberAdded(queryClient, payload.data.member);
+    const currentUserId = getCurrentUserId(socket);
+    if (
+      currentUserId &&
+      payload.data.member.userId === currentUserId &&
+      payload.data.project
+    ) {
+      applyProjectCreated(queryClient, payload.data.project);
+    }
   };
 
   const handleMemberRemoved = (payload: ProjectMemberRemovedPayload): void => {

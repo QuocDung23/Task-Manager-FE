@@ -2,12 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, FolderOpen, Loader2, Search } from "lucide-react";
+import { toast } from "sonner";
 
 import { useBoards } from "@/features/boards/hooks/useBoards";
 import { useBoardListCounts } from "@/features/boards/hooks/useBoardListCounts";
 import { useBoardsMembers } from "@/features/boards/hooks/useBoardsMembers";
 import { useEditTitleProject } from "@/features/projects/hooks/useEditTitleProject";
 import { useProjectRoom } from "@/features/realtime/hooks/useProjectRoom";
+import { subscribeToProjectDeleted } from "@/features/realtime/utils/project-deletion-events";
 import { HeaderLayout } from "@/layouts/header-layout";
 import { PaginationLayout } from "@/layouts/pagination-layout";
 import { Card } from "../ui/card";
@@ -54,6 +56,16 @@ export function DetailProject() {
   // Khi ack thành công sẽ refetch detail + members + boards list qua
   // reconcile handler đã đăng ký trong `useProjectRoom`.
   useProjectRoom(projectId ?? null);
+
+  useEffect(() => {
+    if (!projectId) return;
+
+    return subscribeToProjectDeleted((deletedProjectId) => {
+      if (deletedProjectId !== projectId) return;
+      toast.info("Project no longer available");
+      navigate(APP_ROUTES.MAIN, { replace: true });
+    });
+  }, [projectId, navigate]);
 
   const {
     data: responseData,
