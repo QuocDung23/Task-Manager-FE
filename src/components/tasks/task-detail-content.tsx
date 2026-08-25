@@ -7,7 +7,7 @@ import { useUpdateTask } from "@/features/tasks/hooks/useUpdateTask";
 import { useTaskDetail } from "./use-task-detail";
 import { DeleteTaskDialog } from "./delete-task-dialog";
 import { TaskDetailMainPanel } from "./task-detail/task-detail-main-panel";
-import { TaskDetailCommentsPanel } from "./task-detail/task-detail-comments-panel";
+import { TaskDetailSidePanel } from "./task-detail/task-detail-side-panel";
 import { Root as VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { TaskResponse } from "@/features/tasks/types";
 import { TaskDetailHeader } from "./task-detail/task-detail-header";
@@ -36,17 +36,9 @@ export default function TaskDetailContent({
 
   useTaskSocket(isOpen ? task.id : null);
 
-  // Keep the open dialog in sync with the latest task data from the
-  // query cache. Any mutation (schedule, reschedule, clear, unlock, realtime
-  // event) eventually writes through `taskKeys.detail(task.id)`, so this
-  // effect guarantees the dialog re-renders no matter which source
-  // triggered the update.
   useEffect(() => {
     if (!isOpen) return;
 
-    // 1) Initial sync: pull the latest cached task if it differs from the
-    //    currently selected task (handles the case where the dialog was
-    //    opened with a stale task while the cache was updated elsewhere).
     const initial = queryClient.getQueryData<TaskResponse>(
       taskKeys.detail(task.id),
     );
@@ -54,8 +46,6 @@ export default function TaskDetailContent({
       updateSelectedTask(initial);
     }
 
-    // 2) Continuous sync: subscribe to cache mutations so any update to
-    //    this task (mutations + realtime events) propagates into the dialog.
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       if (!event?.query) return;
       const key = event.query.queryKey;
@@ -123,7 +113,7 @@ export default function TaskDetailContent({
               onTaskUpdated={updateSelectedTask}
             />
 
-            <TaskDetailCommentsPanel taskId={task.id} />
+            <TaskDetailSidePanel taskId={task.id} />
           </div>
 
           <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-foreground/8 bg-card/50 px-5 py-3 sm:px-6">

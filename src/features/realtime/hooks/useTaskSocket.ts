@@ -16,6 +16,10 @@ import { registerListOrderEventHandlers } from "../handlers/list-order-event-han
 import { registerTaskOrderEventHandlers } from "../handlers/task-order-event-handlers";
 import { registerProjectEventHandlers } from "../handlers/project-event-handlers";
 import { registerBoardEventHandlers } from "../handlers/board-event-handlers";
+import { registerTaskActivityEventHandlers } from "../handlers/task-activity-event-handlers";
+import { taskActivityKeys } from "@/features/task-activities/utils/task-activity-query-keys";
+import { registerNotificationEventHandlers } from "../handlers/notification-event-handlers";
+import { notificationKeys } from "@/features/notifications/utils/notification-query-keys";
 import {
   clearJoinedBoardRooms,
   rejoinBoardRooms,
@@ -145,11 +149,12 @@ export function registerTaskEventHandlers(
       isOverdue: true,
     });
   };
-  const handleNotification: ServerToClientEvents["notification:new"] = (
+
+  const handleLegacyNotification: ServerToClientEvents["notification:new"] = (
     payload,
   ) => {
-    if (payload.type.startsWith("TASK_"))
-      toast(payload.title, { description: payload.body });
+    if (!payload.type.startsWith("TASK_")) return;
+    toast(payload.title, { description: payload.body });
   };
 
   socket.on("task:schedule_updated", handleScheduleUpdated);
@@ -157,14 +162,14 @@ export function registerTaskEventHandlers(
   socket.on("task:unlocked", handleUnlocked);
   socket.on("task:due_soon", handleDueSoon);
   socket.on("task:overdue_locked", handleOverdueLocked);
-  socket.on("notification:new", handleNotification);
+  socket.on("notification:new", handleLegacyNotification);
   return () => {
     socket.off("task:schedule_updated", handleScheduleUpdated);
     socket.off("task:rescheduled", handleRescheduled);
     socket.off("task:unlocked", handleUnlocked);
     socket.off("task:due_soon", handleDueSoon);
     socket.off("task:overdue_locked", handleOverdueLocked);
-    socket.off("notification:new", handleNotification);
+    socket.off("notification:new", handleLegacyNotification);
   };
 }
 
@@ -249,11 +254,21 @@ export function useGlobalRealtime(): void {
       socket,
       queryClient,
     );
+    const unregisterTaskActivityHandlers = registerTaskActivityEventHandlers(
+      socket,
+      queryClient,
+    );
+    const unregisterNotificationHandlers = registerNotificationEventHandlers(
+      socket,
+      queryClient,
+    );
     const onConnect = (): void => {
       rejoinTaskRooms(socket);
       rejoinBoardRooms(socket);
       rejoinProjectRooms(socket);
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: taskActivityKeys.all });
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     };
     const onDisconnect = (): void => {
       clearJoinedBoardRooms();
@@ -272,6 +287,8 @@ export function useGlobalRealtime(): void {
         disconnectSocket();
         resetBoardRooms();
         resetProjectRooms();
+        queryClient.removeQueries({ queryKey: notificationKeys.all });
+        queryClient.removeQueries({ queryKey: taskActivityKeys.all });
         hasTokenRef.current = false;
       } else if (hasToken && !socket.connected) {
         refreshSocketAuth();
@@ -298,6 +315,8 @@ export function useGlobalRealtime(): void {
       unregisterTaskOrderHandlers();
       unregisterProjectHandlers();
       unregisterBoardHandlers();
+      unregisterTaskActivityHandlers();
+      unregisterNotificationHandlers();
     };
   }, [queryClient]);
 }

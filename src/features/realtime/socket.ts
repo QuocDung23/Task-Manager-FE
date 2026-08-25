@@ -69,4 +69,7 @@ export function refreshSocketAuth(): void {
   if (!socket) return;
   const token = authStorage.getValidToken();
   socket.auth = token ? { token } : {};
+  if (!socket.connected) {
+    socket.connect();
+  }
 }

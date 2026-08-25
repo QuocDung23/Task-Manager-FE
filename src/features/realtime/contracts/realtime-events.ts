@@ -10,6 +10,8 @@ import type {
   ProjectResponse,
   ProjectMemberResponse,
 } from "@/features/projects/types";
+import type { TaskActivity } from "@/features/task-activities/types";
+import type { NotificationResponse } from "@/features/notifications/types";
 
 export type RealtimeAckCode =
   | "INVALID_ID"
@@ -47,6 +49,24 @@ export type TaskStatusActionUpdatedPayload = RealtimeEnvelope<{
   taskId: string;
   task: TaskResponse;
   statusAction: TaskStatusAction;
+}>;
+
+export type TaskActivityCreatedPayload = RealtimeEnvelope<{
+  activity: TaskActivity;
+}>;
+
+export type NotificationCreatedPayload = RealtimeEnvelope<{
+  notification: NotificationResponse;
+}>;
+
+export type NotificationReadStateChangedPayload = RealtimeEnvelope<{
+  notificationId: string;
+  readAt: string | null;
+}>;
+
+export type NotificationReadAllPayload = RealtimeEnvelope<{
+  before: string;
+  readAt: string;
 }>;
 
 export type BoardTagPayload = RealtimeEnvelope<{
@@ -239,6 +259,12 @@ export type ServerToClientEvents = {
     body: string;
     data?: Record<string, unknown>;
   }) => void;
+  "task:activity_created": (payload: TaskActivityCreatedPayload) => void;
+  "notification:created": (payload: NotificationCreatedPayload) => void;
+  "notification:read_state_changed": (
+    payload: NotificationReadStateChangedPayload,
+  ) => void;
+  "notification:read_all": (payload: NotificationReadAllPayload) => void;
 };
 
 export type ClientToServerEvents = {

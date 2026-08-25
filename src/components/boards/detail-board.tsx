@@ -17,6 +17,7 @@ import { BoardDndProvider } from "./board-dnd-provider";
 import { TagFilter } from "../tags/tag-filter";
 import { BoardTagsManagerDialog } from "../tags/board-tags-manager-dialog";
 import { useBoardRoom } from "@/features/realtime/hooks/useBoardRoom";
+import { NotificationBell } from "../notifications/notification-bell";
 
 interface DetailBoardProps {
   boardId: string;
@@ -55,10 +56,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
 
   const board = boardData?.data;
   const pagination = listsData?.pagination;
-  useBoardRoom(
-    boardId,
-    listsData?.data.map((list) => list.id) ?? [],
-  );
+  useBoardRoom(boardId, listsData?.data.map((list) => list.id) ?? []);
 
   // Pure derived state — sort on the fly from server payload. No effect,
   // no `setState` inside an effect; just memoize the sorted view.
@@ -74,7 +72,13 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
   }, [debouncedSearch, pagination, orderedLists.length]);
 
   const hasActiveFilters = (value: TaskListFilters) =>
-    Boolean(value.scheduleState || value.lockStatus || value.dueBefore || value.dueAfter || (value.tagIds && value.tagIds.length > 0));
+    Boolean(
+      value.scheduleState ||
+      value.lockStatus ||
+      value.dueBefore ||
+      value.dueAfter ||
+      (value.tagIds && value.tagIds.length > 0),
+    );
 
   if (isLoadingBoard) {
     return (
@@ -161,7 +165,38 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
                 </span>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <NotificationBell/>
+            </div>
+          </div>
 
+          <div className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <div className="group relative w-full max-w-sm">
+                <span
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/70 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-focus-within:text-foreground"
+                  aria-hidden="true"
+                >
+                  <Search className="size-4" strokeWidth={1.75} />
+                </span>
+                <Input
+                  type="search"
+                  placeholder="Search lists"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="h-10 rounded-full border border-foreground/8 bg-card/70 pl-10 pr-4 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-card focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                />
+              </div>
+              <TaskScheduleFilter
+                filters={taskFilters}
+                onChange={setTaskFilters}
+              />
+              <TagFilter
+                filters={taskFilters}
+                onChange={setTaskFilters}
+                boardId={boardId}
+              />
+            </div>
             <div className="flex items-center gap-2">
               <CreateListDialog boardId={boardId} />
               <Button
@@ -182,33 +217,6 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
                 Manage labels
               </Button>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="group relative w-full max-w-sm">
-              <span
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/70 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-focus-within:text-foreground"
-                aria-hidden="true"
-              >
-                <Search className="size-4" strokeWidth={1.75} />
-              </span>
-              <Input
-                type="search"
-                placeholder="Search lists"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-10 rounded-full border border-foreground/8 bg-card/70 pl-10 pr-4 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-card focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-              />
-            </div>
-            <TaskScheduleFilter
-              filters={taskFilters}
-              onChange={setTaskFilters}
-            />
-            <TagFilter
-              filters={taskFilters}
-              onChange={setTaskFilters}
-              boardId={boardId}
-            />
           </div>
         </motion.div>
 
@@ -242,7 +250,9 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
             <BoardDndProvider
               lists={orderedLists}
               boardId={boardId}
-              isReorderDisabled={isReorderDisabled || hasActiveFilters(taskFilters)}
+              isReorderDisabled={
+                isReorderDisabled || hasActiveFilters(taskFilters)
+              }
               taskFilters={taskFilters}
             />
           )}

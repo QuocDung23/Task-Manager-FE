@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 interface HeaderLayoutProps {
   eyebrow?: string;
@@ -46,20 +47,25 @@ export function HeaderLayout({
             {children}
           </motion.h2>
 
-          {description ? (
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                delay: 0.18,
-                ease: [0.32, 0.72, 0, 1],
-              }}
-              className="hidden max-w-[28ch] text-balance text-[13.5px] leading-relaxed text-muted-foreground md:block"
-            >
-              {description}
-            </motion.p>
-          ) : null}
+          <div className="flex items-end justify-end gap-4">
+            {description ? (
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.18,
+                  ease: [0.32, 0.72, 0, 1],
+                }}
+                className="hidden max-w-[28ch] text-balance text-end text-[13.5px] leading-relaxed text-muted-foreground md:block"
+              >
+                {description}
+              </motion.p>
+            ) : null}
+            <div className="flex items-center">
+              <NotificationBell />
+            </div>
+          </div>
         </div>
 
         <motion.div
