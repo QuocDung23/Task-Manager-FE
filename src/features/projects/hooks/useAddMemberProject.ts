@@ -46,6 +46,9 @@ export const useAddMemberProject = () => {
         void queryClient.invalidateQueries({
           queryKey: projectKeys.members(variables.projectId),
         });
+        void queryClient.invalidateQueries({
+          queryKey: projectKeys.lists(),
+        });
       }
     },
     onError: (error: ApiError) => {

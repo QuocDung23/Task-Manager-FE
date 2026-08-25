@@ -1,6 +1,10 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "../types";
-import type { ProjectMemberResponse, ProjectResponse } from "../types";
+import type {
+  ProjectMemberResponse,
+  ProjectMemberUser,
+  ProjectResponse,
+} from "../types";
 import { projectKeys } from "./project-query-keys";
 
 type ProjectListCache = ApiResponse<ProjectResponse[]> | undefined;
@@ -167,6 +171,80 @@ function applyMemberToMembersCache(
   return delta;
 }
 
+function upsertMemberInProjectLists(
+  queryClient: QueryClient,
+  projectId: string,
+  member: ProjectMemberUser,
+): void {
+  const queries = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: projectKeys.lists() });
+
+  for (const entry of queries) {
+    queryClient.setQueryData<ProjectListCache>(entry.queryKey, (old) => {
+      if (!old) return old;
+      let mutated = false;
+      const next = old.data.map((project) => {
+        if (project.id !== projectId) return project;
+        const currentMembers = project.members ?? [];
+        const existsIndex = currentMembers.findIndex((m) => m.id === member.id);
+        if (existsIndex >= 0) {
+          mutated = true;
+          return {
+            ...project,
+            members: currentMembers.map((m) =>
+              m.id === member.id ? { ...m, ...member } : m,
+            ),
+          };
+        }
+        mutated = true;
+        return {
+          ...project,
+          members: [...currentMembers, member],
+        };
+      });
+      if (!mutated) return old;
+      return { ...old, data: next };
+    });
+  }
+}
+
+function removeMemberFromProjectLists(
+  queryClient: QueryClient,
+  projectId: string,
+  memberId: string,
+): void {
+  const queries = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: projectKeys.lists() });
+
+  for (const entry of queries) {
+    queryClient.setQueryData<ProjectListCache>(entry.queryKey, (old) => {
+      if (!old) return old;
+      let mutated = false;
+      const next = old.data.map((project) => {
+        if (project.id !== projectId) return project;
+        if (!project.members) return project;
+        const filtered = project.members.filter((m) => m.id !== memberId);
+        if (filtered.length === project.members.length) return project;
+        mutated = true;
+        return { ...project, members: filtered };
+      });
+      if (!mutated) return old;
+      return { ...old, data: next };
+    });
+  }
+}
+
+function toMemberUser(member: ProjectMemberResponse): ProjectMemberUser {
+  return {
+    id: member.userId,
+    name: member.name,
+    email: member.email,
+    avatar: member.avatar,
+  };
+}
+
 function removeMemberFromMembersCache(
   queryClient: QueryClient,
   projectId: string,
@@ -254,6 +332,7 @@ export function applyProjectMemberAdded(
   const delta = applyMemberToMembersCache(queryClient, member);
   if (delta === 1) {
     adjustMembersTotal(queryClient, member.projectId, 1);
+    upsertMemberInProjectLists(queryClient, member.projectId, toMemberUser(member));
   }
 }
 
@@ -261,14 +340,16 @@ export function applyProjectMemberRemoved(
   queryClient: QueryClient,
   projectId: string,
   memberId: string,
-  _userId: string,
+  userId: string,
 ): void {
   if (!projectId || !memberId) return;
   const delta = removeMemberFromMembersCache(queryClient, projectId, memberId);
   if (delta === -1) {
     adjustMembersTotal(queryClient, projectId, -1);
+    // ProjectCard lưu ProjectMemberUser (id = userId) trong cache list,
+    // nên phải filter bằng userId, không phải memberId.
+    removeMemberFromProjectLists(queryClient, projectId, userId || memberId);
   }
-  void _userId;
 }
 
 export function applyProjectMemberRoleUpdated(
