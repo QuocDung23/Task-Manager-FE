@@ -49,8 +49,15 @@ export function ViewMainPage() {
   const { getCount: getBoardCount, isLoading: isBoardCountLoading } =
     useProjectBoardCounts(projects);
   const pagination = responeData?.pagination;
-  const totalPage = pagination?.totalPages ?? 1;
+  const totalPage = Math.max(1, pagination?.totalPages ?? 1);
   const totalItems = pagination?.totalItems ?? 0;
+
+  const isPageOutOfRange = Boolean(pagination && page > totalPage);
+
+  useEffect(() => {
+    if (!pagination || page <= totalPage) return;
+    setPage(totalPage);
+  }, [pagination, page, totalPage]);
 
   const handleChangePage = (newPage: number): void => {
     setPage(newPage);
@@ -182,7 +189,7 @@ export function ViewMainPage() {
           ))}
         </AnimatePresence>
 
-        {projects.length === 0 && (
+        {projects.length === 0 && !isPageOutOfRange && (
           <motion.div
             initial={
               reduceMotion ? false : { opacity: 0, y: 16, filter: "blur(8px)" }
