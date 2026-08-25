@@ -146,7 +146,7 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
 
       {isLoadingTimeline ? (
         <CommentListSkeleton />
-      ) : isError && activityQuery.isError ? (
+      ) : (isError || activityQuery.isError) ? (
         <div className="flex flex-col items-center justify-center gap-2 border border-destructive/20 bg-destructive/5 px-3 py-6 text-center">
           <p className="text-[13px] text-destructive">
             Could not load comments and activity.

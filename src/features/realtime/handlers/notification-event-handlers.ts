@@ -157,7 +157,6 @@ export function registerNotificationEventHandlers(
   const handleReadAll: ServerToClientEvents["notification:read_all"] = (payload) => {
     const { before, readAt } = payload.data;
     const beforeTime = new Date(before).getTime();
-    let affectedCount = 0;
 
     const shouldMarkRead = (item: NotificationResponse): boolean =>
       new Date(item.createdAt).getTime() <= beforeTime && !item.readAt;
@@ -165,18 +164,15 @@ export function registerNotificationEventHandlers(
     updateLists(queryClient, (current, filter) => {
       if (filter === "unread") {
         let filteredItems: NotificationResponse[] = [];
-        let removedCount = 0;
         for (const page of current.pages) {
           const remaining = page.data.items.filter((item) => {
             if (shouldMarkRead(item)) {
-              removedCount++;
               return false;
             }
             return true;
           });
           filteredItems = [...filteredItems, ...remaining];
         }
-        affectedCount = removedCount;
         return {
           ...current,
           pages: [{
@@ -198,15 +194,11 @@ export function registerNotificationEventHandlers(
       return { ...current, pages: updatedPages };
     });
 
-    if (affectedCount > 0) {
-      queryClient.setQueryData<UnreadCountResponse>(
-        notificationKeys.unreadCount(),
-        (current) => ({
-          success: true,
-          data: { count: Math.max(0, (current?.data.count ?? 0) - affectedCount) },
-        }),
-      );
-    }
+    // Keep optimistic update for list cache so items disappear immediately.
+    // Always reconcile unread count with server via invalidateQueries.
+    void queryClient.invalidateQueries({
+      queryKey: notificationKeys.unreadCount(),
+    });
   };
 
   socket.on("notification:created", handleCreated);
