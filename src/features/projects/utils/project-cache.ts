@@ -332,8 +332,12 @@ export function applyProjectMemberAdded(
   const delta = applyMemberToMembersCache(queryClient, member);
   if (delta === 1) {
     adjustMembersTotal(queryClient, member.projectId, 1);
-    upsertMemberInProjectLists(queryClient, member.projectId, toMemberUser(member));
   }
+  upsertMemberInProjectLists(
+    queryClient,
+    member.projectId,
+    toMemberUser(member),
+  );
 }
 
 export function applyProjectMemberRemoved(
