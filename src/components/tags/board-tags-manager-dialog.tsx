@@ -50,7 +50,6 @@ type BoardTagsManagerDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-
 export function BoardTagsManagerDialog({
   boardId,
   open,
@@ -96,7 +95,7 @@ export function BoardTagsManagerDialog({
           className="gap-0 rounded-3xl border-0 bg-transparent p-0 ring-0 shadow-none sm:max-w-130"
         >
           <div className="rounded-3xl p-1.5">
-            <div >
+            <div className="overflow-hidden rounded-[calc(1.5rem-0.375rem)] bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
               <motion.div
                 initial={reduceMotion ? false : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -105,7 +104,11 @@ export function BoardTagsManagerDialog({
               >
                 <div className="rounded-2xl bg-primary/10 p-1.5 ring-1 ring-inset ring-primary/15">
                   <div className="grid size-11 place-items-center rounded-[calc(1rem-0.375rem)] bg-card text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_24px_-16px_rgba(15,23,42,0.18)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                    <Tag className="size-5" strokeWidth={1.75} aria-hidden="true" />
+                    <Tag
+                      className="size-5"
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                    />
                   </div>
                 </div>
 
@@ -145,11 +148,10 @@ export function BoardTagsManagerDialog({
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <p className="text-[12.5px] font-medium text-muted-foreground">
-                    {sortedTags.length === 1 ? "1 active label" : `${sortedTags.length} active labels`}
+                    {sortedTags.length === 1
+                      ? "1 active label"
+                      : `${sortedTags.length} active labels`}
                   </p>
-                  <span className="rounded-lg bg-muted/70 px-2.5 py-1.5 tabular-nums text-[11.5px] font-semibold text-foreground">
-                    {sortedTags.length}
-                  </span>
                 </div>
 
                 <div className="max-h-[min(52vh,26rem)] overflow-y-auto pr-1 [scrollbar-gutter:stable]">
@@ -169,7 +171,11 @@ export function BoardTagsManagerDialog({
                   ) : sortedTags.length === 0 ? (
                     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-background/65 px-6 py-12 text-center">
                       <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
-                        <Tag className="size-5" strokeWidth={1.75} aria-hidden="true" />
+                        <Tag
+                          className="size-5"
+                          strokeWidth={1.75}
+                          aria-hidden="true"
+                        />
                       </div>
                       <p className="mt-4 font-heading text-[17px] font-semibold leading-tight text-foreground">
                         No labels yet
@@ -187,7 +193,9 @@ export function BoardTagsManagerDialog({
                         >
                           <span
                             className="size-8 shrink-0 rounded-xl ring-1 ring-inset ring-foreground/10"
-                            style={{ backgroundColor: normalizeColor(tag.color) }}
+                            style={{
+                              backgroundColor: normalizeColor(tag.color),
+                            }}
                             aria-hidden="true"
                           />
                           <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-foreground">
@@ -200,16 +208,28 @@ export function BoardTagsManagerDialog({
                                 aria-label={`Actions for ${tag.name}`}
                                 className="group/action grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/6 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 data-[state=open]:bg-foreground/6 data-[state=open]:text-foreground"
                               >
-                                <MoreHorizontal className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                                <MoreHorizontal
+                                  className="size-4"
+                                  strokeWidth={1.75}
+                                  aria-hidden="true"
+                                />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" sideOffset={8} className="w-44 rounded-2xl p-1.5">
+                            <DropdownMenuContent
+                              align="end"
+                              sideOffset={8}
+                              className="w-44 rounded-2xl p-1.5"
+                            >
                               <DropdownMenuItem
                                 onClick={() => setEditingTag(tag)}
                                 className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-normal"
                               >
                                 <span className="grid size-6 place-items-center rounded-full bg-foreground/4 text-foreground/80">
-                                  <Pencil className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                                  <Pencil
+                                    className="size-3.5"
+                                    strokeWidth={1.75}
+                                    aria-hidden="true"
+                                  />
                                 </span>
                                 Edit label
                               </DropdownMenuItem>
@@ -219,7 +239,11 @@ export function BoardTagsManagerDialog({
                                 className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-normal"
                               >
                                 <span className="grid size-6 place-items-center rounded-full bg-destructive/10 text-destructive">
-                                  <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                                  <Trash2
+                                    className="size-3.5"
+                                    strokeWidth={1.75}
+                                    aria-hidden="true"
+                                  />
                                 </span>
                                 Delete label
                               </DropdownMenuItem>
@@ -245,7 +269,11 @@ export function BoardTagsManagerDialog({
                   >
                     <span>Create label</span>
                     <span className="grid size-8 place-items-center rounded-full bg-primary-foreground/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:scale-105">
-                      <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
+                      <Plus
+                        className="size-4"
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      />
                     </span>
                   </motion.button>
                 </div>
@@ -290,11 +318,15 @@ export function BoardTagsManagerDialog({
             className="gap-0 rounded-3xl border-0 bg-transparent p-0 ring-0 shadow-none sm:max-w-105"
           >
             <div className="rounded-3xl p-1.5">
-              <div >
+              <div className="overflow-hidden rounded-[calc(1.5rem-0.375rem)] bg-card shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                 <div className="grid grid-cols-[auto_1fr_auto] items-start gap-4 px-5 pb-5 pt-5 sm:px-7 sm:pb-6 sm:pt-7">
                   <div className="rounded-2xl bg-destructive/10 p-1.5 ring-1 ring-inset ring-destructive/15">
                     <div className="grid size-11 place-items-center rounded-[calc(1rem-0.375rem)] bg-card text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_24px_-16px_rgba(15,23,42,0.18)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                      <Trash2 className="size-5" strokeWidth={1.75} aria-hidden="true" />
+                      <Trash2
+                        className="size-5"
+                        strokeWidth={1.75}
+                        aria-hidden="true"
+                      />
                     </div>
                   </div>
                   <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
@@ -324,7 +356,9 @@ export function BoardTagsManagerDialog({
                   <div className="flex items-center gap-3 rounded-2xl border border-destructive/15 bg-destructive/5 px-4 py-3">
                     <span
                       className="size-8 shrink-0 rounded-xl ring-1 ring-inset ring-foreground/10"
-                      style={{ backgroundColor: normalizeColor(deleteConfirmTag.color) }}
+                      style={{
+                        backgroundColor: normalizeColor(deleteConfirmTag.color),
+                      }}
                       aria-hidden="true"
                     />
                     <span className="min-w-0 truncate text-[13.5px] font-medium text-foreground">
@@ -348,17 +382,32 @@ export function BoardTagsManagerDialog({
                       type="button"
                       disabled={deleteTag.isPending}
                       onClick={handleDeleteConfirm}
-                      whileHover={deleteTag.isPending ? undefined : pressHover(reduceMotion)}
-                      whileTap={deleteTag.isPending ? undefined : pressTap(reduceMotion)}
+                      whileHover={
+                        deleteTag.isPending
+                          ? undefined
+                          : pressHover(reduceMotion)
+                      }
+                      whileTap={
+                        deleteTag.isPending ? undefined : pressTap(reduceMotion)
+                      }
                       transition={SPRING_PRESS}
                       className="group inline-flex h-11 min-w-32 items-center justify-center gap-3 whitespace-nowrap rounded-full bg-destructive px-5 text-[13px] font-medium text-white shadow-[0_10px_30px_-16px_color-mix(in_oklab,var(--destructive)_70%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-destructive/90 focus-visible:ring-4 focus-visible:ring-destructive/20 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <span>{deleteTag.isPending ? "Deleting" : "Delete label"}</span>
+                      <span>
+                        {deleteTag.isPending ? "Deleting" : "Delete label"}
+                      </span>
                       <span className="grid size-8 place-items-center rounded-full bg-white/12">
                         {deleteTag.isPending ? (
-                          <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                          <Loader2
+                            className="size-4 animate-spin motion-reduce:animate-none"
+                            aria-hidden="true"
+                          />
                         ) : (
-                          <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
+                          <ArrowRight
+                            className="size-4"
+                            strokeWidth={2}
+                            aria-hidden="true"
+                          />
                         )}
                       </span>
                     </motion.button>
