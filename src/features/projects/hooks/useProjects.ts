@@ -8,5 +8,6 @@ export const useProjects = (page: number, limit: number, name?: string) => {
     queryKey: projectKeys.list(page, limit, name),
     queryFn: () => projectApi.getAll(page, limit, name),
     placeholderData: keepPreviousData,
+    meta: { silentError: true },
   });
 };

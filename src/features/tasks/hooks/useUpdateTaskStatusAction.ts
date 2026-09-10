@@ -4,6 +4,7 @@ import { taskApi } from "../api/task-api";
 import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
 import { taskKeys } from "../utils/task-query-keys";
 import type { ApiError } from "@/lib/api-error";
+import { getApiErrorMessage } from "@/lib/error-message";
 import type { TaskResponse, TaskStatusAction } from "../types";
 
 export type UpdateTaskStatusActionVariables = {
@@ -11,15 +12,6 @@ export type UpdateTaskStatusActionVariables = {
   listId: string;
   statusAction: TaskStatusAction;
 };
-
-function getApiErrorMessage(error: ApiError, fallback: string): string {
-  return (
-    error.response?.data?.message ||
-    error.response?.data?.error ||
-    error.message ||
-    fallback
-  );
-}
 
 function isOverdueLockMessage(message: string): boolean {
   const normalized = message.toLowerCase();

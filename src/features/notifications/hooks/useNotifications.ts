@@ -15,6 +15,7 @@ export function useNotifications(filter: NotificationFilter) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.data.nextCursor ?? undefined,
     staleTime: 15_000,
+    meta: { silentError: true },
   });
 }
 
@@ -23,6 +24,7 @@ export function useUnreadNotificationCount() {
     queryKey: notificationKeys.unreadCount(),
     queryFn: notificationApi.unreadCount,
     staleTime: 15_000,
+    meta: { silentError: true },
   });
 }
 

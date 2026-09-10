@@ -7,6 +7,8 @@ import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useProjectBoardCounts } from "@/features/projects/hooks/useProjectBoardCounts";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ErrorState } from "@/components/ui/error-state";
+import { getApiErrorMessage } from "@/lib/error-message";
 import { APP_ROUTES } from "@/router/constans";
 
 import { HeaderLayout } from "@/layouts/header-layout";
@@ -41,6 +43,8 @@ export function ViewMainPage() {
     data: responeData,
     isLoading,
     isError,
+    error,
+    refetch,
   } = useProjects(page, PAGE_SIZE, debouncedSearch);
   const projects = useMemo(
     () => (Array.isArray(responeData?.data) ? responeData.data : []),
@@ -85,16 +89,16 @@ export function ViewMainPage() {
 
   if (isError) {
     return (
-      <div className="flex h-[calc(100dvh-4rem)] min-h-0 items-center justify-center overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE_FLUID }}
-          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-[13.5px] text-destructive"
-        >
-          Could not load projects. Please try again.
-        </motion.div>
-      </div>
+      <ErrorState
+        title="Could not load projects"
+        message={getApiErrorMessage(
+          error,
+          "Please check your connection and try again.",
+        )}
+        onRetry={() => {
+          void refetch();
+        }}
+      />
     );
   }
 

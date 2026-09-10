@@ -2,12 +2,14 @@ import { useMemo } from "react";
 import { Loader2, MessageSquare, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 import { useTaskComments } from "@/features/tasks/hooks/useTaskComments";
 import { useCreateTaskComment } from "@/features/tasks/hooks/useCreateTaskComment";
 import { useCurrentUser } from "@/features/users/hooks/useCurrentUser";
 import { useTaskActivities } from "@/features/task-activities/hooks/useTaskActivities";
 import type { TaskActivity } from "@/features/task-activities/types";
 import type { TaskComment } from "@/features/tasks/types";
+import { getApiErrorMessage } from "@/lib/error-message";
 import { TaskActivityItem } from "../activity/task-activity-item";
 import { TaskCommentComposer } from "./task-comment-composer";
 import { TaskCommentItem } from "./task-comment-item";
@@ -47,6 +49,7 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
     data,
     isLoading,
     isError,
+    error,
     refetch,
     isRefetching,
     fetchNextPage,
@@ -147,15 +150,15 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
       {isLoadingTimeline ? (
         <CommentListSkeleton />
       ) : (isError || activityQuery.isError) ? (
-        <div className="flex flex-col items-center justify-center gap-2 border border-destructive/20 bg-destructive/5 px-3 py-6 text-center">
-          <p className="text-[13px] text-destructive">
-            Could not load comments and activity.
-          </p>
-          <Button size="sm" variant="outline" onClick={refreshTimeline}>
-            <RotateCw className="size-3" />
-            Retry
-          </Button>
-        </div>
+        <ErrorState
+          variant="inline"
+          title="Could not load comments and activity"
+          message={getApiErrorMessage(
+            isError ? error : activityQuery.error,
+            "Please check your connection and try again.",
+          )}
+          onRetry={refreshTimeline}
+        />
       ) : (
         <div className="space-y-5">
           {hasOlderItems ? (

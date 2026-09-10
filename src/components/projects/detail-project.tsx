@@ -14,6 +14,8 @@ import { HeaderLayout } from "@/layouts/header-layout";
 import { PaginationLayout } from "@/layouts/pagination-layout";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
+import { ErrorState } from "../ui/error-state";
+import { getApiErrorMessage } from "@/lib/error-message";
 import { APP_ROUTES } from "@/router/constans";
 
 import { BoardCard } from "./boardCard-project";
@@ -71,6 +73,8 @@ export function DetailProject() {
     data: responseData,
     isLoading,
     isError,
+    error,
+    refetch,
   } = useBoards(projectId ?? "", page, PAGE_SIZE, debouncedSearch);
 
   const boards = useMemo(
@@ -128,16 +132,16 @@ export function DetailProject() {
 
   if (isError) {
     return (
-      <div className="flex h-[calc(100dvh-4rem)] min-h-0 items-center justify-center overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE_FLUID }}
-          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-[13.5px] text-destructive"
-        >
-          Could not load boards. Please try again.
-        </motion.div>
-      </div>
+      <ErrorState
+        title="Could not load boards"
+        message={getApiErrorMessage(
+          error,
+          "Please check your connection and try again.",
+        )}
+        onRetry={() => {
+          void refetch();
+        }}
+      />
     );
   }
 

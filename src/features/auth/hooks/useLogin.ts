@@ -3,12 +3,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "../api/auth-api";
 import { authStorage } from "../storage/auth-storage";
 import { toast } from "sonner";
-import type { AxiosError } from "axios";
+import type { ApiError } from "@/lib/api-error";
+import { getApiErrorMessage } from "@/lib/error-message";
 import { APP_ROUTES } from "../../../router/constans";
-
-type ApiError = {
-  message?: string;
-};
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -30,9 +27,10 @@ export const useLogin = () => {
         queryClient.invalidateQueries({ queryKey: ["current-user"] });
       }
     },
-    onError: (error: AxiosError<ApiError>) => {
-      const message = error.response?.data?.message ?? "Dang nhap that bai";
-      toast.error(message);
+    onError: (error: ApiError) => {
+      toast.error(
+        getApiErrorMessage(error, "Login failed. Please try again."),
+      );
     },
   });
 };

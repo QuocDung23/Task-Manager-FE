@@ -14,5 +14,6 @@ export const useBoards = (
     enabled: Boolean(projectId.trim()),
     placeholderData: keepPreviousData,
     retry: false,
+    meta: { silentError: true },
   });
 };

@@ -10,5 +10,6 @@ export function useTaskActivities(taskId: string, enabled = true) {
     getNextPageParam: (page) => page.data.nextCursor ?? undefined,
     enabled: Boolean(taskId) && enabled,
     staleTime: 10_000,
+    meta: { silentError: true },
   });
 }

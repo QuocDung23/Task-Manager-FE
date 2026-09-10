@@ -4,21 +4,13 @@ import { taskApi } from "../api/task-api";
 import type { AssignTaskRequest } from "../types";
 import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
 import type { ApiError } from "@/lib/api-error";
+import { getApiErrorMessage } from "@/lib/error-message";
 
 type AssignTaskVariables = {
   taskId: string;
   listId: string;
   userIds: string[];
 };
-
-function getApiErrorMessage(error: ApiError, fallback: string): string {
-  return (
-    error.response?.data?.message ||
-    error.response?.data?.error ||
-    error.message ||
-    fallback
-  );
-}
 
 export const useAssignTask = () => {
   const queryClient = useQueryClient();

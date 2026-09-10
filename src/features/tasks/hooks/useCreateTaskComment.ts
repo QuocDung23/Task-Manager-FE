@@ -2,16 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
 import type { ApiError } from "@/lib/api-error";
+import { getApiErrorMessage } from "@/lib/error-message";
 import { appendRootComment } from "./comment-cache";
-
-function getApiErrorMessage(error: ApiError, fallback: string): string {
-  return (
-    error.response?.data?.message ||
-    error.response?.data?.error ||
-    error.message ||
-    fallback
-  );
-}
 
 type CreateTaskCommentVariables = {
   taskId: string;

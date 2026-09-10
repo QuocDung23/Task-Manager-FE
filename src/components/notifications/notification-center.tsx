@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Bell, Bot, CheckCheck, Loader2, MoreHorizontal, RefreshCw } from "lucide-react";
+import { Bell, Bot, CheckCheck, Loader2, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/users/user-avatar";
+import { ErrorState } from "@/components/ui/error-state";
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -14,6 +15,7 @@ import {
 import type { NotificationFilter, NotificationResponse } from "@/features/notifications/types";
 import { getNotificationPath } from "@/features/notifications/utils/notification-navigation";
 import { formatDateTime } from "@/utils/formatDateTime";
+import { getApiErrorMessage } from "@/lib/error-message";
 
 export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) {
   const [filter, setFilter] = useState<NotificationFilter>("all");
@@ -78,8 +80,15 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
             ))}
           </div>
         ) : query.isError ? (
-          <div className="grid min-h-64 place-items-center text-center">
-            <div><p className="text-sm font-medium">Could not load notifications</p><Button variant="ghost" size="sm" className="mt-2" onClick={() => void query.refetch()}><RefreshCw />Retry</Button></div>
+          <div className="px-2 py-4">
+            <ErrorState
+              variant="inline"
+              title="Could not load notifications"
+              message={getApiErrorMessage(query.error)}
+              onRetry={() => {
+                void query.refetch();
+              }}
+            />
           </div>
         ) : items.length === 0 ? (
           <div className="grid min-h-64 place-items-center text-center">
