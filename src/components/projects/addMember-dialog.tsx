@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
@@ -31,52 +31,12 @@ import {
 import { useUsers } from "@/features/users/hooks/useUsers";
 import type { UserResponse } from "@/features/users/types";
 
-/**
- * Dialog shell chung cho việc "thêm member" vào bất kỳ scope nào (project
- * hoặc board). Component này **chỉ phụ trách UI** — search, list kết quả,
- * motion, button states. Phần gọi API + invalidate cache + toast là
- * trách nhiệm của caller (truyền qua prop `onAdd`).
- *
- * Tách UI khỏi mutation cho phép:
- * - 1 component, 2 backend API (`POST /project/:id/members` và
- *   `POST /board/:id/members`).
- * - Mỗi scope tự quản lý cache riêng và error message riêng ("Already in
- *   project" vs "Already in board").
- *
- * @example
- * ```tsx
- * // Project caller
- * const addMember = useAddMemberProject();
- * <AddMemberDialog
- *   scope="project"
- *   open={open}
- *   onOpenChange={setOpen}
- *   onAdd={async (user) => {
- *     await addMember.mutateAsync({ projectId, data: { userId: user.id } });
- *   }}
- * />
- *
- * // Board caller
- * const addMember = useAddMemberBoard(boardId, projectId);
- * <AddMemberDialog
- *   scope="board"
- *   open={open}
- *   onOpenChange={setOpen}
- *   onAdd={(user) => addMember.mutateAsync(user.id)}
- * />
- * ```
- */
 export type AddMemberScope = "project" | "board";
 
 interface AddMemberDialogProps {
   scope: AddMemberScope;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /**
-   * Perform the actual mutation when the user confirms. Throw / reject to
-   * surface an error state. The dialog stays open until `onAdd` resolves —
-   * use `onSuccess` (caller-controlled) to close it.
-   */
   onAdd: (user: UserResponse) => Promise<unknown>;
 }
 
@@ -104,16 +64,25 @@ export function AddMemberDialog({
 }: AddMemberDialogProps) {
   const reduceMotion = useReducedMotion();
   const [searchEmail, setSearchEmail] = useState("");
+  const [debouncedEmail, setDebouncedEmail] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const deferredEmail = useDeferredValue(searchEmail);
-  const trimmedEmail = deferredEmail.trim();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedEmail(searchEmail.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchEmail]);
+
+  const trimmedEmail = debouncedEmail;
   const hasQuery = trimmedEmail.length > 0;
 
-  const { data: usersResponse, isLoading: isLoadingUsers } = useUsers(
-    hasQuery ? trimmedEmail : undefined,
-  );
+  const {
+    data: usersResponse,
+    isLoading: isLoadingUsers,
+    isPlaceholderData,
+  } = useUsers(hasQuery ? trimmedEmail : undefined);
   const users = useMemo(() => usersResponse?.data ?? [], [usersResponse?.data]);
 
   const headerEnter = enterTransitionFor(reduceMotion);
@@ -134,9 +103,7 @@ export function AddMemberDialog({
   };
 
   const handleSelect = (user: UserResponse) => {
-    setSelectedUser((current) =>
-      current?.id === user.id ? null : user,
-    );
+    setSelectedUser((current) => (current?.id === user.id ? null : user));
   };
 
   const handleAdd = async () => {
@@ -226,6 +193,7 @@ export function AddMemberDialog({
               <SearchResults
                 users={users}
                 isLoading={isLoadingUsers}
+                isPlaceholder={isPlaceholderData}
                 hasQuery={hasQuery}
                 hintText={copy.hint}
                 onSelect={handleSelect}
@@ -301,6 +269,7 @@ export function AddMemberDialog({
 interface SearchResultsProps {
   users: UserResponse[];
   isLoading: boolean;
+  isPlaceholder: boolean;
   hasQuery: boolean;
   hintText: string;
   onSelect: (user: UserResponse) => void;
@@ -310,6 +279,7 @@ interface SearchResultsProps {
 function SearchResults({
   users,
   isLoading,
+  isPlaceholder,
   hasQuery,
   hintText,
   onSelect,
@@ -319,7 +289,7 @@ function SearchResults({
     return <ResultsHint>{hintText}</ResultsHint>;
   }
 
-  if (isLoading) {
+  if (isLoading && !isPlaceholder && users.length === 0) {
     return (
       <ResultsStatus>
         <Loader2
@@ -339,7 +309,10 @@ function SearchResults({
     <ul
       role="listbox"
       aria-label="Search results"
-      className="flex max-h-72 flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/8 bg-card p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+      className={cn(
+        "flex max-h-72 flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/8 bg-card p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] transition-opacity duration-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
+        isPlaceholder && "opacity-60",
+      )}
     >
       {users.map((user) => {
         const isSelected = selectedUserId === user.id;
