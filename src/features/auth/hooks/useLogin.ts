@@ -3,15 +3,26 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "../api/auth-api";
 import { authStorage } from "../storage/auth-storage";
 import { toast } from "sonner";
-import type { ApiError } from "@/lib/api-error";
-import { getApiErrorMessage } from "@/lib/error-message";
 import { APP_ROUTES } from "../../../router/constans";
+import {
+  getAuthErrorMessage,
+  type AuthErrorResult,
+} from "@/lib/auth-error-message";
+import type { LoginRequest, LoginResponse } from "../types";
 
-export const useLogin = () => {
+export type LoginAuthErrorContext = {
+  result: AuthErrorResult;
+  payload: LoginRequest;
+};
+
+export function useLogin(options?: {
+  onAuthError?: (context: LoginAuthErrorContext) => void;
+}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const onAuthError = options?.onAuthError;
 
-  return useMutation({
+  return useMutation<LoginResponse, unknown, LoginRequest>({
     mutationFn: authApi.login,
     onSuccess: (data, variables) => {
       if (data.verify === false) {
@@ -27,10 +38,10 @@ export const useLogin = () => {
         queryClient.invalidateQueries({ queryKey: ["current-user"] });
       }
     },
-    onError: (error: ApiError) => {
-      toast.error(
-        getApiErrorMessage(error, "Login failed. Please try again."),
-      );
+    onError: (error: unknown, variables) => {
+      const result = getAuthErrorMessage(error, "login");
+      toast.error(result.message);
+      onAuthError?.({ result, payload: variables });
     },
   });
-};
+}

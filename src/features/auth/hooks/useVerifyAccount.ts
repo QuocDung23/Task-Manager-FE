@@ -5,13 +5,26 @@ import { authStorage } from "../storage/auth-storage";
 import { toast } from "sonner";
 import { APP_ROUTES } from "@/router/constans";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ApiError } from "@/lib/api-error";
+import {
+  getAuthErrorMessage,
+  type AuthErrorResult,
+} from "@/lib/auth-error-message";
+import type { Verify, VerifyAccountResponse } from "../types";
 
-export const useVerifyAccount = () => {
+export type VerifyAccountAuthErrorContext = {
+  result: AuthErrorResult;
+  payload: Verify;
+  status?: number;
+};
+
+export function useVerifyAccount(options?: {
+  onAuthError?: (context: VerifyAccountAuthErrorContext) => void;
+}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const onAuthError = options?.onAuthError;
 
-  return useMutation({
+  return useMutation<VerifyAccountResponse, unknown, Verify>({
     mutationFn: authApi.verifyAccount,
     onSuccess: (data) => {
       authStorage.setToken(data.accessToken);
@@ -19,11 +32,12 @@ export const useVerifyAccount = () => {
       navigate(APP_ROUTES.MAIN, { replace: true });
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
     },
-    onError: (error: ApiError) => {
-      toast.error(
-        error.response?.data?.message ||
-          "Verification failed. Please check your OTP and try again.",
-      );
+    onError: (error: unknown, variables) => {
+      const apiError = error as { response?: { status?: number } } | undefined;
+      const status = apiError?.response?.status;
+      const result = getAuthErrorMessage(error, "verifyAccount");
+      toast.error(result.message);
+      onAuthError?.({ result, payload: variables, status });
     },
   });
-};
+}

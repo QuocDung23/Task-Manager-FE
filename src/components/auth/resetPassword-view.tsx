@@ -18,23 +18,25 @@ export function ViewResetPassword() {
     hasValidResetParams,
     isPending,
     minPasswordLength,
+    fieldErrors,
     onSubmit,
     setShowPassword,
     showPassword,
+    clearFieldError,
   } = useResetPasswordForm();
 
   if (!hasValidResetParams) {
     return (
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle>Invalid Request</CardTitle>
+          <CardTitle>Invalid request</CardTitle>
           <CardDescription>
             Please start the password reset process again.
           </CardDescription>
         </CardHeader>
         <CardFooter className="justify-center">
           <Button asChild>
-            <Link to={APP_ROUTES.FORGOT_PASSWORD}>Go Back</Link>
+            <Link to={APP_ROUTES.FORGOT_PASSWORD}>Go back</Link>
           </Button>
         </CardFooter>
       </Card>
@@ -60,37 +62,43 @@ export function ViewResetPassword() {
             />
           </svg>
         </div>
-        <CardTitle>Set New Password</CardTitle>
+        <CardTitle>Set a new password</CardTitle>
         <CardDescription>
-          Create a strong password that you don't use elsewhere
+          Choose a strong password you don't use anywhere else.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form id="reset-password-form" onSubmit={onSubmit}>
+        <form id="reset-password-form" onSubmit={onSubmit} noValidate>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword">New password</Label>
               <div className="relative">
                 <Input
                   id="newPassword"
                   name="newPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter new password"
+                  placeholder="Enter a new password"
                   required
                   minLength={minPasswordLength}
+                  aria-invalid={Boolean(fieldErrors.newPassword)}
+                  autoComplete="new-password"
+                  onChange={() => clearFieldError("newPassword")}
                 />
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">Confirm password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Confirm new password"
+                  placeholder="Re-enter the new password"
                   required
                   minLength={minPasswordLength}
+                  aria-invalid={Boolean(fieldErrors.confirmPassword)}
+                  autoComplete="new-password"
+                  onChange={() => clearFieldError("confirmPassword")}
                 />
               </div>
             </div>
@@ -116,7 +124,7 @@ export function ViewResetPassword() {
           className="w-full"
           disabled={isPending}
         >
-          {isPending ? "Resetting..." : "Reset Password"}
+          {isPending ? "Resetting..." : "Reset password"}
         </Button>
         <div className="text-sm text-muted-foreground">
           Remember your password?{" "}
@@ -124,7 +132,7 @@ export function ViewResetPassword() {
             to={APP_ROUTES.LOGIN}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            Back to login
+            Back to sign in
           </Link>
         </div>
       </CardFooter>

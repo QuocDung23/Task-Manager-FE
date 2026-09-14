@@ -1,17 +1,28 @@
 import { useMutation } from "@tanstack/react-query";
-import type { Verify } from "../types";
-import { authApi } from "../api/auth-api";
 import { toast } from "sonner";
-import type { ApiError } from "@/lib/api-error";
+import type { Verify, VerifyOtpResponse } from "../types";
+import { authApi } from "../api/auth-api";
+import {
+  getAuthErrorMessage,
+  type AuthErrorResult,
+} from "@/lib/auth-error-message";
 
-export const useVerifyOtp = () => {
-  return useMutation({
-    mutationFn: (data: Verify) => authApi.verifyOtp(data),
-    onError: (error: ApiError) => {
-      toast.error(
-        error.response?.data?.message ||
-          "The OTP code is invalid or has expired!",
-      );
+export type VerifyOtpAuthErrorContext = {
+  result: AuthErrorResult;
+  payload: Verify;
+};
+
+export function useVerifyOtp(options?: {
+  onAuthError?: (context: VerifyOtpAuthErrorContext) => void;
+}) {
+  const onAuthError = options?.onAuthError;
+
+  return useMutation<VerifyOtpResponse, unknown, Verify>({
+    mutationFn: (data) => authApi.verifyOtp(data),
+    onError: (error: unknown, variables) => {
+      const result = getAuthErrorMessage(error, "verifyOtp");
+      toast.error(result.message);
+      onAuthError?.({ result, payload: variables });
     },
   });
-};
+}

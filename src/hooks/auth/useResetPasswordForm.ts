@@ -1,19 +1,48 @@
-import type { FormEvent } from "react";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useResetPassword } from "@/features/auth/hooks/useResetPassword";
 
 const MIN_PASSWORD_LENGTH = 6;
 
+export type ResetPasswordFieldErrors = {
+  newPassword?: string;
+  confirmPassword?: string;
+  form?: string;
+};
+
 export function useResetPasswordForm() {
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const resetPassword = useResetPassword();
+  const [fieldErrors, setFieldErrors] = useState<ResetPasswordFieldErrors>({});
+  // The hook handles the toast; the form only mirrors errors into per-field
+  // state.
+  const resetPassword = useResetPassword({
+    onAuthError: ({ result }) => {
+      setFieldErrors((prev) => {
+        const next: ResetPasswordFieldErrors = { ...prev, form: undefined };
+        if (result.field === "password") {
+          next.newPassword = result.message;
+        } else if (result.field === "confirmPassword") {
+          next.confirmPassword = result.message;
+        } else {
+          next.form = result.message;
+        }
+        return next;
+      });
+    },
+  });
 
   const email = searchParams.get("email") ?? "";
   const otp = searchParams.get("otp") ?? "";
   const hasValidResetParams = Boolean(email && otp);
+
+  const clearFieldError = (field: keyof ResetPasswordFieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      return { ...prev, [field]: undefined };
+    });
+  };
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -22,28 +51,35 @@ export function useResetPasswordForm() {
     const newPassword = String(formData.get("newPassword") ?? "");
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-    if (!newPassword || !confirmPassword) {
-      toast.error("Please fill in all fields");
-      return;
+    const nextErrors: ResetPasswordFieldErrors = {};
+    if (!newPassword) {
+      nextErrors.newPassword = "Please enter your new password.";
+    } else if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      nextErrors.newPassword = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+    }
+    if (!confirmPassword) {
+      nextErrors.confirmPassword = "Please confirm your password.";
+    } else if (newPassword !== confirmPassword) {
+      nextErrors.confirmPassword = "Passwords do not match.";
     }
 
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
       toast.error(
-        `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+        nextErrors.newPassword ?? nextErrors.confirmPassword ?? "",
       );
       return;
     }
 
     if (!hasValidResetParams) {
-      toast.error("Invalid request. Please start the process again.");
+      setFieldErrors({
+        form: "Invalid request. Please restart the password reset process.",
+      });
+      toast.error("Invalid request. Please restart the password reset process.");
       return;
     }
 
+    setFieldErrors({});
     resetPassword.mutate({
       email,
       otp,
@@ -57,8 +93,10 @@ export function useResetPasswordForm() {
     hasValidResetParams,
     isPending: resetPassword.isPending,
     minPasswordLength: MIN_PASSWORD_LENGTH,
+    fieldErrors,
     onSubmit,
     setShowPassword,
     showPassword,
+    clearFieldError,
   };
 }

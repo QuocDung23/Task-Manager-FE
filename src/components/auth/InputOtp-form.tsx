@@ -6,9 +6,10 @@ type InputOtpProps = {
   value: string[];
   onChange: (value: string[]) => void;
   length?: number;
+  invalid?: boolean;
 };
 
-export function InputOtp({ value, onChange, length = 6 }: InputOtpProps) {
+export function InputOtp({ value, onChange, length = 6, invalid }: InputOtpProps) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -73,6 +74,7 @@ export function InputOtp({ value, onChange, length = 6 }: InputOtpProps) {
           inputMode="numeric"
           maxLength={1}
           value={digit}
+          aria-invalid={invalid}
           onChange={(event) => handleInputChange(index, event.target.value)}
           onKeyDown={(event) => handleKeyDown(index, event)}
           className="h-12 w-12 text-center text-lg font-semibold"
