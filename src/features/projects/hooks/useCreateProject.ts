@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ProjectRequest } from "../types";
+import type { CreateProjectDto } from "../types";
 import { projectApi } from "../api/project-api";
 import { toast } from "sonner";
 import type { ApiError } from "@/lib/api-error";
@@ -10,7 +10,7 @@ export const useCreateProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ProjectRequest) => projectApi.create(data),
+    mutationFn: (data: CreateProjectDto) => projectApi.create(data),
     onSuccess: (response) => {
       toast.success("Create Successfully");
       if (response?.data) {

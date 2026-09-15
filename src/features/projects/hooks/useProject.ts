@@ -6,6 +6,7 @@ export const useProject = (id: string) => {
     return useQuery({
         queryKey: projectKeys.detail(id),
         queryFn: () => projectApi.getById(id),
-        enabled: !!id
+        enabled: !!id,
+        meta: { silentError: true },
     })
 }

@@ -3,10 +3,11 @@ import type {
   AddProjectMemberRequest,
   AddProjectMemberResponse,
   ApiResponse,
+  CreateProjectDto,
   ProjectMemberListResponse,
   ProjectMemberResponse,
-  ProjectRequest,
   ProjectResponse,
+  UpdateProjectDto,
 } from "../types";
 
 export const projectApi = {
@@ -35,7 +36,7 @@ export const projectApi = {
     return response.data;
   },
   create: async (
-    data: ProjectRequest,
+    data: CreateProjectDto,
   ): Promise<ApiResponse<ProjectResponse>> => {
     const response = await axiosLocal.post<ApiResponse<ProjectResponse>>(
       "/project",
@@ -45,7 +46,7 @@ export const projectApi = {
   },
   update: async (
     id: string,
-    data: Partial<ProjectRequest>,
+    data: UpdateProjectDto,
   ): Promise<ApiResponse<ProjectResponse>> => {
     const response = await axiosLocal.patch<ApiResponse<ProjectResponse>>(
       `/project/${id}`,

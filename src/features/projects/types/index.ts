@@ -42,11 +42,14 @@ export type ProjectMemberListResponse = {
   totalMembers: number;
 };
 
-export type ProjectRequest = {
-  id: string
+export type CreateProjectDto = {
   name: string;
   description?: string;
 };
+
+export type UpdateProjectDto = Partial<CreateProjectDto>;
+
+export type ProjectRequest = CreateProjectDto;
 
 export type PaginationResponse = {
   totalItems: number;

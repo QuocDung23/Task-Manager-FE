@@ -50,8 +50,16 @@ export function ViewMainPage() {
     () => (Array.isArray(responeData?.data) ? responeData.data : []),
     [responeData],
   );
-  const { getCount: getBoardCount, isLoading: isBoardCountLoading } =
+
+  const { getCount: getBoardCountFallback, isLoading: isBoardCountLoading } =
     useProjectBoardCounts(projects);
+
+  // Helper lấy boardCount: ưu tiên BE response, fallback qua hook.
+  const getBoardCount = (project: (typeof projects)[number]) => {
+    if (typeof project.boardCount === "number") return project.boardCount;
+    return getBoardCountFallback(project);
+  };
+
   const pagination = responeData?.pagination;
   const totalPage = Math.max(1, pagination?.totalPages ?? 1);
   const totalItems = pagination?.totalItems ?? 0;

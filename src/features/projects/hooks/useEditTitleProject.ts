@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useUpdateProject } from "./useUpdateProject";
 
 export const useEditTitleProject = (
@@ -14,14 +14,14 @@ export const useEditTitleProject = (
   }, [initialTitle]);
 
   const handleSave = () => {
-    setEditing(false);
     const trimmedTitle = title.trim();
-
-    if (trimmedTitle && trimmedTitle !== initialTitle) {
-      updateProject({ id: projectId, data: { name: trimmedTitle } });
-    } else {
+    if (!trimmedTitle || trimmedTitle === initialTitle) {
       setTitle(initialTitle);
+      setEditing(false);
+      return;
     }
+    setEditing(false);
+    updateProject({ id: projectId, data: { name: trimmedTitle } });
   };
 
   const handleKeyBoard = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -41,5 +41,5 @@ export const useEditTitleProject = (
     setTitle,
     handleSave,
     handleKeyBoard,
-  }
+  };
 };

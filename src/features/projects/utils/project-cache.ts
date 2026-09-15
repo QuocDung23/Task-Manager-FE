@@ -17,9 +17,7 @@ type ProjectMembersCache =
   | undefined;
 
 function isActiveProject(project: ProjectResponse): boolean {
-  // ProjectResponse hiện không trả status rõ ràng từ BE; phòng khi BE bổ sung
-  // status ở DTO thì reducer sẽ tự skip các bản ghi soft-delete.
-  const rawStatus = (project as unknown as { status?: string }).status;
+  const rawStatus = (project as { status?: string }).status;
   return rawStatus === undefined || rawStatus === "ACTIVE";
 }
 
@@ -65,32 +63,36 @@ function upsertProjectInLists(
     const key = entry.queryKey;
     queryClient.setQueryData<ProjectListCache>(key, (old) => {
       if (!old) return old;
+
       const matchesFilter = listMatchesNameFilter(key, project);
       const currentIndex = old.data.findIndex((p) => p.id === project.id);
       const current = currentIndex >= 0 ? old.data[currentIndex] : undefined;
 
-      if (currentIndex < 0) {
-        if (!matchesFilter) return old;
-        const next = [project, ...old.data];
+      if (current && !matchesFilter) {
         return {
           ...old,
-          data: next,
-          pagination: bumpPaginationTotal(old.pagination, 1),
+          data: old.data.filter((p) => p.id !== project.id),
         };
       }
 
-      if (!matchesFilter) {
-        const next = old.data.filter((p) => p.id !== project.id);
-        return {
-          ...old,
-          data: next,
-          pagination: bumpPaginationTotal(old.pagination, -1),
-        };
+      if (current) {
+        const next = [...old.data];
+        next[currentIndex] = { ...current, ...project };
+        return { ...old, data: next };
       }
 
-      const next = [...old.data];
-      next[currentIndex] = { ...current, ...project };
-      return { ...old, data: next };
+      const page = typeof key[2] === "number" ? key[2] : null;
+      const isFiltering = typeof key[4] === "string" && key[4].length > 0;
+      if (!isFiltering && page !== null && page > 1) {
+        return old;
+      }
+
+      if (!matchesFilter) return old;
+      return {
+        ...old,
+        data: [project, ...old.data],
+        pagination: bumpPaginationTotal(old.pagination, 1),
+      };
     });
   }
 }
