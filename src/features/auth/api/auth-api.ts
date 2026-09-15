@@ -41,21 +41,19 @@ export const authApi = {
   },
   sendOtp: async (data: SendOtpRequest): Promise<ForgotPasswordResponse> => {
     const response = await axiosLocal.post<ApiResponse<ForgotPasswordResponse>>(
-      "/auth/sendOtp",
+      "/auth/otp",
       data,
     );
     return response.data.data;
   },
   verifyOtp: async (data: Verify): Promise<VerifyOtpResponse> => {
     const response = await axiosLocal.post<ApiResponse<VerifyOtpResponse>>(
-      "/auth/verifyOtp",
+      "/auth/otp/verification",
       data,
     );
     return response.data.data;
   },
-  verifyAccount: async (
-    data: Verify,
-  ): Promise<VerifyAccountResponse> => {
+  verifyAccount: async (data: Verify): Promise<VerifyAccountResponse> => {
     const response = await axiosLocal.post<ApiResponse<VerifyAccountResponse>>(
       "/auth/verify",
       data,
@@ -66,7 +64,7 @@ export const authApi = {
     data: ResetPasswordRequest,
   ): Promise<ResetPasswordResponse> => {
     const response = await axiosLocal.post<ApiResponse<ResetPasswordResponse>>(
-      "/auth/resetPassword",
+      "/auth/password-reset",
       data,
     );
     return response.data.data;
