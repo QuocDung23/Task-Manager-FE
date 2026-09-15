@@ -18,7 +18,6 @@ import { toast } from "sonner";
 import type { LoginRequest } from "../../features/auth/types";
 import { APP_ROUTES } from "../../router/constans";
 import { useLogin } from "../../features/auth/hooks/useLogin";
-import type { ApiError } from "@/lib/api-error";
 
 type FieldErrors = {
   email?: string;
@@ -32,9 +31,7 @@ const LOCKOUT_STATUSES = new Set([400, 401, 404]);
 
 export function ViewLogin() {
   const submitLogin = useLogin({
-    onAuthError: ({ result }) => {
-      const status = (lastErrorRef.current as ApiError | undefined)?.response
-        ?.status;
+    onAuthError: ({ result, status }) => {
       const isLockoutStatus =
         typeof status === "number" && LOCKOUT_STATUSES.has(status);
       if (isLockoutStatus) {
@@ -64,13 +61,8 @@ export function ViewLogin() {
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [attemptCount, setAttemptCount] = useState(0);
-  const lastErrorRef = useRef<unknown>(undefined);
   // Holds a timer that resets the lockout after `LOCKOUT_WINDOW_MS`.
   const lockoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    lastErrorRef.current = submitLogin.error;
-  }, [submitLogin.error]);
 
   useEffect(() => {
     return () => {
@@ -98,6 +90,8 @@ export function ViewLogin() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isLockedOut) return;
+
     const formData = new FormData(event.currentTarget);
 
     const payload: LoginRequest = {

@@ -29,7 +29,7 @@ export function useRegister(options?: {
       );
     },
     onError: (error: unknown, variables) => {
-      const result = getAuthErrorMessage(error, "register", { isRetry: true });
+      const result = getAuthErrorMessage(error, "register");
       toast.error(result.message);
       onAuthError?.({ result, payload: variables });
     },

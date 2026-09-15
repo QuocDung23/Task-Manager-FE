@@ -9,10 +9,12 @@ import {
   type AuthErrorResult,
 } from "@/lib/auth-error-message";
 import type { LoginRequest, LoginResponse } from "../types";
+import type { ApiError } from "@/lib/api-error";
 
 export type LoginAuthErrorContext = {
   result: AuthErrorResult;
   payload: LoginRequest;
+  status?: number;
 };
 
 export function useLogin(options?: {
@@ -40,8 +42,9 @@ export function useLogin(options?: {
     },
     onError: (error: unknown, variables) => {
       const result = getAuthErrorMessage(error, "login");
+      const status = (error as ApiError | undefined)?.response?.status;
       toast.error(result.message);
-      onAuthError?.({ result, payload: variables });
+      onAuthError?.({ result, payload: variables, status });
     },
   });
 }
