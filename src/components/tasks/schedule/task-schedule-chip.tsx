@@ -1,19 +1,11 @@
-import { useMemo, useState } from "react";
-import {
-  CalendarDays,
-  Check,
-  ChevronDown,
-  Clock,
-  Lock,
-} from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { CalendarDays, Check, ChevronDown, Clock, Lock } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  getTaskSchedulePresentation,
-} from "@/features/tasks/utils/task-schedule";
+import { getTaskSchedulePresentation } from "@/features/tasks/utils/task-schedule";
 import type { TaskResponse } from "@/features/tasks/types";
 import { TaskScheduleForm } from "./task-schedule-form";
 
@@ -63,9 +55,16 @@ export function TaskScheduleChip({
   onTaskUpdated,
 }: TaskScheduleChipProps) {
   const [open, setOpen] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
   const presentation = useMemo(
-    () => getTaskSchedulePresentation(task, new Date()),
-    [task],
+    () => getTaskSchedulePresentation(task, now),
+    [task, now],
   );
   const tone = TONE_CLASSES[presentation.tone];
   const Icon = ICON_BY_NAME[presentation.icon];

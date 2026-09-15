@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   combineLocalDateTimeToIso,
-  formatLocalDateTime,
+  inferPresetFromInterval,
   isTaskLocked,
   isTerminalTask,
   toLocalDateValue,
@@ -16,10 +16,7 @@ import {
   useClearTaskSchedule,
   useSetTaskSchedule,
 } from "@/features/tasks/hooks/useTaskSchedule";
-import type {
-  ReminderPresetId,
-  TaskResponse,
-} from "@/features/tasks/types";
+import type { ReminderPresetId, TaskResponse } from "@/features/tasks/types";
 import {
   TaskScheduleDateField,
   TaskScheduleTimeField,
@@ -37,15 +34,20 @@ const LOCKED_RESCHEDULE_REASON =
   "Task rescheduled from overdue lock state via frontend fallback.";
 
 function buildDraft(task: TaskResponse): TaskScheduleDraft {
+  const startDate = toLocalDateValue(task.startDate);
   const date = toLocalDateValue(task.dueDate);
   const time = task.dueDate ? toLocalTimeValue(task.dueDate) : "09:00";
   const reminderDate = toLocalDateValue(task.reminderAt);
   const reminderTime = toLocalTimeValue(task.reminderAt);
   return {
+    startDate,
     date,
     time,
     reminderEnabled: Boolean(task.reminderAt),
-    reminderPreset: task.reminderAt ? "AT_TIME" : "AT_TIME",
+    reminderPreset:
+      task.reminderAt && task.dueDate
+        ? inferPresetFromInterval(task.dueDate, task.reminderAt)
+        : "AT_TIME",
     reminderDate,
     reminderTime,
   };
@@ -57,10 +59,10 @@ export function TaskScheduleForm({
   onClose,
 }: TaskScheduleFormProps) {
   const [draft, setDraft] = useState<TaskScheduleDraft>(() => buildDraft(task));
-  const now = useMemo(() => new Date(), []);
+  // FE-4: Use fresh Date.now() at validation time instead of capturing once at mount
   const validation = useMemo(
-    () => validateTaskScheduleDraft(draft, now),
-    [draft, now],
+    () => validateTaskScheduleDraft(draft, new Date()),
+    [draft],
   );
 
   const locked = isTaskLocked(task);
@@ -69,7 +71,8 @@ export function TaskScheduleForm({
   const clearBlocked = task.lockStatus === "OVERDUE_LOCKED";
 
   const { mutate: setSchedule, isPending: isSetting } = useSetTaskSchedule();
-  const { mutate: clearSchedule, isPending: isClearing } = useClearTaskSchedule();
+  const { mutate: clearSchedule, isPending: isClearing } =
+    useClearTaskSchedule();
   const isBusy = isSetting || isClearing;
 
   useEffect(() => {
@@ -109,8 +112,13 @@ export function TaskScheduleForm({
         taskId: task.id,
         intent,
         data: {
+          startDate: draft.startDate
+            ? (combineLocalDateTimeToIso(draft.startDate, "00:00") ?? undefined)
+            : undefined,
           dueDate: composedDueIso,
-          reminderAt: draft.reminderEnabled ? composedReminderIso ?? undefined : undefined,
+          reminderAt: draft.reminderEnabled
+            ? (composedReminderIso ?? undefined)
+            : undefined,
           reason: locked ? LOCKED_RESCHEDULE_REASON : undefined,
         },
       },
@@ -138,8 +146,6 @@ export function TaskScheduleForm({
 
   const updateDraft = (patch: Partial<TaskScheduleDraft>) =>
     setDraft((current) => ({ ...current, ...patch }));
-
-  const summary = composedDueIso ? formatLocalDateTime(composedDueIso) : "Pick a date and time";
 
   return (
     <div className="rounded-lg bg-background p-3 ring-1 ring-foreground/7">
@@ -175,13 +181,30 @@ export function TaskScheduleForm({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <Label
+            htmlFor={`task-schedule-start-date-${task.id}`}
+            className="mb-1.5 block text-[11px] font-medium text-foreground/80"
+          >
+            Start date
+          </Label>
+          <TaskScheduleDateField
+            id={`task-schedule-start-date-${task.id}`}
+            value={draft.startDate}
+            disabled={terminal || isBusy}
+            onChange={(value) => updateDraft({ startDate: value })}
+          />
+          <p className="mt-1 h-4 text-[11px] leading-4 text-muted-foreground">
+            {validation.errors.startDate ?? "When work begins"}
+          </p>
+        </div>
         <div>
           <Label
             htmlFor={`task-schedule-date-${task.id}`}
             className="mb-1.5 block text-[11px] font-medium text-foreground/80"
           >
-            Date
+            Due date
           </Label>
           <TaskScheduleDateField
             id={`task-schedule-date-${task.id}`}
@@ -190,18 +213,19 @@ export function TaskScheduleForm({
             disabled={terminal || isBusy}
             onChange={(value) => updateDraft({ date: value })}
           />
-          {validation.errors.date ? (
-            <p className="mt-1 text-[11px] leading-4 text-destructive">
-              {validation.errors.date}
-            </p>
-          ) : null}
+          <p className="mt-1 h-4 text-[11px] leading-4 text-muted-foreground">
+            {validation.errors.date ?? "The deadline"}
+          </p>
         </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
         <div>
           <Label
             htmlFor={`task-schedule-time-${task.id}`}
             className="mb-1.5 block text-[11px] font-medium text-foreground/80"
           >
-            Time
+            Due time
           </Label>
           <TaskScheduleTimeField
             id={`task-schedule-time-${task.id}`}
@@ -209,31 +233,31 @@ export function TaskScheduleForm({
             disabled={terminal || isBusy}
             onChange={(value) => updateDraft({ time: value })}
           />
-          {validation.errors.time ? (
-            <p className="mt-1 text-[11px] leading-4 text-destructive">
-              {validation.errors.time}
-            </p>
-          ) : null}
+          <p className="mt-1 h-4 text-[11px] leading-4 text-muted-foreground">
+            {validation.errors.time ?? "24-hour clock"}
+          </p>
+        </div>
+        <div>
+          <span className="mb-1.5 block text-[11px] font-medium text-foreground/80">
+            Reminder
+          </span>
+          <TaskScheduleReminderMenu
+            preset={draft.reminderPreset}
+            enabled={draft.reminderEnabled}
+            disabled={terminal || isBusy}
+            onPresetChange={(preset) => updateDraft({ reminderPreset: preset })}
+            onEnabledChange={(reminderEnabled) =>
+              updateDraft({ reminderEnabled })
+            }
+          />
+          <p className="mt-1 h-4 text-[11px] leading-4 text-muted-foreground">
+            {validation.errors.reminder ?? "Optional nudges"}
+          </p>
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <TaskScheduleReminderMenu
-          preset={draft.reminderPreset}
-          enabled={draft.reminderEnabled}
-          disabled={terminal || isBusy}
-          onPresetChange={(preset) => updateDraft({ reminderPreset: preset })}
-          onEnabledChange={(reminderEnabled) =>
-            updateDraft({ reminderEnabled })
-          }
-        />
-        <span className="text-right text-[11px] leading-4 text-muted-foreground">
-          {summary}
-        </span>
-      </div>
-
       {draft.reminderEnabled && draft.reminderPreset === "CUSTOM" ? (
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
           <div>
             <Label
               htmlFor={`task-schedule-reminder-date-${task.id}`}
@@ -266,36 +290,20 @@ export function TaskScheduleForm({
         </div>
       ) : null}
 
-      {validation.errors.reminder ? (
-        <p className="mt-1 text-[11px] leading-4 text-destructive">
-          {validation.errors.reminder}
-        </p>
-      ) : null}
-
       <div className="mt-3 flex items-center justify-between gap-2">
         <Button
           size="sm"
           variant="ghost"
           onClick={handleClear}
-          disabled={
-            isBusy ||
-            !hasExistingSchedule ||
-            clearBlocked ||
-            terminal
-          }
+          disabled={isBusy || !hasExistingSchedule || clearBlocked || terminal}
           className="text-muted-foreground"
         >
-          Clear
+          Clear schedule
         </Button>
         <Button
           size="sm"
           onClick={handleSubmit}
-          disabled={
-            isBusy ||
-            terminal ||
-            !validation.ok ||
-            !composedDueIso
-          }
+          disabled={isBusy || terminal || !validation.ok || !composedDueIso}
           aria-live="polite"
         >
           {isSetting ? (
@@ -303,12 +311,12 @@ export function TaskScheduleForm({
           ) : (
             <Check className="size-3.5" strokeWidth={1.75} />
           )}
-          {hasExistingSchedule ? "Reschedule" : "Set schedule"}
+          {hasExistingSchedule ? "Reschedule task" : "Set schedule"}
         </Button>
       </div>
 
       {clearBlocked ? (
-        <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+        <p className="mt-2 text-[11.5px] leading-4 text-muted-foreground">
           Overdue tasks need a new date before the schedule can be cleared.
         </p>
       ) : null}

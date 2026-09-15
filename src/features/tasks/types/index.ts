@@ -39,7 +39,9 @@ export type TaskResponse = {
   name: string;
   description?: string;
   orderTask: number;
+  startDate: string | null;
   dueDate: string | null;
+  dueSoonBefore: string | null;
   reminderAt: string | null;
   reminderSentAt: string | null;
   overdueNotifiedAt: string | null;
@@ -66,6 +68,7 @@ export type TaskResponse = {
 export type CreateTaskRequest = {
   name: string;
   description?: string;
+  startDate?: string;
   dueDate?: string;
   reminderAt?: string;
 };
@@ -112,6 +115,7 @@ export type AssignTaskRequest = {
 };
 
 export type SetTaskScheduleRequest = {
+  startDate?: string;
   dueDate: string;
   reminderAt?: string;
   reason?: string;

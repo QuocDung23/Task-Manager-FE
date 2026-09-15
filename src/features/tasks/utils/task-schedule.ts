@@ -1,9 +1,4 @@
-import type {
-  ReminderPresetId,
-  TaskLockStatus,
-  TaskResponse,
-  TaskScheduleState,
-} from "../types";
+import type { ReminderPresetId, TaskResponse } from "../types";
 
 export const REMINDER_PRESETS: ReadonlyArray<{
   id: ReminderPresetId;
@@ -11,23 +6,57 @@ export const REMINDER_PRESETS: ReadonlyArray<{
   description: string;
   minutes: number | null;
 }> = [
-  { id: "AT_TIME", label: "At due time", description: "Notify when the task is due", minutes: 0 },
-  { id: "BEFORE_15", label: "15 minutes before", description: "Notify 15 minutes before the deadline", minutes: 15 },
-  { id: "BEFORE_30", label: "30 minutes before", description: "Notify 30 minutes before the deadline", minutes: 30 },
-  { id: "BEFORE_60", label: "1 hour before", description: "Notify 1 hour before the deadline", minutes: 60 },
-  { id: "BEFORE_DAY", label: "1 day before", description: "Notify 1 day before the deadline", minutes: 60 * 24 },
-  { id: "CUSTOM", label: "Custom", description: "Pick a custom date and time", minutes: null },
+  {
+    id: "AT_TIME",
+    label: "At due time",
+    description: "Notify when the task is due",
+    minutes: 0,
+  },
+  {
+    id: "BEFORE_15",
+    label: "15 minutes before",
+    description: "Notify 15 minutes before the deadline",
+    minutes: 15,
+  },
+  {
+    id: "BEFORE_30",
+    label: "30 minutes before",
+    description: "Notify 30 minutes before the deadline",
+    minutes: 30,
+  },
+  {
+    id: "BEFORE_60",
+    label: "1 hour before",
+    description: "Notify 1 hour before the deadline",
+    minutes: 60,
+  },
+  {
+    id: "BEFORE_DAY",
+    label: "1 day before",
+    description: "Notify 1 day before the deadline",
+    minutes: 60 * 24,
+  },
+  {
+    id: "CUSTOM",
+    label: "Custom",
+    description: "Pick a custom date and time",
+    minutes: null,
+  },
 ];
 
 const TERMINAL_STATUS_ACTIONS = new Set<string>(["DONE", "CANCELLED"]);
 
-export function isTerminalTask(task: Pick<TaskResponse, "statusAction" | "scheduleState">): boolean {
+export function isTerminalTask(
+  task: Pick<TaskResponse, "statusAction" | "scheduleState">,
+): boolean {
   if (task.scheduleState === "done") return true;
   if (!task.statusAction) return false;
   return TERMINAL_STATUS_ACTIONS.has(task.statusAction);
 }
 
-export function isTaskLocked(task: Pick<TaskResponse, "isLocked" | "lockStatus">): boolean {
+export function isTaskLocked(
+  task: Pick<TaskResponse, "isLocked" | "lockStatus">,
+): boolean {
   if (task.isLocked) return true;
   if (task.lockStatus && task.lockStatus !== "UNLOCKED") return true;
   return false;
@@ -52,7 +81,10 @@ export function toLocalTimeValue(iso: string | null | undefined): string {
   return `${hours}:${minutes}`;
 }
 
-export function combineLocalDateTimeToIso(date: string, time: string): string | null {
+export function combineLocalDateTimeToIso(
+  date: string,
+  time: string,
+): string | null {
   if (!date || !time) return null;
   const [year, month, day] = date.split("-").map(Number);
   const [hour, minute] = time.split(":").map(Number);
@@ -87,6 +119,7 @@ export function resolveReminderAt(
 }
 
 export type TaskScheduleDraft = {
+  startDate: string;
   date: string;
   time: string;
   reminderEnabled: boolean;
@@ -98,6 +131,7 @@ export type TaskScheduleDraft = {
 export type TaskScheduleValidation = {
   ok: boolean;
   errors: {
+    startDate?: string;
     date?: string;
     time?: string;
     reminder?: string;
@@ -110,6 +144,8 @@ export function validateTaskScheduleDraft(
 ): TaskScheduleValidation {
   const errors: TaskScheduleValidation["errors"] = {};
 
+  // First validate dueDate (it's required)
+  let dueIso: string | null = null;
   if (!draft.date) {
     errors.date = "Pick a deadline date.";
   } else if (!draft.time) {
@@ -120,14 +156,25 @@ export function validateTaskScheduleDraft(
       errors.date = "Invalid deadline.";
     } else if (new Date(combined).getTime() <= now.getTime()) {
       errors.date = "Deadline must be in the future.";
+    } else {
+      dueIso = combined;
     }
   }
 
-  if (draft.reminderEnabled && !errors.date && !errors.time) {
-    const dueIso = combineLocalDateTimeToIso(draft.date, draft.time);
-    if (!dueIso) {
-      errors.reminder = "Pick a valid reminder time.";
-    } else if (draft.reminderPreset === "CUSTOM") {
+  // Validate startDate (optional but must be before dueDate)
+  if (draft.startDate && dueIso) {
+    const startIso = combineLocalDateTimeToIso(draft.startDate, "00:00");
+    if (!startIso) {
+      errors.startDate = "Invalid start date.";
+    } else if (new Date(startIso).getTime() > new Date(dueIso).getTime()) {
+      errors.startDate = "Start date must be before the deadline.";
+    }
+  } else if (draft.startDate) {
+    // startDate exists but dueDate didn't validate - skip startDate check
+  }
+
+  if (draft.reminderEnabled && !errors.date && !errors.time && dueIso) {
+    if (draft.reminderPreset === "CUSTOM") {
       if (!draft.reminderDate || !draft.reminderTime) {
         errors.reminder = "Pick a custom reminder date and time.";
       } else {
@@ -140,14 +187,15 @@ export function validateTaskScheduleDraft(
         } else if (new Date(reminderIso).getTime() <= now.getTime()) {
           errors.reminder = "Reminder must be in the future.";
         } else if (
-          new Date(reminderIso).getTime() >=
-          new Date(dueIso).getTime()
+          new Date(reminderIso).getTime() >= new Date(dueIso).getTime()
         ) {
           errors.reminder = "Reminder must be before the deadline.";
         }
       }
     } else {
-      const presetEntry = REMINDER_PRESETS.find((entry) => entry.id === draft.reminderPreset);
+      const presetEntry = REMINDER_PRESETS.find(
+        (entry) => entry.id === draft.reminderPreset,
+      );
       if (!presetEntry || presetEntry.minutes === null) {
         errors.reminder = "Pick a reminder preset.";
       } else {
@@ -178,7 +226,10 @@ export function getTaskSchedulePresentation(
   task: TaskResponse,
   now: Date,
 ): TaskSchedulePresentation {
-  if (task.scheduleState === "overdue_locked" || task.lockStatus === "OVERDUE_LOCKED") {
+  if (
+    task.scheduleState === "overdue_locked" ||
+    task.lockStatus === "OVERDUE_LOCKED"
+  ) {
     return {
       label: "Overdue · Locked",
       helper: task.lockReason ?? undefined,
@@ -188,26 +239,42 @@ export function getTaskSchedulePresentation(
   }
   if (task.scheduleState === "done" || isTerminalTask(task)) {
     return {
-      label: task.dueDate
-        ? `Done · ${formatLocalDate(task.dueDate)}`
-        : "Done",
+      label: task.dueDate ? `Done · ${formatLocalDate(task.dueDate)}` : "Done",
       tone: "success",
       icon: "check",
     };
   }
   if (task.scheduleState === "due_soon") {
+    if (task.startDate && task.dueDate) {
+      return {
+        label: formatDateRange(task.startDate, task.dueDate),
+        helper: task.reminderAt
+          ? formatLocalDateTime(task.reminderAt)
+          : (formatRelativeFromIso(task.dueDate, now) ?? undefined),
+        tone: "warning",
+        icon: "clock",
+      };
+    }
     const relative = formatRelativeFromIso(task.dueDate, now);
     return {
       label: relative ? `Due soon · ${relative}` : "Due soon",
-      helper: task.reminderAt ? formatLocalDateTime(task.reminderAt) : undefined,
+      helper: task.reminderAt
+        ? formatLocalDateTime(task.reminderAt)
+        : undefined,
       tone: "warning",
       icon: "clock",
     };
   }
   if (task.scheduleState === "scheduled" && task.dueDate) {
+    const label =
+      task.startDate && task.dueDate
+        ? formatDateRange(task.startDate, task.dueDate)
+        : formatLocalDateTime(task.dueDate);
     return {
-      label: formatLocalDateTime(task.dueDate),
-      helper: task.reminderAt ? `Reminder ${formatLocalDateTime(task.reminderAt)}` : undefined,
+      label,
+      helper: task.reminderAt
+        ? `Reminder ${formatLocalDateTime(task.reminderAt)}`
+        : undefined,
       tone: "neutral",
       icon: "calendar",
     };
@@ -219,7 +286,8 @@ export function getTaskSchedulePresentation(
   };
 }
 
-export function formatLocalDate(iso: string): string {
+export function formatLocalDate(iso: string | null | undefined): string {
+  if (!iso) return "Not set";
   const parsed = new Date(iso);
   if (Number.isNaN(parsed.getTime())) return "Not set";
   return parsed.toLocaleDateString("en-US", {
@@ -227,6 +295,21 @@ export function formatLocalDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+export function formatDateRange(
+  startIso: string | null,
+  endIso: string | null,
+): string {
+  if (!startIso || !endIso) return formatLocalDate(endIso ?? startIso ?? "");
+  return `${formatLocalDate(startIso)} → ${formatLocalDate(endIso)}`;
+}
+
+export function getDurationDays(startIso: string, endIso: string): number {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+  return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 export function formatLocalDateTime(iso: string): string {
@@ -250,7 +333,10 @@ export function formatLocalDateTime(iso: string): string {
   return `${datePart}, ${timePart} (UTC${sign}${tzHours}:${tzMinutes})`;
 }
 
-export function formatRelativeFromIso(iso: string | null, now: Date): string | null {
+export function formatRelativeFromIso(
+  iso: string | null,
+  now: Date,
+): string | null {
   if (!iso) return null;
   const due = new Date(iso);
   if (Number.isNaN(due.getTime())) return null;
@@ -268,44 +354,27 @@ export function formatRelativeFromIso(iso: string | null, now: Date): string | n
   return rtf.format(diffDays, "day");
 }
 
-export type ResolvedScheduleState = {
-  state: TaskScheduleState;
-  dueDate: string | null;
-  reminderAt: string | null;
-  lockStatus: TaskLockStatus;
-  isLocked: boolean;
-  isOverdue: boolean;
-};
+export function inferPresetFromInterval(
+  dueDateIso: string,
+  reminderAtIso: string,
+): ReminderPresetId {
+  const due = new Date(dueDateIso).getTime();
+  const reminder = new Date(reminderAtIso).getTime();
+  const diffMinutes = Math.round((due - reminder) / 60_000);
 
-export function resolveScheduleState(task: TaskResponse, now: Date): ResolvedScheduleState {
-  const state = task.scheduleState ?? deriveFallbackState(task, now);
-  return {
-    state,
-    dueDate: task.dueDate ?? null,
-    reminderAt: task.reminderAt ?? null,
-    lockStatus: task.lockStatus ?? "UNLOCKED",
-    isLocked: task.isLocked ?? isTaskLocked(task),
-    isOverdue: task.isOverdue ?? deriveIsOverdue(task, now),
-  };
+  if (diffMinutes <= 0) return "AT_TIME";
+  if (diffMinutes <= 15) return "BEFORE_15";
+  if (diffMinutes <= 30) return "BEFORE_30";
+  if (diffMinutes <= 60) return "BEFORE_60";
+  if (diffMinutes <= 60 * 24) return "BEFORE_DAY";
+  return "CUSTOM";
 }
 
-function deriveFallbackState(task: TaskResponse, now: Date): TaskScheduleState {
-  if (isTerminalTask(task)) return "done";
-  if (!task.dueDate) return "none";
-  const due = new Date(task.dueDate);
-  if (Number.isNaN(due.getTime())) return "none";
-  if (due.getTime() < now.getTime()) return "overdue_locked";
-  if (task.reminderAt) {
-    const reminder = new Date(task.reminderAt);
-    if (!Number.isNaN(reminder.getTime()) && reminder.getTime() <= now.getTime()) {
-      return "due_soon";
-    }
-  }
-  return "scheduled";
-}
-
-function deriveIsOverdue(task: TaskResponse, now: Date): boolean {
-  if (!task.dueDate) return false;
-  const due = new Date(task.dueDate);
-  return !Number.isNaN(due.getTime()) && due.getTime() < now.getTime();
+export function parseLocalDateValue(value: string): Date | undefined {
+  if (!value) return undefined;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return undefined;
+  const [, y, m, d] = match;
+  const parsed = new Date(Number(y), Number(m) - 1, Number(d));
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }

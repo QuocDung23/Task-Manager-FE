@@ -56,7 +56,7 @@ export type PaginationResponse = {
   itemsPerPage: number;
   currentPage: number;
   totalPages: number;
-}
+};
 
 export type ProjectListResult = {
   projects: ProjectResponse[];
@@ -73,4 +73,3 @@ export type AddProjectMemberResponse = {
   projectId: string;
   roleId: string;
 };
-

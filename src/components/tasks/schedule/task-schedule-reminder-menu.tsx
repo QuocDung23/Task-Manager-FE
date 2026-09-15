@@ -1,15 +1,12 @@
-import { Check, BellRing } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Check, BellOff, BellRing } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { REMINDER_PRESETS } from "@/features/tasks/utils/task-schedule";
 import type { ReminderPresetId } from "@/features/tasks/types";
 
@@ -21,6 +18,17 @@ type TaskScheduleReminderMenuProps = {
   onEnabledChange: (enabled: boolean) => void;
 };
 
+const NONE_PRESET_ID = "NONE" as const;
+type DisplayPreset = typeof NONE_PRESET_ID | ReminderPresetId;
+
+const NONE_PRESET = {
+  id: NONE_PRESET_ID,
+  label: "No reminder",
+  description: "Skip the nudge.",
+} as const;
+
+const DISPLAY_PRESETS = [NONE_PRESET, ...REMINDER_PRESETS];
+
 export function TaskScheduleReminderMenu({
   preset,
   enabled,
@@ -28,75 +36,119 @@ export function TaskScheduleReminderMenu({
   onPresetChange,
   onEnabledChange,
 }: TaskScheduleReminderMenuProps) {
-  const activePreset = REMINDER_PRESETS.find((entry) => entry.id === preset);
-  const triggerLabel = enabled
-    ? activePreset?.label ?? "Pick a reminder"
-    : "No reminder";
+  const [open, setOpen] = useState(false);
+
+  const activeId: DisplayPreset = enabled ? preset : NONE_PRESET_ID;
+  const activeLabel = enabled
+    ? (REMINDER_PRESETS.find((p) => p.id === preset)?.label ?? "Reminder")
+    : NONE_PRESET.label;
+  const TriggerIcon = enabled ? BellRing : BellOff;
+
+  const handlePick = (value: DisplayPreset) => {
+    if (value === NONE_PRESET_ID) {
+      onEnabledChange(false);
+    } else {
+      onPresetChange(value);
+      onEnabledChange(true);
+    }
+    setOpen(false);
+  };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Popover open={open} onOpenChange={disabled ? undefined : setOpen}>
+      <PopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
           disabled={disabled}
-          className="h-8 justify-between gap-2 rounded-lg px-2.5 text-[12px] font-medium"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          className={cn(
+            "h-9 w-full justify-between gap-2 rounded-md border-input px-2.5 text-[12.5px] font-normal tabular-nums shadow-xs",
+            "hover:bg-background",
+          )}
         >
-          <span className="flex items-center gap-1.5">
-            <BellRing className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
-            {triggerLabel}
+          <span className="flex min-w-0 items-center gap-2">
+            <TriggerIcon
+              className={cn(
+                "size-3.5 shrink-0",
+                enabled ? "text-primary" : "opacity-60",
+              )}
+              strokeWidth={1.75}
+              aria-hidden
+            />
+            <span className="truncate text-left">{activeLabel}</span>
           </span>
-          <span className="text-[10.5px] uppercase tracking-wide text-muted-foreground">
+          <span
+            className={cn(
+              "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tabular-nums",
+              enabled
+                ? "bg-primary/12 text-primary"
+                : "bg-muted text-muted-foreground",
+            )}
+          >
             {enabled ? "On" : "Off"}
           </span>
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
-        <DropdownMenuLabel className="px-2 py-1.5">
-          Reminder
-        </DropdownMenuLabel>
-        <DropdownMenuItem
-          onSelect={(event) => {
-            event.preventDefault();
-            onEnabledChange(!enabled);
-          }}
-          className="gap-2"
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={6}
+        collisionPadding={12}
+        className="w-[min(280px,calc(100vw-2rem))] p-1"
+      >
+        <div
+          role="radiogroup"
+          aria-label="Reminder"
+          className="flex flex-col gap-0.5"
         >
-          <span
-            aria-hidden="true"
-            className={`grid size-5 place-items-center rounded-md ring-1 transition-colors ${
-              enabled
-                ? "bg-primary text-primary-foreground ring-primary"
-                : "bg-background text-transparent ring-foreground/15"
-            }`}
-          >
-            <Check className="size-3" strokeWidth={2} />
-          </span>
-          <span className="text-[12.5px]">{enabled ? "Disable reminder" : "Enable reminder"}</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup
-          value={preset}
-          onValueChange={(value) => {
-            onPresetChange(value as ReminderPresetId);
-            onEnabledChange(true);
-          }}
-        >
-          {REMINDER_PRESETS.map((option) => (
-            <DropdownMenuRadioItem
-              key={option.id}
-              value={option.id}
-              disabled={!enabled && option.id !== "AT_TIME"}
-              className="flex-col items-start gap-0 py-1.5"
-            >
-              <span className="text-[12.5px] font-medium">{option.label}</span>
-              <span className="text-[11px] text-muted-foreground">
-                {option.description}
-              </span>
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {DISPLAY_PRESETS.map((option) => {
+            const isActive = activeId === option.id;
+            const isNone = option.id === NONE_PRESET_ID;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                role="radio"
+                aria-checked={isActive}
+                onClick={() => handlePick(option.id)}
+                className={cn(
+                  "group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors outline-none",
+                  "hover:bg-accent focus-visible:bg-accent",
+                  isActive && "bg-accent/60",
+                )}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "grid size-4 shrink-0 place-items-center rounded-full ring-1 transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground ring-primary"
+                      : "bg-background text-transparent ring-foreground/20",
+                  )}
+                >
+                  {isActive ? (
+                    <Check className="size-2.5" strokeWidth={3} />
+                  ) : null}
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-0">
+                  <span
+                    className={cn(
+                      "flex items-center gap-1.5 text-[12.5px] font-medium",
+                      isNone && "text-muted-foreground",
+                    )}
+                  >
+                    {option.label}
+                  </span>
+                  <span className="text-[11px] leading-4 text-muted-foreground">
+                    {option.description}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
