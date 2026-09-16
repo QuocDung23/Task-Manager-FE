@@ -6,6 +6,7 @@ import {
   AvatarGroup,
   AvatarImage,
 } from "@/components/ui/avatar";
+import { MembershipBadge } from "@/components/ui/membership-badge";
 
 import type { BoardMemberUser } from "@/features/boards/types";
 
@@ -23,6 +24,7 @@ interface BoardCardProps {
   members?: BoardMemberUser[];
   listCount?: number;
   isListCountLoading?: boolean;
+  owned?: boolean;
 }
 
 export function BoardCard({
@@ -31,16 +33,24 @@ export function BoardCard({
   members = [],
   listCount,
   isListCountLoading = false,
+  owned,
 }: BoardCardProps) {
   const totalMembers = members.length;
   const visibleMembers = members.slice(0, MAX_AVATARS);
   const remainingCount = Math.max(totalMembers - visibleMembers.length, 0);
   const lists = listCount ?? 0;
+  const isOwned = owned === true;
 
   return (
     <div className="flex h-full flex-col p-5">
       <div className="flex items-start gap-3.5">
-        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/10">
+        <div
+          className={
+            isOwned
+              ? "grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/10"
+              : "grid size-10 shrink-0 place-items-center rounded-xl bg-foreground/5 text-muted-foreground ring-1 ring-inset ring-foreground/10"
+          }
+        >
           <FolderOpen
             className="size-5"
             strokeWidth={1.75}
@@ -49,9 +59,12 @@ export function BoardCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-heading text-[15.5px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
-            {name}
-          </h3>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="truncate font-heading text-[15.5px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
+              {name}
+            </h3>
+            <MembershipBadge owned={owned} />
+          </div>
           {description ? (
             <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground/85">
               {description}

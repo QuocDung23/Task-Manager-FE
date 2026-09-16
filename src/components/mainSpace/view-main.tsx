@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ErrorState } from "@/components/ui/error-state";
 import { getApiErrorMessage } from "@/lib/error-message";
+import { getCurrentUserId, resolveMembership } from "@/lib/membership";
 import { APP_ROUTES } from "@/router/constans";
 
 import { HeaderLayout } from "@/layouts/header-layout";
@@ -27,6 +28,8 @@ export function ViewMainPage() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const currentUserId = useMemo(() => getCurrentUserId(), []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -194,6 +197,10 @@ export function ViewMainPage() {
                     members={project.members}
                     boardCount={getBoardCount(project)}
                     isBoardCountLoading={isBoardCountLoading}
+                    owned={
+                      resolveMembership(project.userId, currentUserId) ===
+                      "created-by-me"
+                    }
                   />
                 </Link>
               </Card>

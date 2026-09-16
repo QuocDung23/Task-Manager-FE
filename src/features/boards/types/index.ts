@@ -10,6 +10,7 @@ export type BoardResponse = {
   name: string;
   description?: string;
   projectId: string;
+  userId: string;
   listCount: number;
   memberCount: number;
 };

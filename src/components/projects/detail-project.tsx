@@ -16,6 +16,7 @@ import { Card } from "../ui/card";
 import { Input } from "../ui/input";
 import { ErrorState } from "../ui/error-state";
 import { getApiErrorMessage } from "@/lib/error-message";
+import { getCurrentUserId, resolveMembership } from "@/lib/membership";
 import { APP_ROUTES } from "@/router/constans";
 
 import { BoardCard } from "./boardCard-project";
@@ -42,6 +43,8 @@ export function DetailProject() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const currentUserId = useMemo(() => getCurrentUserId(), []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -282,6 +285,10 @@ export function DetailProject() {
                   members={membersByBoardId[board.id] ?? []}
                   listCount={getListCount(board)}
                   isListCountLoading={isListCountLoading}
+                  owned={
+                    resolveMembership(board.userId, currentUserId) ===
+                    "created-by-me"
+                  }
                 />
               </Card>
             </motion.div>
