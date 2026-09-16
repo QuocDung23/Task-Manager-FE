@@ -6,9 +6,6 @@ const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
 export const axiosLocal = axios.create({
   baseURL: apiBaseUrl,
   timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
   withCredentials: true,
 });
 
@@ -30,7 +27,6 @@ axiosLocal.interceptors.request.use(
   },
   (error) => Promise.reject(error),
 );
-
 
 axiosLocal.interceptors.response.use(
   (response) => response,
