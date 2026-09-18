@@ -15,8 +15,12 @@ function resolveSocketUrl(): string {
 
 let socket: TypedSocket | null = null;
 
+function getSocketAuthToken(): string | null {
+  return authStorage.getToken();
+}
+
 function buildSocket(): TypedSocket {
-  const token = authStorage.getValidToken();
+  const token = getSocketAuthToken();
   const url = resolveSocketUrl();
   const instance: TypedSocket = io(url, {
     autoConnect: false,
@@ -42,7 +46,7 @@ function buildSocket(): TypedSocket {
   }
 
   instance.on("connect_error", () => {
-    const current = authStorage.getValidToken();
+    const current = authStorage.getToken();
     instance.auth = current ? { token: current } : {};
   });
 
@@ -56,7 +60,7 @@ export function getSocket(): TypedSocket {
 
 export function ensureSocketConnected(): void {
   const instance = getSocket();
-  const token = authStorage.getValidToken();
+  const token = getSocketAuthToken();
   instance.auth = token ? { token } : {};
   if (!instance.connected) instance.connect();
 }
@@ -67,7 +71,7 @@ export function disconnectSocket(): void {
 
 export function refreshSocketAuth(): void {
   if (!socket) return;
-  const token = authStorage.getValidToken();
+  const token = getSocketAuthToken();
   socket.auth = token ? { token } : {};
   if (!socket.connected) {
     socket.connect();

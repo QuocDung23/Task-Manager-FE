@@ -15,6 +15,8 @@ import { MainLayout } from "@/layouts/main-layout";
 import { DetailProject } from "@/components/projects/detail-project";
 import { APP_ROUTES } from "./constans";
 import { BoardPage } from "@/pages/board/board-page";
+import { SessionRestoreProvider } from "@/features/auth/hooks/useSessionRestore";
+import type { JSX } from "react";
 
 export const router = createBrowserRouter([
   {
@@ -86,3 +88,11 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+export function AppProviders({ children }: { children: React.ReactNode }): JSX.Element {
+  return (
+    <SessionRestoreProvider>
+      {children}
+    </SessionRestoreProvider>
+  );
+}

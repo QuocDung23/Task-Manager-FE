@@ -278,12 +278,13 @@ export function useGlobalRealtime(): void {
     socket.on("disconnect", onDisconnect);
 
     const tick = (): void => {
-      const hasToken = Boolean(authStorage.getValidToken());
+      const hasToken = Boolean(authStorage.getToken());
       if (hasToken && !hasTokenRef.current) {
         refreshSocketAuth();
         ensureSocketConnected();
         hasTokenRef.current = true;
       } else if (!hasToken && hasTokenRef.current) {
+        // Token fully removed — user logged out
         disconnectSocket();
         resetBoardRooms();
         resetProjectRooms();

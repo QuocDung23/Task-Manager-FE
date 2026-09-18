@@ -25,7 +25,7 @@ export function decodeTokenPayload(
   return decodeJwtPayload(token);
 }
 
-function isExpiredJwtToken(token: string): boolean {
+export function isTokenExpired(token: string): boolean {
   const payload = decodeJwtPayload(token);
   const exp = payload?.exp;
 
@@ -45,20 +45,26 @@ export const authStorage = {
   getToken() {
     return localStorage.getItem(AUTH_TOKEN_KEY);
   },
+
+  hasExpiredToken(token?: string | null): boolean {
+    const t = token ?? this.getToken();
+    if (!t) return true;
+    return isTokenExpired(t);
+  },
+
   getValidToken() {
     const token = this.getToken();
     if (!token) return null;
-
-    if (isExpiredJwtToken(token)) {
-      this.clearToken();
+    if (isTokenExpired(token)) {
       return null;
     }
-
     return token;
   },
   getTokenPayload(): TokenPayload | null {
-    const token = this.getValidToken();
+    // Use getToken() to avoid auto-clearing; guard should handle expired tokens
+    const token = this.getToken();
     if (!token) return null;
+    if (isTokenExpired(token)) return null;
     const payload = decodeJwtPayload(token);
     if (!payload) return null;
     return payload as TokenPayload;

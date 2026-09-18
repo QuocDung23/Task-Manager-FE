@@ -1,14 +1,23 @@
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
-import { router } from "./router";
+import { AppProviders, router } from "./router";
 import { useGlobalRealtime } from "./features/realtime/hooks/useTaskSocket";
+import type { JSX } from "react";
 
-export default function App() {
+function RouterApp(): JSX.Element {
   useGlobalRealtime();
   return (
     <>
-        <RouterProvider router={router} />
-        <Toaster richColors position="top-right" />
+      <RouterProvider router={router} />
+      <Toaster richColors position="top-right" />
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <AppProviders>
+      <RouterApp />
+    </AppProviders>
   );
 }

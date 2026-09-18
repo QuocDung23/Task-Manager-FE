@@ -17,6 +17,26 @@ const NO_REFRESHTOKEN_ENDPOINTS = [
   "/auth/refresh-token",
 ];
 
+export async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshTokenPromise) {
+    refreshTokenPromise = axiosLocal
+      .post("/auth/refresh-token")
+      .then((res) => {
+        const newAccessToken = res.data.data.accessToken;
+        authStorage.setToken(newAccessToken);
+        return newAccessToken;
+      })
+      .catch(() => {
+        authStorage.clearToken();
+        return null;
+      })
+      .finally(() => {
+        refreshTokenPromise = null;
+      });
+  }
+  return refreshTokenPromise;
+}
+
 axiosLocal.interceptors.request.use(
   (config) => {
     const token = authStorage.getToken();
@@ -31,10 +51,8 @@ axiosLocal.interceptors.request.use(
 axiosLocal.interceptors.response.use(
   (response) => response,
   async (error) => {
-    //original = ban đầu
     const originalRequest = error.config;
 
-    //1 check condition bo qa refresh
     if (
       error.response?.status !== 401 ||
       !originalRequest ||
@@ -46,30 +64,20 @@ axiosLocal.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    const existingToken = authStorage.getToken();
+    if (!existingToken) {
+      return Promise.reject(error);
+    }
+
     originalRequest._retry = true;
 
-    //2 activate or await to response
-    if (!refreshTokenPromise) {
-      refreshTokenPromise = axiosLocal
-        .post("/auth/refresh-token")
-        .then((res) => {
-          const newAccessToken = res.data.data.accessToken;
-          authStorage.setToken(newAccessToken);
-          return newAccessToken;
-        })
-        .finally(() => {
-          refreshTokenPromise = null;
-        });
+    const newAccessToken = await refreshAccessToken();
+    if (newAccessToken) {
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      return axiosLocal(originalRequest);
     }
-    try {
-      const newAccessToken = await refreshTokenPromise;
-      if (newAccessToken) {
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return axiosLocal(originalRequest);
-      }
-    } catch (refreshError) {
-      return Promise.reject(refreshError);
-    }
+
+    // Refresh failed — propagate the original error to caller
     return Promise.reject(error);
   },
 );
