@@ -4,12 +4,14 @@ import {
   useContext,
   useEffect,
   useRef,
+  useSyncExternalStore,
   useState,
   type JSX,
   type ReactNode,
 } from "react";
-import { refreshAccessToken } from "@/services/axios";
+
 import { authStorage } from "../storage/auth-storage";
+import { refreshAccessToken } from "@/services/axios";
 
 export type SessionRestoreStatus =
   | "initializing"
@@ -23,31 +25,55 @@ interface SessionRestoreContextValue {
   status: SessionRestoreStatus;
   isLoading: boolean;
   restoreSession: () => Promise<boolean>;
-
-  isSessionRestored: boolean;
-
-  isSessionExpired: boolean;
 }
 
 const SessionRestoreContext = createContext<SessionRestoreContextValue | null>(
   null,
 );
 
-export function useSessionRestoreContext(): SessionRestoreContextValue {
+export function useSessionRestore(): SessionRestoreContextValue {
   const ctx = useContext(SessionRestoreContext);
   if (!ctx) {
     throw new Error(
-      "useSessionRestoreContext must be used within SessionRestoreProvider",
+      "useSessionRestore must be used within SessionRestoreProvider",
     );
   }
   return ctx;
 }
 
-export function useSessionRestore(): SessionRestoreContextValue {
-  return useSessionRestoreContext();
+let sharedRestorePromise: Promise<boolean> | null = null;
+const restoreListeners = new Set<() => void>();
+
+function notifyRestoreListeners(): void {
+  restoreListeners.forEach((listener) => listener());
 }
 
-let sharedRestorePromise: Promise<boolean> | null = null;
+function subscribeToRestore(callback: () => void): () => void {
+  restoreListeners.add(callback);
+  return () => {
+    restoreListeners.delete(callback);
+  };
+}
+
+function getIsRestoringSnapshot(): boolean {
+  return sharedRestorePromise !== null;
+}
+
+function beginRestore(task: () => Promise<boolean>): Promise<boolean> {
+  if (sharedRestorePromise) {
+    return sharedRestorePromise;
+  }
+  sharedRestorePromise = task().finally(() => {
+    sharedRestorePromise = null;
+    notifyRestoreListeners();
+  });
+  notifyRestoreListeners();
+  return sharedRestorePromise;
+}
+
+export function useIsSessionRestoring(): boolean {
+  return useSyncExternalStore(subscribeToRestore, getIsRestoringSnapshot);
+}
 
 interface SessionRestoreProviderProps {
   children: ReactNode;
@@ -69,6 +95,17 @@ export function SessionRestoreProvider({
     return false;
   }, []);
 
+  const restoreSession = useCallback((): Promise<boolean> => {
+    // Base the decision on the live token instead of the mount-time status:
+    // a valid access token means there is nothing to refresh, an expired one
+    // means we refresh no matter what the previous provider status was.
+    const currentToken = authStorage.getToken();
+    if (currentToken && !authStorage.hasExpiredToken(currentToken)) {
+      return Promise.resolve(true);
+    }
+    return beginRestore(doRestore);
+  }, [doRestore]);
+
   useEffect(() => {
     mountedRef.current = true;
 
@@ -87,40 +124,14 @@ export function SessionRestoreProvider({
     }
 
     setStatus("checking");
-
-    if (!sharedRestorePromise) {
-      sharedRestorePromise = doRestore().finally(() => {
-        sharedRestorePromise = null;
-      });
-    }
-
-    void sharedRestorePromise;
+    void beginRestore(doRestore);
 
     return () => {
       mountedRef.current = false;
     };
-  }, []);
-
-  const restoreSession = useCallback(async (): Promise<boolean> => {
-    if (status === "restored" || status === "unchanged") {
-      return true; // Already good
-    }
-    if (status === "initializing" || status === "checking") {
-      // Wait for ongoing restore
-      if (sharedRestorePromise) {
-        return sharedRestorePromise;
-      }
-      setStatus("checking");
-    } else {
-      setStatus("checking");
-    }
-    const success = await doRestore();
-    return success;
-  }, [status, doRestore]);
+  }, [doRestore]);
 
   const isLoading = status === "initializing" || status === "checking";
-  const isSessionRestored = status === "restored";
-  const isSessionExpired = status === "failed";
 
   return (
     <SessionRestoreContext.Provider
@@ -128,8 +139,6 @@ export function SessionRestoreProvider({
         status,
         isLoading,
         restoreSession,
-        isSessionRestored,
-        isSessionExpired,
       }}
     >
       {children}

@@ -33,12 +33,6 @@ export const authApi = {
     const response = await axiosLocal.post("/auth/logout");
     return response.data;
   },
-  refreshToken: async (): Promise<LoginResponse> => {
-    const response = await axiosLocal.post<ApiResponse<LoginResponse>>(
-      "/auth/refresh-token",
-    );
-    return response.data.data;
-  },
   sendOtp: async (data: SendOtpRequest): Promise<ForgotPasswordResponse> => {
     const response = await axiosLocal.post<ApiResponse<ForgotPasswordResponse>>(
       "/auth/otp",

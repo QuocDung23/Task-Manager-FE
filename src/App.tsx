@@ -1,6 +1,7 @@
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
-import { AppProviders, router } from "./router";
+import { router } from "./router";
+import { AppProviders } from "./router/app-providers";
 import { useGlobalRealtime } from "./features/realtime/hooks/useTaskSocket";
 import type { JSX } from "react";
 

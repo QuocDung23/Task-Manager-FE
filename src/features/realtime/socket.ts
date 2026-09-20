@@ -16,7 +16,7 @@ function resolveSocketUrl(): string {
 let socket: TypedSocket | null = null;
 
 function getSocketAuthToken(): string | null {
-  return authStorage.getToken();
+  return authStorage.getUsableToken();
 }
 
 function buildSocket(): TypedSocket {
@@ -46,7 +46,7 @@ function buildSocket(): TypedSocket {
   }
 
   instance.on("connect_error", () => {
-    const current = authStorage.getToken();
+    const current = authStorage.getUsableToken();
     instance.auth = current ? { token: current } : {};
   });
 

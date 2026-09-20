@@ -10,8 +10,8 @@ interface MembershipBadgeProps {
 
 export function MembershipBadge({
   owned,
-  labelOwner = "Created by me",
-  labelMember = "Shared with me",
+  labelOwner = "Owner",
+  labelMember = "Member",
   className,
 }: MembershipBadgeProps) {
   if (typeof owned !== "boolean") return null;

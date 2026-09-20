@@ -52,25 +52,19 @@ export const authStorage = {
     return isTokenExpired(t);
   },
 
-  getValidToken() {
+  getUsableToken() {
     const token = this.getToken();
     if (!token) return null;
-    if (isTokenExpired(token)) {
-      return null;
-    }
+    if (isTokenExpired(token)) return null;
     return token;
   },
   getTokenPayload(): TokenPayload | null {
-    // Use getToken() to avoid auto-clearing; guard should handle expired tokens
     const token = this.getToken();
     if (!token) return null;
     if (isTokenExpired(token)) return null;
     const payload = decodeJwtPayload(token);
     if (!payload) return null;
     return payload as TokenPayload;
-  },
-  hasValidToken() {
-    return !!this.getValidToken();
   },
   clearToken() {
     localStorage.removeItem(AUTH_TOKEN_KEY);

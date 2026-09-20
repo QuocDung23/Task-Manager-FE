@@ -1,5 +1,6 @@
 import axios from "axios";
 import { authStorage } from "../features/auth/storage/auth-storage";
+import { AuthRefreshCoordinator } from "./auth-refresh-coordinator";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
 
@@ -10,6 +11,7 @@ export const axiosLocal = axios.create({
 });
 
 let refreshTokenPromise: Promise<string | null> | null = null;
+const refreshCoordinator = new AuthRefreshCoordinator();
 
 const NO_REFRESHTOKEN_ENDPOINTS = [
   "/auth/login",
@@ -17,19 +19,34 @@ const NO_REFRESHTOKEN_ENDPOINTS = [
   "/auth/refresh-token",
 ];
 
+function isAuthRejection(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  const status = error.response?.status;
+  return status === 401 || status === 403;
+}
+
+async function performRefreshRequest(): Promise<string | null> {
+  try {
+    const response = await axiosLocal.post("/auth/refresh-token");
+    const newAccessToken: unknown = response.data?.data?.accessToken;
+    if (typeof newAccessToken !== "string" || !newAccessToken) {
+      authStorage.clearToken();
+      return null;
+    }
+    authStorage.setToken(newAccessToken);
+    return newAccessToken;
+  } catch (error) {
+    if (isAuthRejection(error)) {
+      authStorage.clearToken();
+    }
+    return null;
+  }
+}
+
 export async function refreshAccessToken(): Promise<string | null> {
   if (!refreshTokenPromise) {
-    refreshTokenPromise = axiosLocal
-      .post("/auth/refresh-token")
-      .then((res) => {
-        const newAccessToken = res.data.data.accessToken;
-        authStorage.setToken(newAccessToken);
-        return newAccessToken;
-      })
-      .catch(() => {
-        authStorage.clearToken();
-        return null;
-      })
+    refreshTokenPromise = refreshCoordinator
+      .coordinate(performRefreshRequest)
       .finally(() => {
         refreshTokenPromise = null;
       });
@@ -77,7 +94,6 @@ axiosLocal.interceptors.response.use(
       return axiosLocal(originalRequest);
     }
 
-    // Refresh failed — propagate the original error to caller
     return Promise.reject(error);
   },
 );

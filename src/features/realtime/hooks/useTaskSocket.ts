@@ -278,7 +278,7 @@ export function useGlobalRealtime(): void {
     socket.on("disconnect", onDisconnect);
 
     const tick = (): void => {
-      const hasToken = Boolean(authStorage.getToken());
+      const hasToken = Boolean(authStorage.getUsableToken());
       if (hasToken && !hasTokenRef.current) {
         refreshSocketAuth();
         ensureSocketConnected();
