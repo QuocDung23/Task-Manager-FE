@@ -40,5 +40,6 @@ export type BoardMemberUser = {
   avatar: string | null;
   boardMemberId: string;
   roleId: string;
+  role?: string;
   status: string;
 };

@@ -79,7 +79,15 @@ export function registerNotificationEventHandlers(
       document.visibilityState === "visible" &&
       (notification.priority === "URGENT" || notification.priority === "DIRECT")
     ) {
-      toast(notification.title, { id: notification.id, description: notification.body });
+      const memberRoleEvent =
+        notification.type === "PROJECT_MEMBER_ROLE_CHANGED" ||
+        notification.type === "BOARD_MEMBER_ROLE_CHANGED";
+      toast(notification.title, {
+        id: memberRoleEvent
+          ? `member-role:${notification.type}:${notification.body}`
+          : notification.id,
+        description: notification.body,
+      });
     }
   };
 

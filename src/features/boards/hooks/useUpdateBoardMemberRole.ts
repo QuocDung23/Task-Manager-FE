@@ -12,13 +12,6 @@ type ApiError = {
   };
 };
 
-/**
- * Cập nhật role của một board member.
- *
- * Endpoint BE theo plan realtime-board §5.6 — sẽ được bổ sung ở Phase 3 BE.
- * onSuccess áp dụng `applyBoardMemberRoleUpdated` để cache đồng bộ với
- * socket event `board:member_role_updated`.
- */
 export const useUpdateBoardMemberRole = (
   boardId: string,
   projectId: string,
@@ -43,9 +36,7 @@ export const useUpdateBoardMemberRole = (
       });
     },
     onError: (error: ApiError) => {
-      toast.error(
-        error.response?.data?.message ?? "Update Member Role Failed",
-      );
+      toast.error(error.response?.data?.message ?? "Update Member Role Failed");
     },
   });
 };

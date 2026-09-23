@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { AddMemberDialog } from "@/components/projects/addMember-dialog";
 import { useAddMemberBoard } from "@/features/boards/hooks/useAddMemberBoard";
@@ -42,8 +43,17 @@ export function DialogManageMembersBoard({
     email: member.email,
     avatar: member.avatar ?? null,
     roleId: member.roleId,
+    role: member.role,
     isOwner: Boolean(ownerUserId && member.id === ownerUserId),
   }));
+
+  const roleUuidByName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const raw of membersQuery.data ?? []) {
+      if (raw.role && !map.has(raw.role)) map.set(raw.role, raw.roleId);
+    }
+    return map;
+  }, [membersQuery.data]);
 
   const handleRemoveMember = async (member: MemberItem) => {
     try {
@@ -57,8 +67,16 @@ export function DialogManageMembersBoard({
   };
 
   const handleChangeRole = async (member: MemberItem, roleName: string) => {
+    const roleId = roleUuidByName.get(roleName);
+    if (!roleId) {
+      toast.error(`Could not resolve role "${roleName}"`);
+      return;
+    }
     try {
-      await changeRoleMutation.mutateAsync({ userId: member.userId, roleId: roleName });
+      await changeRoleMutation.mutateAsync({
+        userId: member.userId,
+        roleId,
+      });
     } catch {
       /* Ignore: the mutation hook surfaces the error toast. */
     }

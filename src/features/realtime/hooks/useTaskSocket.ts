@@ -153,8 +153,16 @@ export function registerTaskEventHandlers(
   const handleLegacyNotification: ServerToClientEvents["notification:new"] = (
     payload,
   ) => {
-    if (!payload.type.startsWith("TASK_")) return;
-    toast(payload.title, { description: payload.body });
+    const isMemberRole =
+      payload.type === "PROJECT_MEMBER_ROLE_CHANGED" ||
+      payload.type === "BOARD_MEMBER_ROLE_CHANGED";
+    if (!payload.type.startsWith("TASK_") && !isMemberRole) return;
+    toast(payload.title, {
+      id: isMemberRole
+        ? `member-role:${payload.type}:${payload.body}`
+        : undefined,
+      description: payload.body,
+    });
   };
 
   socket.on("task:schedule_updated", handleScheduleUpdated);
