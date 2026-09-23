@@ -5,12 +5,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { MoreVertical, UserPlus, SquarePen, Trash2 } from "lucide-react";
+import { MoreVertical, UserPlus, Users, SquarePen, Trash2 } from "lucide-react";
 
 import { useDeleteProject } from "@/features/projects/hooks/useDeleteProject";
 import { UpdateProjectDialog } from "./updateProject-main";
 import type { ProjectResponse } from "@/features/projects/types";
 import { DialogAddMemberProject } from "../projects/addMember-project";
+import { DialogManageMembersProject } from "../members/manage-members-project";
 import { stopDropdownTriggerPropagation } from "@/lib/dropdown-trigger";
 
 
@@ -21,6 +22,7 @@ interface MenuSettingProps {
 export function MenuSettingProject({ project }: MenuSettingProps) {
   const [openEdit, setOpenEdit] = useState(false);
   const [openAddMember, setOpenAddMember] = useState(false);
+  const [openManageMembers, setOpenManageMembers] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
   const { mutate: deleteProject, isPending } = useDeleteProject();
 
@@ -65,6 +67,20 @@ export function MenuSettingProject({ project }: MenuSettingProps) {
             onSelect={(e) => {
               e.preventDefault();
               setOpenMenu(false);
+              setTimeout(() => setOpenManageMembers(true), 0);
+            }}
+            className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-normal transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus:bg-foreground/50"
+          >
+            <span className="grid size-6 place-items-center rounded-full bg-foreground/4 text-foreground/80">
+              <Users className="size-3.5" aria-hidden="true" />
+            </span>
+            <span>Manage members</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              setOpenMenu(false);
               setTimeout(() => setOpenEdit(true), 0);
             }}
             className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-normal transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus:bg-foreground/50"
@@ -98,6 +114,12 @@ export function MenuSettingProject({ project }: MenuSettingProps) {
         projectId={project.id}
         open={openAddMember}
         onOpenChange={setOpenAddMember}
+      />
+      <DialogManageMembersProject
+        projectId={project.id}
+        ownerUserId={project.userId}
+        open={openManageMembers}
+        onOpenChange={setOpenManageMembers}
       />
       <UpdateProjectDialog
         project={project}

@@ -18,6 +18,7 @@ export function DialogAddMemberBoard({
   return (
     <AddMemberDialog
       scope="board"
+      projectId={projectId}
       open={open}
       onOpenChange={onOpenChange}
       onAdd={(user) => mutateAsync(user.id)}

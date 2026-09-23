@@ -48,7 +48,7 @@ export function PaginationLayout({
     <Pagination className="mt-12">
       <PaginationContent
         className={cn(
-          "relative isolate gap-1 rounded-full border border-border bg-card p-1.5 text-card-foreground",
+          "gap-1 rounded-full border border-border bg-card p-1 text-card-foreground",
         )}
       >
         <PaginationItem>
@@ -66,7 +66,7 @@ export function PaginationLayout({
           {pages.map((page, idx) =>
             page === "ellipsis" ? (
               <PaginationItem key={`ellipsis-${idx}`}>
-                <span className="grid size-9 place-items-center text-muted-foreground">
+                <span className="grid size-8 place-items-center text-muted-foreground">
                   <DotsThree weight="bold" className="size-4" />
                 </span>
               </PaginationItem>
@@ -119,7 +119,7 @@ function NavPill({
       aria-label={label}
       disabled={disabled}
       className={cn(
-        "group/nav inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium",
+        "group/nav inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium",
         "transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         disabled
           ? "cursor-not-allowed text-muted-foreground/40"
@@ -155,25 +155,14 @@ function PagePill({
       transition={{ type: "spring", stiffness: 420, damping: 28 }}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "relative grid size-9 place-items-center rounded-full text-[13px] font-medium tabular-nums",
+        "grid size-8 place-items-center rounded-full text-[12.5px] font-medium tabular-nums",
         "transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         isActive
-          ? "text-accent-foreground"
+          ? "bg-accent text-accent-foreground"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
-      {isActive && (
-        <motion.span
-          layoutId="pagination-active-pill"
-          className="absolute inset-0 -z-10 rounded-full bg-accent"
-          transition={{ type: "spring", stiffness: 380, damping: 30 }}
-        >
-          <span className="grid size-full place-items-center text-accent-foreground">
-            {page}
-          </span>
-        </motion.span>
-      )}
-      {!isActive && page}
+      {page}
     </motion.button>
   );
 }

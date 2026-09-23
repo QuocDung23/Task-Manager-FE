@@ -1,10 +1,11 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Search, Tag } from "lucide-react";
+import { Loader2, Search, Users, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
 import { useBoard } from "@/features/boards/hooks/useBoard";
+import { useBoardMembers } from "@/features/boards/hooks/useBoardMembers";
 import { useLists } from "@/features/lists/hooks/useLists";
 import { EASE_FLUID } from "@/lib/motion";
 
@@ -18,6 +19,15 @@ import { TagFilter } from "../tags/tag-filter";
 import { BoardTagsManagerDialog } from "../tags/board-tags-manager-dialog";
 import { useBoardRoom } from "@/features/realtime/hooks/useBoardRoom";
 import { NotificationBell } from "../notifications/notification-bell";
+import { DialogManageMembersBoard } from "../members/manage-members-board";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  AvatarGroup,
+  AvatarGroupCount,
+} from "@/components/ui/avatar";
+import { getMemberInitials } from "@/lib/member-roles";
 
 interface DetailBoardProps {
   boardId: string;
@@ -39,6 +49,8 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [taskFilters, setTaskFilters] = useState<TaskListFilters>({});
   const [tagsManagerOpen, setTagsManagerOpen] = useState(false);
+  const [openManageMembers, setOpenManageMembers] = useState(false);
+  const { data: boardMembers } = useBoardMembers(boardId);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -166,7 +178,49 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <NotificationBell/>
+              <motion.button
+                type="button"
+                aria-label="Manage board members"
+                onClick={() => setOpenManageMembers(true)}
+                whileHover={reduceMotion ? undefined : { y: -1 }}
+                whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 420,
+                  damping: 28,
+                }}
+                className="group flex items-center gap-2.5 rounded-full border border-border/60 bg-card/70 py-1.5 pl-1.5 pr-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-card outline-none focus-visible:ring-4 focus-visible:ring-accent/15 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+              >
+                <AvatarGroup className="-space-x-2.5">
+                  {(boardMembers ?? []).slice(0, 3).map((member) => (
+                    <Avatar
+                      key={member.id}
+                      size="sm"
+                      className="size-7 cursor-pointer"
+                    >
+                      {member.avatar ? (
+                        <AvatarImage src={member.avatar} alt="" />
+                      ) : null}
+                      <AvatarFallback className="bg-secondary text-[10px] font-semibold text-secondary-foreground">
+                        {getMemberInitials(member.name, member.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                  {(boardMembers?.length ?? 0) > 3 && (
+                    <AvatarGroupCount className="size-7 cursor-pointer font-heading text-[10px] font-medium">
+                      <span className="tabular-nums">
+                        +{(boardMembers?.length ?? 0) - 3}
+                      </span>
+                    </AvatarGroupCount>
+                  )}
+                </AvatarGroup>
+                <Users
+                  className="size-3.5 text-muted-foreground transition-colors duration-300 group-hover:text-foreground"
+                  aria-hidden="true"
+                  strokeWidth={1.75}
+                />
+              </motion.button>
+              <NotificationBell />
             </div>
           </div>
 
@@ -264,6 +318,13 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
         boardId={boardId}
         open={tagsManagerOpen}
         onOpenChange={setTagsManagerOpen}
+      />
+      <DialogManageMembersBoard
+        boardId={boardId}
+        projectId={board.projectId}
+        ownerUserId={board.userId}
+        open={openManageMembers}
+        onOpenChange={setOpenManageMembers}
       />
     </TaskDetailProvider>
   );

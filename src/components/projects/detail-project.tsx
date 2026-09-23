@@ -149,7 +149,7 @@ export function DetailProject() {
   }
 
   return (
-    <div className="relative flex h-[calc(100dvh-4rem)] min-h-0 w-full flex-1 flex-col overflow-hidden">
+    <div className="flex h-[calc(100dvh-4rem)] min-h-0 w-full flex-1 flex-col overflow-hidden">
       <div className="shrink-0">
         <HeaderLayout className="tracking-normal">
           <div className="flex min-w-0 items-center gap-2">
@@ -221,7 +221,7 @@ export function DetailProject() {
 
       <div
         ref={boardGridRef}
-        className="mt-8 pt-2 grid min-h-0 w-full flex-1 content-start grid-cols-1 items-stretch gap-5 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        className="mt-8 grid min-h-0 w-full flex-1 content-start grid-cols-1 items-stretch gap-5 overflow-y-auto overscroll-contain pt-2 pr-1 [scrollbar-gutter:stable] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
         <AnimatePresence mode="popLayout">
           {boards.map((board, index) => (
@@ -329,7 +329,7 @@ export function DetailProject() {
       </div>
 
       {pagination && totalPage > 1 && (
-        <div className="absolute inset-x-0 bottom-0 z-20 flex h-20 items-center justify-center bg-background **:data-[slot=pagination]:mt-0">
+        <div className="mt-auto flex shrink-0 items-end justify-center bg-transparent pt-4 pb-2 **:data-[slot=pagination]:mt-0">
           <PaginationLayout
             currentPage={page}
             totalPage={totalPage}

@@ -48,6 +48,10 @@ export const useAddMemberBoard = (boardId: string, projectId: string) => {
         toast.error("Already in board");
       } else if (error.response?.status === 404) {
         toast.error("No valid board or user found.");
+      } else if (error.response?.status === 403) {
+        toast.error(
+          "User is not a member of this project. Add them to the project first.",
+        );
       } else {
         toast.error("Add member to board fail");
       }

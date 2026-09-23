@@ -12,7 +12,7 @@ export function MainLayout() {
       <SidebarProvider>
         <SidebarMain />
         <SidebarInset className="relative isolate overflow-x-hidden bg-background text-foreground">
-          <main className="flex w-full flex-1 flex-col px-6 py-8 md:px-10 md:py-8 lg:px-10">
+          <main className="flex w-full flex-1 flex-col px-2 py-2 md:px-10 md:py-8 lg:px-10">
             <Outlet />
           </main>
         </SidebarInset>

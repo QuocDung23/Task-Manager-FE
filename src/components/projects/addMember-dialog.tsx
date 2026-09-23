@@ -28,16 +28,24 @@ import {
   pressHover,
   pressTap,
 } from "@/lib/motion";
+import { useProjectMembers } from "@/features/projects/hooks/useProjectMembers";
 import { useUsers } from "@/features/users/hooks/useUsers";
-import type { UserResponse } from "@/features/users/types";
 
 export type AddMemberScope = "project" | "board";
 
+export type AddMemberUser = {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string | null;
+};
+
 interface AddMemberDialogProps {
   scope: AddMemberScope;
+  projectId?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (user: UserResponse) => Promise<unknown>;
+  onAdd: (user: AddMemberUser) => Promise<unknown>;
 }
 
 const SCOPE_COPY: Record<
@@ -58,6 +66,7 @@ const SCOPE_COPY: Record<
 
 export function AddMemberDialog({
   scope,
+  projectId,
   open,
   onOpenChange,
   onAdd,
@@ -65,7 +74,7 @@ export function AddMemberDialog({
   const reduceMotion = useReducedMotion();
   const [searchEmail, setSearchEmail] = useState("");
   const [debouncedEmail, setDebouncedEmail] = useState("");
-  const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AddMemberUser | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -77,13 +86,35 @@ export function AddMemberDialog({
 
   const trimmedEmail = debouncedEmail;
   const hasQuery = trimmedEmail.length > 0;
+  const isBoardScope = scope === "board";
+
+  // Board scope searches inside the members of the parent project, not the
+  // whole system. `GET /project/:projectId/members` already returns only
+  // ACTIVE members of the project.
+  const projectMembersQuery = useProjectMembers(
+    isBoardScope ? projectId : null,
+    { enabled: isBoardScope && hasQuery },
+  );
 
   const {
     data: usersResponse,
     isLoading: isLoadingUsers,
     isPlaceholderData,
-  } = useUsers(hasQuery ? trimmedEmail : undefined);
-  const users = useMemo(() => usersResponse?.data ?? [], [usersResponse?.data]);
+  } = useUsers(!isBoardScope && hasQuery ? trimmedEmail : undefined);
+  const users = useMemo((): AddMemberUser[] => {
+    if (isBoardScope) {
+      const email = trimmedEmail.toLowerCase();
+      return (projectMembersQuery.data?.data?.members ?? [])
+        .filter((member) => member.email.toLowerCase().includes(email))
+        .map((member) => ({
+          id: member.userId,
+          name: member.name,
+          email: member.email,
+          avatar: member.avatar ?? null,
+        }));
+    }
+    return usersResponse?.data ?? [];
+  }, [isBoardScope, trimmedEmail, projectMembersQuery.data, usersResponse?.data]);
 
   const headerEnter = enterTransitionFor(reduceMotion);
   const bodyEnter = reduceMotion
@@ -102,7 +133,7 @@ export function AddMemberDialog({
     onOpenChange(nextOpen);
   };
 
-  const handleSelect = (user: UserResponse) => {
+  const handleSelect = (user: AddMemberUser) => {
     setSelectedUser((current) => (current?.id === user.id ? null : user));
   };
 
@@ -192,8 +223,16 @@ export function AddMemberDialog({
 
               <SearchResults
                 users={users}
-                isLoading={isLoadingUsers}
-                isPlaceholder={isPlaceholderData}
+                isLoading={
+                  isBoardScope
+                    ? projectMembersQuery.isLoading
+                    : isLoadingUsers
+                }
+                isPlaceholder={
+                  isBoardScope
+                    ? projectMembersQuery.isPlaceholderData
+                    : isPlaceholderData
+                }
                 hasQuery={hasQuery}
                 hintText={copy.hint}
                 onSelect={handleSelect}
@@ -267,12 +306,12 @@ export function AddMemberDialog({
 }
 
 interface SearchResultsProps {
-  users: UserResponse[];
+  users: AddMemberUser[];
   isLoading: boolean;
   isPlaceholder: boolean;
   hasQuery: boolean;
   hintText: string;
-  onSelect: (user: UserResponse) => void;
+  onSelect: (user: AddMemberUser) => void;
   selectedUserId: string | null;
 }
 

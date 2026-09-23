@@ -10,6 +10,7 @@ import type { ApiResponse, ProjectMemberListResponse } from "../types";
  */
 export function useProjectMembers(
   projectId: string | null | undefined,
+  options?: { enabled?: boolean },
 ): UseQueryResult<ApiResponse<ProjectMemberListResponse>> {
   return useQuery({
     queryKey: projectKeys.members(projectId ?? ""),
@@ -22,7 +23,7 @@ export function useProjectMembers(
       }
       return projectApi.getMembers(projectId);
     },
-    enabled: Boolean(projectId),
+    enabled: Boolean(projectId) && (options?.enabled ?? true),
     staleTime: 60_000,
   });
 }

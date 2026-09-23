@@ -59,11 +59,13 @@ export function BoardCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex-row items-start justify-between gap-2">
             <h3 className="truncate font-heading text-[15.5px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
               {name}
             </h3>
-            <MembershipBadge owned={owned} />
+            <div className="pt-2">
+              <MembershipBadge owned={owned} />
+            </div>
           </div>
           {description ? (
             <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground/85">
