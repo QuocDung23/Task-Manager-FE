@@ -12,7 +12,7 @@
           var stored = localStorage.getItem("mt-theme-mode");
           var dark =
             stored === "dark" ||
-            (!stored &&
+            (stored !== "light" &&
               window.matchMedia &&
               window.matchMedia("(prefers-color-scheme: dark)").matches);
           var root = document.documentElement;

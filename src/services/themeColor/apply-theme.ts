@@ -22,12 +22,15 @@ export function applyTheme(mode: ThemeMode = defaultTheme): void {
     root.style.setProperty(tokenToCssVar[key], tokens[key]);
   }
 
-  // Toggle .dark class for Tailwind dark: variant
   if (mode === "dark") {
     root.classList.add("dark");
   } else {
     root.classList.remove("dark");
   }
+
+  // Keep native controls (scrollbar, checkbox, date input, autofill) on the
+  // active scheme. Overrides the one-shot inline value from the FOUC script.
+  root.style.colorScheme = mode;
 
   root.dataset.theme = mode;
 }

@@ -80,7 +80,8 @@ export function SidebarUser() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+          variant="destructive"
+          className="cursor-pointer"
           onClick={() => logout()}
         >
           <LogOut className="mr-2 h-4 w-4" />

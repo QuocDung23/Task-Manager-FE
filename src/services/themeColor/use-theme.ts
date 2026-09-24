@@ -1,40 +1,20 @@
-import { useEffect, useState } from "react";
-import { applyTheme } from "./apply-theme";
-import { defaultTheme } from "./theme-tokens";
+import { useSyncExternalStore } from "react";
+import { getSnapshot, setThemeMode, subscribe } from "./theme-store";
 import type { ThemeMode } from "./themes";
 
-const STORAGE_KEY = "mt-theme-mode";
-
-function readStoredMode(): ThemeMode {
-  if (typeof window === "undefined") return defaultTheme;
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") return stored;
-  if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-    return "dark";
-  }
-  return defaultTheme;
-}
+export { STORAGE_KEY } from "./theme-store";
 
 /**
- * Reactive theme hook. Reads/writes `localStorage`, syncs to `<html>`,
- * and re-applies tokens on every change.
- *
- * Dark mode will light up automatically once a `dark` record is added to
- * `themes` in `./theme-tokens.ts` and the union type is widened.
+ * Reactive theme hook. Subscribes to the shared theme store, so every call
+ * site re-renders when the mode changes. `applyTheme` runs inside the store,
+ * not from a per-instance effect.
  */
 export function useTheme() {
-  const [mode, setMode] = useState<ThemeMode>(readStoredMode);
-
-  useEffect(() => {
-    applyTheme(mode);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, mode);
-    }
-  }, [mode]);
+  const mode: ThemeMode = useSyncExternalStore(subscribe, getSnapshot);
 
   return {
     mode,
-    setMode,
-    toggle: () => setMode((m: ThemeMode) => (m === "light" ? "dark" : "light")),
+    setMode: setThemeMode,
+    toggle: () => setThemeMode(mode === "light" ? "dark" : "light"),
   };
 }

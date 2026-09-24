@@ -55,6 +55,7 @@
  * these on mount and on every mode change. Keep in sync.
  */
 :root {
+    color-scheme: light;
     --background: oklch(0.99 0.003 240);
     --foreground: oklch(0.18 0.005 240);
     --card: oklch(1 0 0);
@@ -89,6 +90,7 @@
     --sidebar-ring: oklch(0.55 0.20 250);
 }
 .dark {
+    color-scheme: dark;
     --background: oklch(0.28 0.014 250);
     --foreground: oklch(0.93 0.006 250);
     --card: oklch(0.32 0.014 250);
@@ -133,8 +135,6 @@
     @apply font-sans;
     }
 
-  /* Dark: ambient depth glow off-canvas — a whisper of accent-tinted light,
-     never a gradient wall. Static (no attachment, no repaint cost). */
   .dark body {
     background-image: radial-gradient(
         1200px 760px at 82% -16%,

@@ -10,39 +10,14 @@ import { useEffect, useRef, type JSX } from "react";
 
 function SessionLoadingScreen(): JSX.Element {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        backgroundColor: "#f9fafb",
-      }}
-    >
+    <div className="flex h-dvh items-center justify-center bg-background">
       <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "12px",
-        }}
+        role="status"
+        aria-label="Checking session"
+        className="flex flex-col items-center gap-3"
       >
-        <div
-          style={{
-            width: "40px",
-            height: "40px",
-            border: "3px solid #e5e7eb",
-            borderTopColor: "#3b82f6",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite",
-          }}
-        />
-        <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-        <span style={{ color: "#6b7280", fontSize: "14px" }}>
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-border border-t-ring" />
+        <span className="text-sm text-muted-foreground">
           Checking session...
         </span>
       </div>
