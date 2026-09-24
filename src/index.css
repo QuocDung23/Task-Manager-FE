@@ -88,45 +88,38 @@
     --sidebar-border: oklch(0.91 0.006 240);
     --sidebar-ring: oklch(0.55 0.20 250);
 }
-
-/*
- * Dark theme — cool slate neutral + electric blue accent.
- * Mirror of `darkTheme` (not yet defined) in `./themes/dark.ts`.
- * Same hue family as light (240°) — only L inverted, accent slightly
- * desaturated for AAA contrast on dark surfaces.
- */
 .dark {
-    --background: oklch(0.16 0.005 240);
-    --foreground: oklch(0.96 0.003 240);
-    --card: oklch(0.20 0.006 240);
-    --card-foreground: oklch(0.96 0.003 240);
-    --popover: oklch(0.20 0.006 240);
-    --popover-foreground: oklch(0.96 0.003 240);
-    --primary: oklch(0.96 0.003 240);
-    --primary-foreground: oklch(0.16 0.005 240);
-    --secondary: oklch(0.25 0.006 240);
-    --secondary-foreground: oklch(0.96 0.003 240);
-    --muted: oklch(0.25 0.006 240);
-    --muted-foreground: oklch(0.68 0.008 240);
-    --accent: oklch(0.68 0.18 250);
-    --accent-foreground: oklch(0.16 0.005 240);
-    --destructive: oklch(0.65 0.22 27);
-    --border: oklch(1 0 0 / 8%);
-    --input: oklch(1 0 0 / 12%);
-    --ring: oklch(0.68 0.18 250);
-    --chart-1: oklch(0.68 0.18 250);
-    --chart-2: oklch(0.58 0.10 240);
-    --chart-3: oklch(0.45 0.05 240);
-    --chart-4: oklch(0.78 0.12 220);
-    --chart-5: oklch(0.85 0.06 240);
-    --sidebar: oklch(0.18 0.005 240);
-    --sidebar-foreground: oklch(0.96 0.003 240);
-    --sidebar-primary: oklch(0.68 0.18 250);
-    --sidebar-primary-foreground: oklch(0.16 0.005 240);
-    --sidebar-accent: oklch(0.25 0.006 240);
-    --sidebar-accent-foreground: oklch(0.96 0.003 240);
-    --sidebar-border: oklch(1 0 0 / 8%);
-    --sidebar-ring: oklch(0.68 0.18 250);
+    --background: oklch(0.28 0.014 250);
+    --foreground: oklch(0.93 0.006 250);
+    --card: oklch(0.32 0.014 250);
+    --card-foreground: oklch(0.93 0.006 250);
+    --popover: oklch(0.35 0.014 250);
+    --popover-foreground: oklch(0.93 0.006 250);
+    --primary: oklch(0.62 0.19 250);
+    --primary-foreground: oklch(0.99 0.003 250);
+    --secondary: oklch(0.37 0.014 250);
+    --secondary-foreground: oklch(0.93 0.006 250);
+    --muted: oklch(0.36 0.014 250);
+    --muted-foreground: oklch(0.78 0.008 250);
+    --accent: oklch(0.62 0.19 250);
+    --accent-foreground: oklch(0.99 0.003 250);
+    --destructive: oklch(0.68 0.20 27);
+    --border: oklch(0.95 0.006 250 / 12%);
+    --input: oklch(0.95 0.006 250 / 18%);
+    --ring: oklch(0.70 0.16 250);
+    --chart-1: oklch(0.62 0.19 250);
+    --chart-2: oklch(0.54 0.07 250);
+    --chart-3: oklch(0.44 0.04 250);
+    --chart-4: oklch(0.74 0.12 220);
+    --chart-5: oklch(0.82 0.06 250);
+    --sidebar: oklch(0.25 0.012 250);
+    --sidebar-foreground: oklch(0.93 0.006 250);
+    --sidebar-primary: oklch(0.62 0.19 250);
+    --sidebar-primary-foreground: oklch(0.99 0.003 250);
+    --sidebar-accent: oklch(0.37 0.014 250);
+    --sidebar-accent-foreground: oklch(0.93 0.006 250);
+    --sidebar-border: oklch(0.95 0.006 250 / 12%);
+    --sidebar-ring: oklch(0.70 0.16 250);
 }
 
 @layer base {
@@ -138,5 +131,20 @@
     }
   html {
     @apply font-sans;
+    }
+
+  /* Dark: ambient depth glow off-canvas — a whisper of accent-tinted light,
+     never a gradient wall. Static (no attachment, no repaint cost). */
+  .dark body {
+    background-image: radial-gradient(
+        1200px 760px at 82% -16%,
+        oklch(0.44 0.09 250 / 0.20),
+        transparent 62%
+      ),
+      radial-gradient(
+        900px 680px at -12% 108%,
+        oklch(0.40 0.07 250 / 0.12),
+        transparent 55%
+      );
     }
 }

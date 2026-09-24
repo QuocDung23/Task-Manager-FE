@@ -9,11 +9,11 @@
  * Keep tokens themselves in `themes/`. Keep the registry thin.
  */
 
-import { lightTheme, type ThemeMode, type ThemeTokens } from "./themes";
+import { lightTheme, darkTheme, type ThemeMode, type ThemeTokens } from "./themes";
 
 export const themes: Partial<Record<ThemeMode, ThemeTokens>> = {
   light: lightTheme,
-  // dark: darkTheme, // ← uncomment when dark mode ships (see ./themes/dark.ts)
+  dark: darkTheme,
 };
 
 export const defaultTheme: ThemeMode = "light";

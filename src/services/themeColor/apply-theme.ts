@@ -22,5 +22,12 @@ export function applyTheme(mode: ThemeMode = defaultTheme): void {
     root.style.setProperty(tokenToCssVar[key], tokens[key]);
   }
 
+  // Toggle .dark class for Tailwind dark: variant
+  if (mode === "dark") {
+    root.classList.add("dark");
+  } else {
+    root.classList.remove("dark");
+  }
+
   root.dataset.theme = mode;
 }

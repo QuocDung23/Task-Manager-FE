@@ -157,7 +157,7 @@ export function DetailProject() {
               <Input
                 aria-label="Project title"
                 autoFocus
-                className="h-auto min-w-0 max-w-75 py-1 px-2 text-base font-semibold text-zinc-900 bg-zinc-100 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-md"
+                className="h-auto min-w-0 max-w-75 py-1 px-2 text-base font-semibold text-zinc-900 bg-zinc-100 dark:text-zinc-100 dark:bg-white/10 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-md"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={handleSave}

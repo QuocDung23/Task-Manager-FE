@@ -1,4 +1,4 @@
-import { ChevronsUpDown, LogOut, Settings, User } from "lucide-react";
+import { ChevronsUpDown, LogOut, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import { getInitials } from "@/utils/getInitials";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { getAvatarUrl } from "@/utils/getAvatarUrl";
 import { ViewProfileUser } from "./profile-user";
+import { ThemeSwitcher } from "./theme-switcher";
 
 export function SidebarUser() {
   const { data: userRes, isLoading } = useCurrentUser();
@@ -57,7 +58,7 @@ export function SidebarUser() {
           </span>
         </div>
 
-        <ChevronsUpDown className="ml-auto h-4 w-4 text-zinc-500" />
+        <ChevronsUpDown className="ml-auto h-4 w-4 text-zinc-500 dark:text-zinc-400" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
@@ -73,10 +74,7 @@ export function SidebarUser() {
               <span>Profile</span>
             </DropdownMenuItem>
           </ViewProfileUser>
-          <DropdownMenuItem className="cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Setting</span>
-          </DropdownMenuItem>
+          <ThemeSwitcher />
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />

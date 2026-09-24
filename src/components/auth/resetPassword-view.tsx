@@ -108,7 +108,7 @@ export function ViewResetPassword() {
                 id="showPassword"
                 checked={showPassword}
                 onChange={(e) => setShowPassword(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-gray-300 dark:border-zinc-700"
               />
               <Label htmlFor="showPassword" className="text-sm font-normal">
                 Show password
