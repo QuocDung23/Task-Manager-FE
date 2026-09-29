@@ -189,7 +189,7 @@ export function ViewMainPage() {
                 <Link
                   to={`${APP_ROUTES.PROJECT}/${project.id}`}
                   state={{ projectName: project.name }}
-                  className="block"
+                  className="block h-full"
                 >
                   <ProjectCard
                     name={project.name}
