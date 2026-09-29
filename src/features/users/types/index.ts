@@ -29,3 +29,9 @@ export type UpdateAvatarPayload = {
   file: File;
   previewUrl?: string;
 }
+
+export type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};

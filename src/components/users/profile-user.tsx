@@ -1,14 +1,19 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { Separator } from "../ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { useCurrentUser } from "@/features/users/hooks/useCurrentUser";
 import { useUpdateUser } from "@/features/users/hooks/useUpdateUser";
 import { ProfileHeader } from "./profile-header";
 import { ProfileInfo } from "./profile-info";
 import { EditForm } from "./edit-form";
+import { ChangePasswordForm } from "./change-password-form";
+
+type ProfileTab = "profile" | "password";
 
 export function ViewProfileUser({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<ProfileTab>("profile");
   const { data: userRes, isLoading } = useCurrentUser();
   const updateUser = useUpdateUser();
   const user = userRes?.data;
@@ -47,7 +52,17 @@ export function ViewProfileUser({ children }: { children: React.ReactNode }) {
 
   const handleClose = (isOpen: boolean) => {
     setOpen(isOpen);
-    if (!isOpen) setEdit(false);
+    if (!isOpen) {
+      setEdit(false);
+      setTab("profile");
+    }
+  };
+
+  // `edit` is only meaningful on the "profile" tab: leaving it clears the edit
+  // state so returning never shows a stale edit form.
+  const handleTabChange = (value: string) => {
+    setTab(value as ProfileTab);
+    if (value !== "profile") setEdit(false);
   };
 
   const displayUser = {
@@ -69,23 +84,37 @@ export function ViewProfileUser({ children }: { children: React.ReactNode }) {
           edit={edit}
           isLoading={isLoading}
           onEdit={handleEditOpen}
+          showEditButton={tab === "profile"}
         />
 
         <Separator />
 
-        <div className="px-6 py-4">
-          {edit ? (
-            <EditForm
-              formData={formData}
-              setFormData={setFormData}
-              onSave={handleSave}
-              onCancel={() => setEdit(false)}
-              isSaving={updateUser.isPending}
-            />
-          ) : (
-            <ProfileInfo user={displayUser} />
-          )}
-        </div>
+        <Tabs value={tab} onValueChange={handleTabChange} className="gap-0">
+          <div className="px-6 pt-4">
+            <TabsList className="w-full">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="password">Password</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="profile" className="px-6 py-4">
+            {edit ? (
+              <EditForm
+                formData={formData}
+                setFormData={setFormData}
+                onSave={handleSave}
+                onCancel={() => setEdit(false)}
+                isSaving={updateUser.isPending}
+              />
+            ) : (
+              <ProfileInfo user={displayUser} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="password" className="px-6 py-4">
+            <ChangePasswordForm onCancel={() => setTab("profile")} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

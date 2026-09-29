@@ -1,6 +1,6 @@
 import { axiosLocal } from "@/services/axios";
 import type { ApiResponse, UserResponse } from "../types";
-import type { UserUpdatePayload } from "../types";
+import type { ChangePasswordPayload, UserUpdatePayload } from "../types";
 
 export const userApi = {
   getAll: async (
@@ -33,6 +33,12 @@ export const userApi = {
     const formData = new FormData()
     formData.append("avatar", file)
     const response = await axiosLocal.patch<ApiResponse<{ avatar: string }>>('/user/me/avatar', formData)
+    return response.data;
+  },
+  // BE trả body `{ "success": true }` vì service return `data: undefined`,
+  // nên không có key `data` trong response — dùng `ApiResponse<void>`.
+  changePassword: async (data: ChangePasswordPayload): Promise<ApiResponse<void>> => {
+    const response = await axiosLocal.patch<ApiResponse<void>>('/user/me/password', data);
     return response.data;
   }
 };

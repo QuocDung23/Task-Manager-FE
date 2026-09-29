@@ -11,6 +11,7 @@ interface ProfileHeaderProps {
   edit: boolean;
   isLoading: boolean;
   onEdit: () => void;
+  showEditButton?: boolean;
 }
 
 export function ProfileHeader({
@@ -18,6 +19,7 @@ export function ProfileHeader({
   edit,
   isLoading,
   onEdit,
+  showEditButton = true,
 }: ProfileHeaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -115,7 +117,7 @@ export function ProfileHeader({
               disabled={uploadingAvatar}
             />
           </div>
-          {!edit && (
+          {!edit && showEditButton && (
             <Button
               size="sm"
               variant="outline"
