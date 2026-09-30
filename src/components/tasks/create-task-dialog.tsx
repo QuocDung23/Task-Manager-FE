@@ -1,3 +1,4 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
 import { useEffect, useId, useState } from "react";
 import { ClipboardList, Plus, X } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -18,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateTask } from "@/features/tasks/hooks/useCreateTask";
 import type { CreateTaskRequest } from "@/features/tasks/types";
+import { useT } from "@/services/i18n";
 
 type CreateTaskDialogProps = {
   listId: string;
@@ -25,6 +27,7 @@ type CreateTaskDialogProps = {
 };
 
 export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const formId = useId();
   const nameId = `${formId}-name`;
@@ -33,6 +36,7 @@ export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
 
   const {
     formState: { errors },
+    clearErrors,
     handleSubmit,
     register,
     reset,
@@ -43,6 +47,7 @@ export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
       description: "",
     },
   });
+  useClearOnLocaleChange(() => clearErrors());
 
   useEffect(() => {
     if (!open) reset({ name: "", description: "" });
@@ -67,7 +72,7 @@ export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
         {trigger === undefined ? (
           <Button size="sm">
             <Plus />
-            New task
+            {t("task.new")}
           </Button>
         ) : (
           trigger
@@ -84,16 +89,16 @@ export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
             />
           </span>
           <div className="min-w-0 flex-1 space-y-1">
-            <DialogTitle>Create new task</DialogTitle>
+            <DialogTitle>{t("task.createTitle")}</DialogTitle>
             <DialogDescription className="max-w-[34ch]">
-              Add a task to this list so it appears immediately in the board.
+              {t("task.createHelp")}
             </DialogDescription>
           </div>
           <DialogClose asChild>
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Close"
+              aria-label={t("crud.close")}
               disabled={isPending}
               className="text-muted-foreground"
             >
@@ -105,19 +110,19 @@ export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <FieldGroup>
             <Field data-invalid={Boolean(errors.name)}>
-              <Label htmlFor={nameId}>Task name</Label>
+              <Label htmlFor={nameId}>{t("task.name")}</Label>
               <Input
                 id={nameId}
                 autoFocus
                 autoComplete="off"
                 aria-invalid={Boolean(errors.name)}
-                placeholder="e.g. Draft onboarding flow"
+                placeholder={t("task.namePlaceholder")}
                 maxLength={255}
                 {...register("name", {
-                  required: "Task name is required",
+                  required: t("task.nameRequired"),
                   maxLength: {
                     value: 255,
-                    message: "Keep the task name under 255 characters.",
+                    message: t("task.nameLength"),
                   },
                 })}
               />
@@ -129,22 +134,22 @@ export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
 
             <Field data-invalid={Boolean(errors.description)}>
               <div className="flex items-center justify-between">
-                <Label htmlFor={descriptionId}>Description</Label>
+                <Label htmlFor={descriptionId}>{t("crud.description")}</Label>
                 <span className="text-[11.5px] text-muted-foreground">
-                  Optional
+                  {t("crud.optional")}
                 </span>
               </div>
               <Textarea
                 id={descriptionId}
                 aria-invalid={Boolean(errors.description)}
-                placeholder="Add context, checklist, or notes for this task"
+                placeholder={t("task.descriptionPlaceholder")}
                 rows={4}
                 maxLength={2000}
                 className="resize-none"
                 {...register("description", {
                   maxLength: {
                     value: 2000,
-                    message: "Keep the description under 2000 characters.",
+                    message: t("task.descriptionLength"),
                   },
                 })}
               />
@@ -162,10 +167,10 @@ export function CreateTaskDialog({ listId, trigger }: CreateTaskDialogProps) {
               disabled={isPending}
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {t("crud.cancel")}
             </Button>
             <Button type="submit" disabled={isPending} aria-live="polite">
-              {isPending ? "Creating" : "Create task"}
+              {isPending ? t("crud.creating") : t("task.create")}
             </Button>
           </div>
         </form>

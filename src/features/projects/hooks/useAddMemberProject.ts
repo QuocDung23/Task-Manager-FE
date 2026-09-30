@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { projectApi } from "../api/project-api";
 import type {
@@ -35,7 +36,7 @@ export const useAddMemberProject = () => {
       data: AddProjectMemberRequest;
     }) => projectApi.addMember(projectId, data),
     onSuccess: (response, variables) => {
-      toast.success("Add Member Successfully");
+      toast.success(t("toast.memberAdded"));
       const raw = response?.data as
         | ProjectMemberResponse
         | AddProjectMemberResponse
@@ -57,11 +58,11 @@ export const useAddMemberProject = () => {
         errorMessage.includes("Already in project") ||
         error.response?.status === 409
       ) {
-        toast.error("Already in project");
+        toast.error(t("toast.alreadyInProject"));
       } else if (error.response?.status === 404) {
-        toast.error("No valid project or user found.");
+        toast.error(t("toast.projectUserMissing"));
       } else {
-        toast.error("Add member to project fail");
+        toast.error(t("toast.projectAddFailed"));
       }
     },
   });

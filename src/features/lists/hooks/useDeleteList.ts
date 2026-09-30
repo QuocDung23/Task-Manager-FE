@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { listApi } from "../api/list-api";
 import { toast } from "sonner";
@@ -8,11 +10,11 @@ export const useDeleteList = (boardId: string) => {
   return useMutation({
     mutationFn: (id: string) => listApi.delete(id),
     onSuccess: () => {
-      toast.success("Delete List Successfully");
+      toast.success(t("toast.listDeleted"));
       queryClient.invalidateQueries({ queryKey: ["lists", boardId] });
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "Delete Failed");
+      toast.error(getApiErrorMessage(error, "Delete Failed"));
     },
   });
 };

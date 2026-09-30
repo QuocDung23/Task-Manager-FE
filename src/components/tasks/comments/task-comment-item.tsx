@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useMemo, useState } from "react";
 import {
   Check,
@@ -74,6 +76,7 @@ function CommentBody({
   onSubmitEdit: () => void;
   onCancelEdit: () => void;
 }) {
+  const t = useT();
   if (!isEditing) {
     return (
       <p className="whitespace-pre-wrap wrap-break-words text-[13.5px] leading-relaxed text-foreground/90">
@@ -114,14 +117,14 @@ function CommentBody({
           ) : (
             <Check className="size-3" />
           )}
-          Save
+          <TranslateText id="common.save" />
         </Button>
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={onCancelEdit}
           disabled={isUpdating}
-          aria-label="Cancel edit"
+          aria-label={t("task.cancelEdit")}
         >
           <X />
         </Button>
@@ -131,6 +134,7 @@ function CommentBody({
 }
 
 export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
+  const t = useT();
   const { data: currentUserRes } = useCurrentUser();
   const currentUser = currentUserRes?.data ?? null;
   const currentUserId = currentUser?.id;
@@ -198,7 +202,7 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
     if (!isAuthor) return;
     if (
       typeof window !== "undefined" &&
-      !window.confirm("Delete this comment? Replies will also be removed.")
+      !window.confirm(t("task.confirmDeleteComment"))
     ) {
       return;
     }
@@ -230,7 +234,7 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
           <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[12px] leading-tight">
             <div>
               <span className="font-medium text-foreground">
-                {comment.user?.name ?? "Unknown"}
+                {comment.user?.name ?? t("task.unknownUser")}
               </span>
               <span aria-hidden="true" className="text-muted-foreground/40">
                 ·
@@ -244,7 +248,7 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
               </time>
               {isEdited(comment) ? (
                 <span className="text-[10.5px] text-muted-foreground/60">
-                  edited
+                  {t("task.edited")}
                 </span>
               ) : null}
             </div>
@@ -264,7 +268,7 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
           <div className="mt-1">
             {isDeleted ? (
               <p className="text-[13px] text-muted-foreground">
-                Comment deleted
+                <TranslateText id="task.commentDeleted" />
               </p>
             ) : (
               <CommentBody
@@ -293,7 +297,7 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
                   className="text-muted-foreground"
                 >
                   <CornerDownRight className="size-3" />
-                  Reply
+                  <TranslateText id="task.reply" />
                 </Button>
               ) : null}
 
@@ -307,10 +311,8 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
                 >
                   <MessageCircle className="size-3" />
                   {repliesOpen
-                    ? "Hide replies"
-                    : `Show ${comment.replyCount} ${
-                        comment.replyCount === 1 ? "reply" : "replies"
-                      }`}
+                    ? t("task.hideReplies")
+                    : t("task.showReplies", { count: comment.replyCount })}
                 </Button>
               ) : null}
 
@@ -320,7 +322,7 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
                   aria-live="polite"
                 >
                   <Trash2 className="size-3" aria-hidden="true" />
-                  Removing…
+                  {t("task.removing")}
                 </span>
               ) : null}
             </div>
@@ -332,8 +334,8 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
         <div className="ml-9">
           <TaskCommentComposer
             currentUser={currentUser}
-            placeholder="Write a reply…"
-            submitLabel="Reply"
+            placeholder={t("task.writeReply")}
+            submitLabel={t("task.reply")}
             isSubmitting={isCreatingReply}
             autoFocus
             variant="reply"
@@ -365,12 +367,12 @@ export function TaskCommentItem({ taskId, comment }: TaskCommentItemProps) {
               type="button"
               className="text-[11.5px] text-primary hover:text-primary/80"
             >
-              Load older replies
+              <TranslateText id="task.loadOlderReplies" />
             </button>
           ) : null}
 
           {replies.length === 0 && !isFetchingReplies ? (
-            <p className="text-[12px] text-muted-foreground">No replies yet.</p>
+            <p className="text-[12px] text-muted-foreground"><TranslateText id="task.noReplies" /></p>
           ) : null}
         </div>
       ) : null}

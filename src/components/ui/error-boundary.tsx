@@ -3,6 +3,7 @@ import { AlertTriangle, RotateCw } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "./button";
+import { useT } from "@/services/i18n";
 
 const EASE_FLUID = [0.32, 0.72, 0, 1] as const;
 
@@ -50,6 +51,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 }
 
 function ErrorBoundaryFallback({ onReload }: { onReload: () => void }) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   return (
     <div className="flex min-h-dvh w-full items-center justify-center bg-background px-4">
@@ -63,15 +65,14 @@ function ErrorBoundaryFallback({ onReload }: { onReload: () => void }) {
           <AlertTriangle className="size-6" strokeWidth={1.75} aria-hidden="true" />
         </div>
         <h1 className="mt-5 font-heading text-[19px] font-semibold leading-tight text-foreground">
-          Something went wrong
+          {t("error.unknown")}
         </h1>
         <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
-          The application ran into an unexpected problem. Please reload the
-          page. If the issue persists, contact your administrator.
+          {t("error.boundaryHelp")}
         </p>
         <Button onClick={onReload} className="mt-6">
           <RotateCw className="size-4" />
-          Reload page
+          {t("error.reload")}
         </Button>
       </motion.div>
     </div>

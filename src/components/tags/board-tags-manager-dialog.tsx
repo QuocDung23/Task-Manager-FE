@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 
 import { useState } from "react";
 import {
@@ -55,6 +57,7 @@ export function BoardTagsManagerDialog({
   open,
   onOpenChange,
 }: BoardTagsManagerDialogProps) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const { data: tags = [], isLoading } = useTags(boardId);
   const deleteTag = useDeleteTag(boardId);
@@ -114,17 +117,17 @@ export function BoardTagsManagerDialog({
 
                 <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
                   <DialogTitle className="font-heading text-[19px] font-medium leading-tight tracking-[-0.02em] text-foreground sm:text-[20px]">
-                    Manage labels
+                    <TranslateText id="tag.manage" />
                   </DialogTitle>
                   <DialogDescription className="max-w-[34ch] text-[13px] font-normal leading-relaxed text-muted-foreground">
-                    Keep this board easy to scan with a small set of labels.
+                    <TranslateText id="tag.hint" />
                   </DialogDescription>
                 </DialogHeader>
 
                 <DialogClose asChild>
                   <motion.button
                     type="button"
-                    aria-label="Close"
+                    aria-label={t("common.close")}
                     disabled={deleteTag.isPending}
                     whileHover={iconHover(reduceMotion)}
                     whileTap={iconTap(reduceMotion)}
@@ -148,9 +151,7 @@ export function BoardTagsManagerDialog({
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <p className="text-[12.5px] font-medium text-muted-foreground">
-                    {sortedTags.length === 1
-                      ? "1 active label"
-                      : `${sortedTags.length} active labels`}
+                    {t("tag.activeCount", { count: sortedTags.length })}
                   </p>
                 </div>
 
@@ -178,10 +179,10 @@ export function BoardTagsManagerDialog({
                         />
                       </div>
                       <p className="mt-4 font-heading text-[17px] font-semibold leading-tight text-foreground">
-                        No labels yet
+                        <TranslateText id="tag.noLabels" />
                       </p>
                       <p className="mt-2 max-w-[30ch] text-[13.5px] leading-relaxed text-muted-foreground">
-                        Create your first label to organize tasks on this board.
+                        <TranslateText id="tag.createFirst" />
                       </p>
                     </div>
                   ) : (
@@ -205,7 +206,7 @@ export function BoardTagsManagerDialog({
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
-                                aria-label={`Actions for ${tag.name}`}
+                                aria-label={t("tag.actionsFor", { name: tag.name })}
                                 className="group/action grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/6 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 data-[state=open]:bg-foreground/6 data-[state=open]:text-foreground"
                               >
                                 <MoreHorizontal
@@ -231,7 +232,7 @@ export function BoardTagsManagerDialog({
                                     aria-hidden="true"
                                   />
                                 </span>
-                                Edit label
+                                <TranslateText id="tag.edit" />
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 variant="destructive"
@@ -245,7 +246,7 @@ export function BoardTagsManagerDialog({
                                     aria-hidden="true"
                                   />
                                 </span>
-                                Delete label
+                                <TranslateText id="tag.delete" />
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -257,7 +258,7 @@ export function BoardTagsManagerDialog({
 
                 <div className="mt-5 flex flex-col-reverse gap-2.5 border-t border-border/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-[11.5px] text-muted-foreground/75">
-                    Labels are shared across this board.
+                    <TranslateText id="tag.shared" />
                   </span>
                   <motion.button
                     type="button"
@@ -267,7 +268,7 @@ export function BoardTagsManagerDialog({
                     transition={SPRING_PRESS}
                     className="group inline-flex h-11 items-center justify-center gap-3 whitespace-nowrap rounded-full bg-primary pl-5 pr-1.5 text-[13px] font-medium text-primary-foreground shadow-[0_10px_30px_-16px_color-mix(in_oklab,var(--primary)_70%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/90 focus-visible:ring-4 focus-visible:ring-primary/20"
                   >
-                    <span>Create label</span>
+                    <span><TranslateText id="tag.create" /></span>
                     <span className="grid size-8 place-items-center rounded-full bg-primary-foreground/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:scale-105">
                       <Plus
                         className="size-4"
@@ -331,16 +332,16 @@ export function BoardTagsManagerDialog({
                   </div>
                   <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
                     <DialogTitle className="font-heading text-[19px] font-medium leading-tight tracking-[-0.02em] text-foreground">
-                      Delete label
+                      <TranslateText id="tag.delete" />
                     </DialogTitle>
                     <DialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
-                      This removes the label from every task on this board.
+                      <TranslateText id="tag.removeAllWarning" />
                     </DialogDescription>
                   </DialogHeader>
                   <DialogClose asChild>
                     <motion.button
                       type="button"
-                      aria-label="Close"
+                      aria-label={t("common.close")}
                       disabled={deleteTag.isPending}
                       whileHover={iconHover(reduceMotion)}
                       whileTap={iconTap(reduceMotion)}
@@ -376,7 +377,7 @@ export function BoardTagsManagerDialog({
                       transition={SPRING_PRESS}
                       className="h-11 whitespace-nowrap rounded-full px-5 text-[13px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Cancel
+                      <TranslateText id="common.cancel" />
                     </motion.button>
                     <motion.button
                       type="button"
@@ -394,7 +395,7 @@ export function BoardTagsManagerDialog({
                       className="group inline-flex h-11 min-w-32 items-center justify-center gap-3 whitespace-nowrap rounded-full bg-destructive px-5 text-[13px] font-medium text-white shadow-[0_10px_30px_-16px_color-mix(in_oklab,var(--destructive)_70%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-destructive/90 focus-visible:ring-4 focus-visible:ring-destructive/20 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <span>
-                        {deleteTag.isPending ? "Deleting" : "Delete label"}
+                        {deleteTag.isPending ? t("task.deleting") : t("tag.delete")}
                       </span>
                       <span className="grid size-8 place-items-center rounded-full bg-white/12">
                         {deleteTag.isPending ? (

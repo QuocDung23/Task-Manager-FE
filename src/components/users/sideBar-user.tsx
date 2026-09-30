@@ -14,8 +14,11 @@ import { useLogout } from "@/features/auth/hooks/useLogout";
 import { getAvatarUrl } from "@/utils/getAvatarUrl";
 import { ViewProfileUser } from "./profile-user";
 import { ThemeSwitcher } from "./theme-switcher";
+import { LanguageSwitcher } from "./language-switcher";
+import { useT } from "@/services/i18n";
 
 export function SidebarUser() {
+  const t = useT();
   const { data: userRes, isLoading } = useCurrentUser();
   const { mutate: logout } = useLogout();
 
@@ -33,8 +36,8 @@ export function SidebarUser() {
     );
   }
   const displayUser = user || {
-    name: "User",
-    email: "Loading...",
+    name: t("task.unknownUser"),
+    email: t("common.loading"),
     avatar: undefined,
   };
   const avatarUrl = getAvatarUrl(displayUser.avatar);
@@ -71,10 +74,11 @@ export function SidebarUser() {
           <ViewProfileUser>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
+              <span>{t("profile.profile")}</span>
             </DropdownMenuItem>
           </ViewProfileUser>
           <ThemeSwitcher />
+          <LanguageSwitcher />
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
@@ -85,7 +89,7 @@ export function SidebarUser() {
           onClick={() => logout()}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Logout</span>
+          <span>{t("profile.logout")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

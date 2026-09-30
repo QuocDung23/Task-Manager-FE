@@ -12,8 +12,10 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { APP_ROUTES } from "../../router/constans";
 import { useResetPasswordForm } from "@/hooks/auth/useResetPasswordForm";
+import { useT } from "@/services/i18n";
 
 export function ViewResetPassword() {
+  const t = useT();
   const {
     hasValidResetParams,
     isPending,
@@ -29,14 +31,14 @@ export function ViewResetPassword() {
     return (
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle>Invalid request</CardTitle>
+          <CardTitle>{t("auth.invalidRequest")}</CardTitle>
           <CardDescription>
-            Please start the password reset process again.
+            {t("auth.restartReset")}
           </CardDescription>
         </CardHeader>
         <CardFooter className="justify-center">
           <Button asChild>
-            <Link to={APP_ROUTES.FORGOT_PASSWORD}>Go back</Link>
+            <Link to={APP_ROUTES.FORGOT_PASSWORD}>{t("common.back")}</Link>
           </Button>
         </CardFooter>
       </Card>
@@ -62,22 +64,22 @@ export function ViewResetPassword() {
             />
           </svg>
         </div>
-        <CardTitle>Set a new password</CardTitle>
+        <CardTitle>{t("auth.newPasswordTitle")}</CardTitle>
         <CardDescription>
-          Choose a strong password you don't use anywhere else.
+          {t("auth.newPasswordDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form id="reset-password-form" onSubmit={onSubmit} noValidate>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="newPassword">New password</Label>
+              <Label htmlFor="newPassword">{t("auth.newPassword")}</Label>
               <div className="relative">
                 <Input
                   id="newPassword"
                   name="newPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter a new password"
+                  placeholder={t("auth.enterNewPassword")}
                   required
                   minLength={minPasswordLength}
                   aria-invalid={Boolean(fieldErrors.newPassword)}
@@ -87,13 +89,13 @@ export function ViewResetPassword() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirm password</Label>
+              <Label htmlFor="confirmPassword">{t("common.confirmPassword")}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Re-enter the new password"
+                  placeholder={t("auth.reenterNewPassword")}
                   required
                   minLength={minPasswordLength}
                   aria-invalid={Boolean(fieldErrors.confirmPassword)}
@@ -111,7 +113,7 @@ export function ViewResetPassword() {
                 className="h-4 w-4 rounded border-gray-300 dark:border-zinc-700"
               />
               <Label htmlFor="showPassword" className="text-sm font-normal">
-                Show password
+                {t("common.showPassword")}
               </Label>
             </div>
           </div>
@@ -124,15 +126,15 @@ export function ViewResetPassword() {
           className="w-full"
           disabled={isPending}
         >
-          {isPending ? "Resetting..." : "Reset password"}
+          {isPending ? t("auth.resetting") : t("common.resetPassword")}
         </Button>
         <div className="text-sm text-muted-foreground">
-          Remember your password?{" "}
+          {t("auth.rememberPassword")}{" "}
           <Link
             to={APP_ROUTES.LOGIN}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            Back to sign in
+            {t("auth.backToSignIn")}
           </Link>
         </div>
       </CardFooter>

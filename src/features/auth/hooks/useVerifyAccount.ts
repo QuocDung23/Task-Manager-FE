@@ -10,6 +10,7 @@ import {
   type AuthErrorResult,
 } from "@/lib/auth-error-message";
 import type { Verify, VerifyAccountResponse } from "../types";
+import { t } from "@/services/i18n";
 
 export type VerifyAccountAuthErrorContext = {
   result: AuthErrorResult;
@@ -28,7 +29,7 @@ export function useVerifyAccount(options?: {
     mutationFn: authApi.verifyAccount,
     onSuccess: (data) => {
       authStorage.setToken(data.accessToken);
-      toast.success("Account verified successfully! Welcome aboard.");
+      toast.success(t("auth.accountVerified"));
       navigate(APP_ROUTES.MAIN, { replace: true });
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
     },

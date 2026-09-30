@@ -7,6 +7,7 @@ import {
   getAuthErrorMessage,
   type AuthErrorResult,
 } from "@/lib/auth-error-message";
+import { t } from "@/services/i18n";
 
 export type SendOtpAuthErrorContext = {
   result: AuthErrorResult;
@@ -22,7 +23,7 @@ export function useSendOtp(options?: {
   return useMutation<ForgotPasswordResponse, unknown, SendOtpRequest>({
     mutationFn: (data) => authApi.sendOtp(data),
     onSuccess: (_, variables) => {
-      toast.success("OTP sent! Please check your email.");
+      toast.success(t("auth.otpSent"));
       navigate(`/verify-otp?email=${encodeURIComponent(variables.email)}`);
     },
     onError: (error: unknown, variables) => {

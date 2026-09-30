@@ -1,3 +1,5 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
+import { useT } from "@/services/i18n";
 import { useEffect, useId } from "react";
 import { ArrowRight, ListPlus, Loader2, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -39,6 +41,7 @@ export function UpdateListDialog({
   open,
   onOpenChange,
 }: UpdateListDialogProps) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const formId = useId();
   const nameId = `${formId}-name`;
@@ -46,6 +49,7 @@ export function UpdateListDialog({
 
   const {
     formState: { errors },
+    clearErrors,
     handleSubmit,
     register,
     reset,
@@ -56,6 +60,7 @@ export function UpdateListDialog({
       description: list.description || "",
     },
   });
+  useClearOnLocaleChange(() => clearErrors());
 
   useEffect(() => {
     if (open) {
@@ -109,17 +114,17 @@ export function UpdateListDialog({
 
               <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
                 <DialogTitle className="font-heading text-[19px] font-medium leading-tight tracking-[-0.02em] text-foreground sm:text-[20px]">
-                  Edit list
+                  {t("crud.editList")}
                 </DialogTitle>
                 <DialogDescription className="max-w-[34ch] text-[13px] font-normal leading-relaxed text-muted-foreground">
-                  Rename the lane. Changes apply to every task inside it.
+                  {t("crud.listUpdateHelp")}
                 </DialogDescription>
               </DialogHeader>
 
               <DialogClose asChild>
                 <motion.button
                   type="button"
-                  aria-label="Close"
+                  aria-label={t("crud.close")}
                   disabled={isPending}
                   whileHover={iconHover(reduceMotion)}
                   whileTap={iconTap(reduceMotion)}
@@ -148,21 +153,21 @@ export function UpdateListDialog({
                     htmlFor={nameId}
                     className="text-[12.5px] font-medium text-foreground/85"
                   >
-                    List name
+                    {t("crud.listName")}
                   </Label>
                   <Input
                     id={nameId}
                     autoFocus
                     autoComplete="off"
                     aria-invalid={Boolean(errors.name)}
-                    placeholder="Enter list name"
+                    placeholder={t("crud.listPlaceholder")}
                     maxLength={255}
                     className="h-12 rounded-2xl border border-foreground/8 bg-background/65 px-4 text-[13.5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-background focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 aria-invalid:border-destructive/45 aria-invalid:ring-destructive/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     {...register("name", {
-                      required: "List name is required",
+                      required: t("crud.listRequired"),
                       maxLength: {
                         value: 255,
-                        message: "Keep the list name under 255 characters.",
+                        message: t("crud.listLength"),
                       },
                     })}
                   />
@@ -183,7 +188,7 @@ export function UpdateListDialog({
                   transition={SPRING_PRESS}
                   className="h-11 whitespace-nowrap rounded-full px-5 text-[13px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Cancel
+                  {t("crud.cancel")}
                 </motion.button>
 
                 <motion.button
@@ -197,7 +202,7 @@ export function UpdateListDialog({
                   transition={SPRING_PRESS}
                   className="group inline-flex h-11 items-center justify-center gap-3 whitespace-nowrap rounded-full bg-primary pl-5 pr-1.5 text-[13px] font-medium text-primary-foreground shadow-[0_10px_30px_-16px_color-mix(in_oklab,var(--primary)_70%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/90 focus-visible:ring-4 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-37.5"
                 >
-                  <span>{isPending ? "Saving" : "Save changes"}</span>
+                  <span>{isPending ? t("crud.saving") : t("crud.save")}</span>
                   <span className="grid size-8 place-items-center rounded-full bg-primary-foreground/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:scale-105">
                     {isPending ? (
                       <motion.span

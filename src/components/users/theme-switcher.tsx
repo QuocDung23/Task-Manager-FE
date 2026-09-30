@@ -1,8 +1,10 @@
 import { Moon, Sun } from "lucide-react";
 import { DropdownMenuItem } from "../ui/dropdown-menu";
 import { useTheme } from "@/services/themeColor";
+import { useT } from "@/services/i18n";
 
 export function ThemeSwitcher() {
+  const t = useT();
   const { mode, toggle } = useTheme();
 
   return (
@@ -12,7 +14,7 @@ export function ThemeSwitcher() {
       ) : (
         <Moon className="mr-2 h-4 w-4" />
       )}
-      <span>{mode === "dark" ? "Light Mode" : "Dark Mode"}</span>
+      <span>{mode === "dark" ? t("profile.lightMode") : t("profile.darkMode")}</span>
     </DropdownMenuItem>
   );
 }

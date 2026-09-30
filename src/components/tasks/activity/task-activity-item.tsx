@@ -3,8 +3,10 @@ import { UserAvatar } from "@/components/users/user-avatar";
 import type { TaskActivity } from "@/features/task-activities/types";
 import { presentTaskActivity } from "@/features/task-activities/utils/task-activity-presenter";
 import { formatDateTime } from "@/utils/formatDateTime";
+import { useLocale } from "@/services/i18n";
 
 export function TaskActivityItem({ activity }: { activity: TaskActivity }) {
+  useLocale();
   const presentation = presentTaskActivity(activity);
 
   return (

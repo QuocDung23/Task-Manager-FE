@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useReducedMotion, motion } from "framer-motion";
 import { ListPlus, Trash, X } from "lucide-react";
 
@@ -34,6 +36,7 @@ export function DeleteListDialog({
   open,
   onOpenChange,
 }: DeleteListDialogProps) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const { mutate: deleteList, isPending } = useDeleteList(boardId);
 
@@ -77,21 +80,20 @@ export function DeleteListDialog({
 
               <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
                 <DialogTitle className="font-heading text-[19px] font-medium leading-tight tracking-[-0.02em] text-foreground sm:text-[20px]">
-                  Delete list
+                  <TranslateText id="list.delete" />
                 </DialogTitle>
                 <DialogDescription className="max-w-[36ch] text-[13px] font-normal leading-relaxed text-muted-foreground">
                   <span className="font-medium text-foreground/85">
                     {list.name}
                   </span>{" "}
-                  will be removed along with every task inside it. This cannot
-                  be undone.
+                  <TranslateText id="list.removeWarning" />
                 </DialogDescription>
               </DialogHeader>
 
               <DialogClose asChild>
                 <motion.button
                   type="button"
-                  aria-label="Close"
+                  aria-label={t("common.close")}
                   disabled={isPending}
                   whileHover={iconHover(reduceMotion)}
                   whileTap={iconTap(reduceMotion)}
@@ -114,7 +116,7 @@ export function DeleteListDialog({
               className="flex flex-col gap-5 px-5 pb-5 sm:px-7 sm:pb-7"
             >
               <div className="rounded-2xl border border-destructive/15 bg-destructive/4 px-4 py-3 text-[12.5px] leading-relaxed text-destructive/90 dark:border-destructive/20 dark:bg-destructive/6">
-                Tasks in this list are not recoverable after deletion.
+                <TranslateText id="list.deleteWarning" />
               </div>
 
               <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-end">
@@ -127,7 +129,7 @@ export function DeleteListDialog({
                   transition={SPRING_PRESS}
                   className="h-11 whitespace-nowrap rounded-full px-5 text-[13px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Cancel
+                  <TranslateText id="common.cancel" />
                 </motion.button>
 
                 <motion.button
@@ -142,7 +144,7 @@ export function DeleteListDialog({
                   transition={SPRING_PRESS}
                   className="group inline-flex h-11 items-center justify-center gap-3 whitespace-nowrap rounded-full bg-destructive pl-5 pr-1.5 text-[13px] font-medium text-white shadow-[0_10px_30px_-16px_color-mix(in_oklab,var(--destructive)_70%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-destructive/90 focus-visible:ring-4 focus-visible:ring-destructive/20 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-37.5"
                 >
-                  <span>{isPending ? "Deleting" : "Delete list"}</span>
+                  <span>{isPending ? t("task.deleting") : t("list.delete")}</span>
                   <span className="grid size-8 place-items-center rounded-full bg-white/15 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:scale-105">
                     <Trash className="size-3.5" strokeWidth={2} aria-hidden="true" />
                   </span>

@@ -1,4 +1,5 @@
 import { ClipboardList, FolderOpen, Users } from "lucide-react";
+import { useT } from "@/services/i18n";
 
 import {
   Avatar,
@@ -35,6 +36,7 @@ export function BoardCard({
   isListCountLoading = false,
   owned,
 }: BoardCardProps) {
+  const t = useT();
   const totalMembers = members.length;
   const visibleMembers = members.slice(0, MAX_AVATARS);
   const remainingCount = Math.max(totalMembers - visibleMembers.length, 0);
@@ -86,7 +88,7 @@ export function BoardCard({
             {isListCountLoading ? "…" : lists}
           </span>
           <span className="text-[11.5px] font-medium leading-none text-muted-foreground/80">
-            {lists === 1 ? "list" : "lists"}
+            {lists === 1 ? t("list.countOne") : t("list.countMany")}
           </span>
         </div>
       </div>
@@ -116,7 +118,7 @@ export function BoardCard({
                 <Avatar
                   size="sm"
                   className="size-7"
-                  aria-label={`${remainingCount} more member${remainingCount === 1 ? "" : "s"}`}
+                  aria-label={t("member.more", { count: remainingCount })}
                 >
                   <AvatarFallback className="bg-muted text-[10px] font-semibold text-muted-foreground">
                     +{remainingCount}
@@ -146,7 +148,7 @@ export function BoardCard({
               {totalMembers}
             </span>
             <span className="text-[11.5px] font-medium leading-none text-muted-foreground/80">
-              {totalMembers === 1 ? "member" : "members"}
+              {totalMembers === 1 ? t("member.countOne") : t("member.countMany")}
             </span>
           </div>
         </div>

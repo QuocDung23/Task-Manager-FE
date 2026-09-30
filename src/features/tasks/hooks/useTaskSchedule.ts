@@ -1,3 +1,5 @@
+import { t } from "@/services/i18n";
+import { getApiErrorMessage } from "@/lib/error-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -13,12 +15,7 @@ import type {
 } from "../types";
 
 function getErrorMessage(error: ApiError, fallback: string): string {
-  return (
-    error.response?.data?.message ||
-    error.response?.data?.error ||
-    error.message ||
-    fallback
-  );
+  return getApiErrorMessage(error, fallback);
 }
 
 export type ScheduleIntent = "set" | "reschedule";
@@ -41,8 +38,8 @@ export function useSetTaskSchedule() {
       applyCanonicalTaskSnapshot(queryClient, response.data, { source: "http" });
       toast.success(
         variables.intent === "reschedule"
-          ? "Task rescheduled"
-          : "Schedule set",
+          ? t("toast.taskRescheduled")
+          : t("toast.scheduleSet"),
       );
     },
     onError: (error: ApiError, variables) => {
@@ -59,11 +56,11 @@ export function useSetTaskSchedule() {
         return;
       }
       if (status === 403) {
-        toast.error("You don't have permission to change the schedule.");
+        toast.error(t("toast.scheduleForbidden"));
         return;
       }
       if (status === 404) {
-        toast.error("Task no longer exists.");
+        toast.error(t("toast.taskMissing"));
         removeTaskAcrossCaches(queryClient, variables.taskId);
         return;
       }
@@ -92,7 +89,7 @@ export function useClearTaskSchedule() {
       taskApi.clearSchedule(taskId, data),
     onSuccess: (response) => {
       applyCanonicalTaskSnapshot(queryClient, response.data, { source: "http" });
-      toast.success("Schedule cleared");
+      toast.success(t("toast.scheduleCleared"));
     },
     onError: (error: ApiError, variables) => {
       const status = error.response?.status;
@@ -101,11 +98,11 @@ export function useClearTaskSchedule() {
         return;
       }
       if (status === 403) {
-        toast.error("You don't have permission to clear the schedule.");
+        toast.error(t("toast.clearScheduleForbidden"));
         return;
       }
       if (status === 404) {
-        toast.error("Task no longer exists.");
+        toast.error(t("toast.taskMissing"));
         removeTaskAcrossCaches(queryClient, variables.taskId);
         return;
       }
@@ -127,7 +124,7 @@ export function useUnlockTask() {
       taskApi.unlock(taskId, data),
     onSuccess: (response) => {
       applyCanonicalTaskSnapshot(queryClient, response.data, { source: "http" });
-      toast.success("Task unlocked");
+      toast.success(t("toast.taskUnlocked"));
     },
     onError: (error: ApiError) => {
       toast.error(getErrorMessage(error, "Could not unlock the task."));

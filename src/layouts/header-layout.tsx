@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useLocale } from "@/services/i18n";
 
 interface HeaderLayoutProps {
   eyebrow?: string;
@@ -15,6 +16,7 @@ export function HeaderLayout({
   className,
   children,
 }: HeaderLayoutProps) {
+  const { locale } = useLocale();
   return (
     <section className="w-full">
       <div className="flex flex-col gap-3">
@@ -23,7 +25,7 @@ export function HeaderLayout({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-            className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[10.5px] font-medium uppercase tracking-[0.22em] text-muted-foreground"
+            className={cn("inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[10.5px] font-medium text-muted-foreground", locale === "vi" ? "tracking-normal" : "uppercase tracking-[0.22em]")}
           >
             <span className="size-1.5 rounded-full bg-accent" />
             {eyebrow}

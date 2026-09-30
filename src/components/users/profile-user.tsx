@@ -1,3 +1,5 @@
+import { TranslateText } from "@/services/i18n";
+import { useT } from "@/services/i18n";
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { Separator } from "../ui/separator";
@@ -12,6 +14,7 @@ import { ChangePasswordForm } from "./change-password-form";
 type ProfileTab = "profile" | "password";
 
 export function ViewProfileUser({ children }: { children: React.ReactNode }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<ProfileTab>("profile");
   const { data: userRes, isLoading } = useCurrentUser();
@@ -66,12 +69,12 @@ export function ViewProfileUser({ children }: { children: React.ReactNode }) {
   };
 
   const displayUser = {
-    name: user?.name || "No name",
-    email: user?.email || "No email",
-    bio: user?.bio || "No bio",
+    name: user?.name || t("profile.noName"),
+    email: user?.email || t("profile.noEmail"),
+    bio: user?.bio || t("profile.noBio"),
     avatar: user?.avatar || null,
-    address: user?.address || "No address",
-    phoneNumber: user?.phoneNumber?.toString() ?? "No phone",
+    address: user?.address || t("profile.noAddress"),
+    phoneNumber: user?.phoneNumber?.toString() ?? t("profile.noPhone"),
     phoneNumberRaw: user?.phoneNumber?.toString() ?? "",
   };
 
@@ -92,8 +95,8 @@ export function ViewProfileUser({ children }: { children: React.ReactNode }) {
         <Tabs value={tab} onValueChange={handleTabChange} className="gap-0">
           <div className="px-6 pt-4">
             <TabsList className="w-full">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="password">Password</TabsTrigger>
+              <TabsTrigger value="profile"><TranslateText id="profile.profile" /></TabsTrigger>
+              <TabsTrigger value="password"><TranslateText id="profile.password" /></TabsTrigger>
             </TabsList>
           </div>
 

@@ -17,11 +17,13 @@ import { PaginationLayout } from "@/layouts/pagination-layout";
 import { CreateProjectButton } from "./createProjectButton-main";
 import { MenuSettingProject } from "./settingProject-main";
 import { ProjectCard } from "./projectCard-main";
+import { useT } from "@/services/i18n";
 
 const EASE_FLUID = [0.32, 0.72, 0, 1] as const;
 const PAGE_SIZE = 12;
 
 export function ViewMainPage() {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const projectGridRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
@@ -92,7 +94,7 @@ export function ViewMainPage() {
           className="flex flex-col items-center gap-3 text-muted-foreground"
         >
           <Loader2 className="h-6 w-6 animate-spin motion-reduce:animate-none" />
-          <span className="text-[13px] tracking-tight">Loading projects</span>
+          <span className="text-[13px] tracking-tight">{t("project.loading")}</span>
         </motion.div>
       </div>
     );
@@ -101,10 +103,10 @@ export function ViewMainPage() {
   if (isError) {
     return (
       <ErrorState
-        title="Could not load projects"
+        title={t("project.loadError")}
         message={getApiErrorMessage(
           error,
-          "Please check your connection and try again.",
+          t("project.connectionError"),
         )}
         onRetry={() => {
           void refetch();
@@ -116,7 +118,7 @@ export function ViewMainPage() {
   return (
     <div className="flex h-[calc(100dvh-4rem)] min-h-0 w-full flex-1 flex-col overflow-hidden">
       <div className="shrink-0">
-        <HeaderLayout className="tracking-normal">Projects</HeaderLayout>
+        <HeaderLayout className="tracking-normal">{t("project.projects")}</HeaderLayout>
       </div>
 
       {/* Toolbar: search + create */}
@@ -132,7 +134,7 @@ export function ViewMainPage() {
           </span>
           <Input
             className="h-11 w-full rounded-full border-border/80 bg-card pl-10 pr-4 text-[13.5px] shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/70 hover:border-primary/20 focus-visible:border-primary/35 focus-visible:ring-4 focus-visible:ring-primary/10"
-            placeholder="Search projects..."
+            placeholder={t("project.search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -141,11 +143,11 @@ export function ViewMainPage() {
         <div className="flex items-center justify-end gap-4 sm:justify-end pr-2">
           <div className="hidden items-center gap-3 text-xs font-medium text-muted-foreground sm:flex">
             <span>
-              {totalItems} project{totalItems === 1 ? "" : "s"}
+              {t("project.count", { count: totalItems })}
             </span>
             <span className="h-3 w-px bg-border" aria-hidden="true" />
             <span>
-              Page {page} of {Math.max(totalPage, 1)}
+              {t("project.page", { page, total: Math.max(totalPage, 1) })}
             </span>
           </div>
           <CreateProjectButton />
@@ -228,12 +230,12 @@ export function ViewMainPage() {
                 </div>
 
                 <h3 className="mt-4 font-heading text-[17px] font-semibold leading-tight text-foreground">
-                  {debouncedSearch ? "No matches" : "No projects yet"}
+                  {debouncedSearch ? t("project.noMatches") : t("project.empty")}
                 </h3>
                 <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
                   {debouncedSearch
-                    ? `Nothing matches "${debouncedSearch}". Try a different keyword.`
-                    : "Start your first workspace from the button above."}
+                    ? t("project.noMatchDetail", { query: debouncedSearch })
+                    : t("project.emptyDetail")}
                 </p>
               </div>
             </div>

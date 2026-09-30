@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -14,7 +16,7 @@ export const useUpdateBoard = (projectId: string) => {
     mutationFn: ({ id, data }: { id: string; data: BoardRequest }) =>
       boardApi.update(id, data),
     onSuccess: (response, variables) => {
-      toast.success("Update Successfully");
+      toast.success(t("toast.updated"));
       const board: BoardResponse | undefined = response?.data;
       if (board) {
         applyBoardUpdated(queryClient, projectId, board);
@@ -24,7 +26,7 @@ export const useUpdateBoard = (projectId: string) => {
       });
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message ?? "Update Failed");
+      toast.error(getApiErrorMessage(error, "Update Failed"));
     },
   });
 };

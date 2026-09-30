@@ -1,3 +1,4 @@
+import { TranslateText } from "@/services/i18n";
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -17,16 +18,19 @@ import {
 import { ArrowUpRight, Home } from "lucide-react";
 import { APP_ROUTES } from "@/router/constans";
 import { UserPage } from "@/pages/user/user-page";
+import { useLocale, useT } from "@/services/i18n";
 
 const navItems = [
   {
-    label: "Overview",
+    label: "nav.overview",
     to: APP_ROUTES.MAIN,
     icon: Home,
   },
 ] as const;
 
 export function SidebarMain() {
+  const t = useT();
+  const { locale } = useLocale();
   return (
     <Sidebar
       variant="floating"
@@ -42,10 +46,10 @@ export function SidebarMain() {
           </div>
           <div className="flex min-w-0 flex-col">
             <h1 className="truncate font-heading text-[15px] font-semibold tracking-tight text-sidebar-foreground">
-              Task Manager
+              <TranslateText id="nav.taskManager" />
             </h1>
-            <span className="text-[10.5px] font-medium uppercase tracking-[0.18em] text-sidebar-foreground/60">
-              Workspace
+            <span className={`text-[10.5px] font-medium text-sidebar-foreground/60 ${locale === "vi" ? "tracking-normal" : "uppercase tracking-[0.18em]"}`}>
+              {t("nav.workspace")}
             </span>
           </div>
         </div>
@@ -108,7 +112,7 @@ export function SidebarMain() {
                               : "text-[13.5px] font-medium text-sidebar-foreground/65 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:text-sidebar-accent-foreground"
                           }
                         >
-                          {item.label}
+                          {t(item.label)}
                         </ItemTitle>
                       </ItemContent>
                       <ItemActions>

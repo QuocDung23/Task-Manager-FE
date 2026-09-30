@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { Check, ChevronDown, Search, SlidersHorizontal, Tag, X } from "lucide-react";
@@ -22,6 +24,7 @@ type TagFilterProps = {
 };
 
 export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [localSelectedIds, setLocalSelectedIds] = useState<Set<string>>(
@@ -101,10 +104,10 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                 ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/15 data-[state=open]:bg-primary/15"
                 : "border-foreground/8 bg-card/70 text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] hover:border-foreground/12 hover:bg-card hover:text-foreground data-[state=open]:bg-card"
             }`}
-            aria-label={`Filter by labels. ${selectedCount} selected.`}
+            aria-label={t("tag.filterAria", { count: selectedCount })}
           >
             <Tag className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-            <span>Labels</span>
+            <span><TranslateText id="tag.labels" /></span>
             {hasActiveFilter ? (
               <span className="grid size-5 place-items-center rounded-full bg-primary text-[10.5px] font-semibold text-primary-foreground">
                 {selectedCount}
@@ -130,7 +133,7 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                   <SlidersHorizontal className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                 </span>
                 <h3 className="text-[13px] font-medium text-foreground">
-                  Filter by labels
+                  <TranslateText id="tag.filter" />
                 </h3>
               </div>
               <span className="rounded-lg bg-muted/70 px-2 py-1 tabular-nums text-[11px] font-semibold text-foreground">
@@ -147,7 +150,7 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                 />
                 <Input
                   type="search"
-                  placeholder="Search labels"
+                  placeholder={t("tag.search")}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   className="h-10 rounded-full border border-foreground/8 bg-card/70 pl-10 pr-4 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-card focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
@@ -158,7 +161,7 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
             {selectedCount >= 2 ? (
               <div className="flex flex-wrap items-center gap-2 border-y border-foreground/7 bg-muted/20 px-3 py-2.5">
                 <span className="text-[11.5px] font-medium text-muted-foreground">
-                  Match
+                  <TranslateText id="tag.match" />
                 </span>
                 <div className="flex rounded-full border border-foreground/10 bg-background/65 p-1">
                   {(["ANY", "ALL"] as const).map((mode) => (
@@ -172,14 +175,14 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                           : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                       }`}
                     >
-                      {mode === "ANY" ? "Any" : "All"}
+                      {mode === "ANY" ? t("tag.modeAny") : t("tag.modeAll")}
                     </button>
                   ))}
                 </div>
                 <span className="text-[11px] text-muted-foreground/75">
                   {tagMode === "ANY"
-                    ? "at least one selected"
-                    : "every selected label"}
+                    ? t("tag.anyHelp")
+                    : t("tag.allHelp")}
                 </span>
               </div>
             ) : null}
@@ -199,12 +202,12 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/70 bg-card/40 px-4 py-8 text-center">
                   <Tag className="size-5 text-muted-foreground/55" strokeWidth={1.75} aria-hidden="true" />
                   <p className="mt-3 text-[12.5px] font-medium text-foreground">
-                    {deferredSearch ? "No labels match your search" : "No labels available"}
+                    {deferredSearch ? t("tag.noMatches") : t("tag.noAvailable")}
                   </p>
                   <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
                     {deferredSearch
-                      ? "Try a different keyword."
-                      : "Create a label from the board menu."}
+                      ? t("tag.tryKeyword")
+                      : t("tag.createFromBoard")}
                   </p>
                 </div>
               ) : (
@@ -243,7 +246,7 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                             {tag.name}
                           </span>
                           {isSelected ? (
-                            <span className="text-[10.5px] font-medium text-primary">Selected</span>
+                            <span className="text-[10.5px] font-medium text-primary"><TranslateText id="tag.selected" /></span>
                           ) : null}
                         </button>
                       </li>
@@ -261,7 +264,7 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                   className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[11.5px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15"
                 >
                   <X className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
-                  Clear
+                  <TranslateText id="common.clear" />
                 </button>
               ) : (
                 <span />
@@ -274,7 +277,7 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                   onClick={() => setOpen(false)}
                   className="h-9 rounded-full px-3 text-[12px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15"
                 >
-                  Cancel
+                  <TranslateText id="common.cancel" />
                 </Button>
                 <Button
                   type="button"
@@ -282,7 +285,7 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
                   onClick={handleApply}
                   className="h-9 rounded-full bg-primary px-4 text-[12px] font-medium text-primary-foreground shadow-[0_8px_22px_-14px_color-mix(in_oklab,var(--primary)_70%,transparent)] hover:bg-primary/90 focus-visible:ring-4 focus-visible:ring-primary/20"
                 >
-                  Apply
+                  <TranslateText id="common.apply" />
                 </Button>
               </div>
             </div>
@@ -293,7 +296,7 @@ export function TagFilter({ filters, onChange, boardId }: TagFilterProps) {
       {hasActiveFilter ? (
         <button
           type="button"
-          aria-label="Clear label filter"
+          aria-label={t("tag.clearFilter")}
           onClick={handleClear}
           className="grid size-7 place-items-center rounded-full text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15"
         >

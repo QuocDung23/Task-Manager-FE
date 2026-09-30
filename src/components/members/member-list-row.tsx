@@ -1,3 +1,4 @@
+import { TranslateText } from "@/services/i18n";
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Check, Loader2, Shield, ShieldCheck, Trash2, User, X } from "lucide-react";
@@ -26,6 +27,7 @@ import {
   type MemberItem,
   type MemberScope,
 } from "@/lib/member-roles";
+import { useT } from "@/services/i18n";
 
 interface MemberListRowProps {
   member: MemberItem;
@@ -50,6 +52,7 @@ export function MemberListRow({
   isRemoving = false,
   isChangingRole = false,
 }: MemberListRowProps) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const [isConfirming, setIsConfirming] = useState(false);
   const enter = enterTransitionFor(reduceMotion);
@@ -61,7 +64,7 @@ export function MemberListRow({
   const canDemote = isAdminViewer && !member.isOwner && !isLastAdmin;
 
   const roleNames = roleNamesForScope(scope);
-  const roleLabel = member.isOwner ? "Owner" : getMemberRoleLabel(member.role);
+  const roleLabel = member.isOwner ? t("member.owner") : getMemberRoleLabel(member.role);
   const isBusy = isRemoving || isChangingRole;
 
   const handleConfirmRemove = async () => {
@@ -109,15 +112,15 @@ export function MemberListRow({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex items-center gap-1.5 truncate text-[13.5px] font-medium text-foreground">
-          <span className="truncate">{member.name || "Unnamed user"}</span>
+          <span className="truncate">{member.name || t("member.unnamed")}</span>
           {isSelf && (
             <span className="shrink-0 text-[11px] font-normal text-muted-foreground/80">
-              (you)
+              {t("member.you")}
             </span>
           )}
         </span>
         <span className="truncate text-xs text-muted-foreground">
-          {member.email || "No email on file"}
+          {member.email || t("member.noEmail")}
         </span>
       </div>
 
@@ -133,7 +136,7 @@ export function MemberListRow({
             className="inline-flex h-8 items-center gap-1 rounded-full px-3 text-[12px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="size-3.5" aria-hidden="true" />
-            Cancel
+            <TranslateText id="common.cancel" />
           </motion.button>
           <motion.button
             type="button"
@@ -154,7 +157,7 @@ export function MemberListRow({
             ) : (
               <Trash2 className="size-3.5" aria-hidden="true" />
             )}
-            Remove
+            {t("member.remove")}
           </motion.button>
         </div>
       ) : (
@@ -164,7 +167,7 @@ export function MemberListRow({
               <DropdownMenuTrigger asChild>
                 <motion.button
                   type="button"
-                  aria-label={`Change role for ${member.name}`}
+                  aria-label={t("member.changeFor", { name: member.name })}
                   disabled={isChangingRole}
                   whileHover={
                     isChangingRole ? undefined : pressHover(reduceMotion)
@@ -216,7 +219,7 @@ export function MemberListRow({
                 className="w-40 rounded-2xl border-0 bg-popover p-1.5 ring-foreground/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_14px_34px_-18px_rgba(15,23,42,0.28)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_14px_34px_-18px_rgba(0,0,0,0.6)]"
               >
                 <p className="px-2.5 py-1.5 text-[10.5px] font-semibold tracking-[0.16em] uppercase text-muted-foreground/65">
-                  Change role
+                  <TranslateText id="member.changeRole" />
                 </p>
                 <DropdownMenuItem
                   onSelect={() => handleChangeRole(roleNames.admin)}
@@ -230,7 +233,7 @@ export function MemberListRow({
                       strokeWidth={1.75}
                     />
                   </span>
-                  <span className="flex-1">Admin</span>
+                  <span className="flex-1"><TranslateText id="member.admin" /></span>
                   {member.role === roleNames.admin && (
                     <Check className="size-3.5" aria-hidden="true" />
                   )}
@@ -247,7 +250,7 @@ export function MemberListRow({
                       strokeWidth={1.75}
                     />
                   </span>
-                  <span className="flex-1">Member</span>
+                  <span className="flex-1"><TranslateText id="member.member" /></span>
                   {member.role === roleNames.member && (
                     <Check className="size-3.5" aria-hidden="true" />
                   )}
@@ -279,7 +282,7 @@ export function MemberListRow({
           {canManageRow && (
             <motion.button
               type="button"
-              aria-label={`Remove ${member.name}`}
+              aria-label={t("member.removeFor", { name: member.name })}
               onClick={() => setIsConfirming(true)}
               whileHover={iconHover(reduceMotion)}
               whileTap={iconTap(reduceMotion)}

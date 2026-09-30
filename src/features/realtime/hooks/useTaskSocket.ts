@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useEffect, useRef } from "react";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -47,7 +48,7 @@ function emitTaskJoin(socket: TypedSocket, taskId: string): void {
     if (import.meta.env.DEV)
       console.debug("[realtime] task:join ack", taskId, response);
     if (!response.success && response.code === "FORBIDDEN") {
-      toast.error("You do not have permission to view this task.");
+      toast.error(t("toast.taskViewForbidden"));
     }
   });
 }
@@ -128,7 +129,7 @@ export function registerTaskEventHandlers(
   ) => applyTaskPayload(payload);
   const handleUnlocked: ServerToClientEvents["task:unlocked"] = (payload) => {
     applyTaskPayload(payload);
-    toast.success("Task unlocked");
+    toast.success(t("toast.taskUnlocked"));
   };
   const handleDueSoon: ServerToClientEvents["task:due_soon"] = (payload) => {
     updateTaskFieldsAcrossCaches(queryClient, payload.taskId, {

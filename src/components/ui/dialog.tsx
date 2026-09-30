@@ -1,3 +1,4 @@
+import { TranslateText } from "@/services/i18n";
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
@@ -74,7 +75,7 @@ function DialogContent({
             >
               <XIcon
               />
-              <span className="sr-only">Close</span>
+              <span className="sr-only"><TranslateText id="common.close" /></span>
             </Button>
           </DialogPrimitive.Close>
         )}
@@ -113,7 +114,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
+          <Button variant="outline"><TranslateText id="common.close" /></Button>
         </DialogPrimitive.Close>
       )}
     </div>

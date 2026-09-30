@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+
 type TaskDetailCoverBandProps = {
   accent?: string;
 };
@@ -24,16 +26,17 @@ type TaskDetailHeaderMetaProps = {
 };
 
 export function TaskDetailHeaderMeta({
-  caption = "Live preview",
+  caption,
   savedAgo,
 }: TaskDetailHeaderMetaProps) {
+  const t = useT();
   return (
     <span className="inline-flex h-6 items-center gap-1.5 text-[11px] text-muted-foreground">
       <span
         aria-hidden="true"
         className="size-1.5 rounded-full bg-muted-foreground/50"
       />
-      <span className="truncate">{caption}</span>
+      <span className="truncate">{caption ?? t("task.livePreview")}</span>
       {savedAgo ? (
         <>
           <span aria-hidden="true" className="text-muted-foreground/40">

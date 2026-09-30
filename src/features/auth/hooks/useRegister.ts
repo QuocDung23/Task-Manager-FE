@@ -8,6 +8,7 @@ import {
   type AuthErrorResult,
 } from "@/lib/auth-error-message";
 import type { RegisterRequest, RegisterResponse } from "../types";
+import { t } from "@/services/i18n";
 
 export type RegisterAuthErrorContext = {
   result: AuthErrorResult;
@@ -23,7 +24,7 @@ export function useRegister(options?: {
   return useMutation<RegisterResponse, unknown, RegisterRequest>({
     mutationFn: authApi.register,
     onSuccess: (_, variables) => {
-      toast.success("Register Successfully");
+      toast.success(t("auth.registerSuccess"));
       navigate(
         `${APP_ROUTES.VERIFY_ACCOUNT}?email=${encodeURIComponent(variables.email)}&flow=verify-account`,
       );

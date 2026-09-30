@@ -8,7 +8,7 @@ import {
   TASK_STATUS_ACTION_VALUES,
   isOptionDisabled,
   isKnownTaskStatusAction,
-  STATUS_ACTION_META as SHARED_STATUS_ACTION_META,
+  getLocalizedStatusActionMeta,
 } from "@/features/tasks/utils/status-action";
 import {
   STATUS_ACTION_META,
@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useT } from "@/services/i18n";
 
 type TaskStatusActionPickerProps = {
   task: TaskResponse;
@@ -64,6 +65,7 @@ export function TaskStatusActionPicker({
   onTaskUpdated,
   compact = false,
 }: TaskStatusActionPickerProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<TaskStatusAction | null>(
     null,
@@ -72,7 +74,7 @@ export function TaskStatusActionPicker({
   const { mutate: updateStatusAction, isPending } = useUpdateTaskStatusAction();
 
   const currentMeta = isKnownTaskStatusAction(task.statusAction)
-    ? STATUS_ACTION_META[task.statusAction]
+    ? { ...STATUS_ACTION_META[task.statusAction], label: getLocalizedStatusActionMeta(task.statusAction).label }
     : undefined;
   const currentIconColor = isKnownTaskStatusAction(task.statusAction)
     ? STATUS_ICON_COLOR[task.statusAction]
@@ -116,7 +118,7 @@ export function TaskStatusActionPicker({
           type="button"
           disabled={busy || locked}
           aria-busy={busy || undefined}
-          aria-label={`Change status. Currently ${currentMeta?.label ?? "No status"}`}
+          aria-label={t("status.changeAria", { label: currentMeta?.label ?? t("status.noStatus") })}
           className={
             compact
               ? "group/status inline-flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-[background-color,transform,color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-60"
@@ -143,10 +145,10 @@ export function TaskStatusActionPicker({
           {!compact && (
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] leading-4 text-muted-foreground">
-                Status
+                {t("status.heading")}
               </span>
               <span className="block truncate text-[12.5px] font-medium leading-5 text-foreground">
-                {currentMeta?.label ?? "No status"}
+                {currentMeta?.label ?? t("status.noStatus")}
               </span>
             </span>
           )}
@@ -167,18 +169,18 @@ export function TaskStatusActionPicker({
         <div className="overflow-hidden rounded-lg bg-background ring-1 ring-foreground/7">
           <div className="px-3 pb-2.5 pt-3">
             <h3 className="text-[13px] font-medium text-foreground">
-              Change status
+              {t("status.change")}
             </h3>
             <p className="mt-0.5 text-[11.5px] leading-4 text-muted-foreground">
               {overdueLocked
-                ? "Task is overdue. Only Done is allowed."
-                : "Pick a status that matches the current state."}
+                ? t("status.overdueHint")
+                : t("status.pickHint")}
             </p>
           </div>
           <div className="border-t border-foreground/7 p-1.5">
             <ul className="space-y-1">
               {TASK_STATUS_ACTION_VALUES.map((statusAction) => {
-                const meta = SHARED_STATUS_ACTION_META[statusAction];
+                const meta = getLocalizedStatusActionMeta(statusAction);
                 const detailedMeta = STATUS_ACTION_META[statusAction];
                 const selected = statusAction === task.statusAction;
                 const pending = statusAction === pendingAction;
@@ -195,7 +197,7 @@ export function TaskStatusActionPicker({
                       aria-disabled={disabled || undefined}
                       title={
                         overdueLocked && statusAction !== "DONE"
-                          ? "Reschedule first or mark done."
+                          ? t("status.rescheduleHint")
                           : undefined
                       }
                       className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left outline-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
@@ -212,7 +214,7 @@ export function TaskStatusActionPicker({
                           {meta.label}
                         </span>
                         <span className="block text-[10.5px] text-muted-foreground">
-                          {detailedMeta.title}
+                          {meta.description}
                         </span>
                       </span>
                       <span

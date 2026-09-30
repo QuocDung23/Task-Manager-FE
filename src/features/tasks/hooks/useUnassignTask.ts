@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -21,14 +22,14 @@ export const useUnassignTask = () => {
 
     onSuccess: (res) => {
       applyCanonicalTaskSnapshot(queryClient, res.data, { source: "http" });
-      toast.success("Assignee removed");
+      toast.success(t("toast.assigneeRemoved"));
     },
 
     onError: (error: ApiError, variables) => {
       const status = error.response?.status;
 
       if (status === 404) {
-        toast.error("Assignee was already removed.");
+        toast.error(t("toast.assigneeAlreadyRemoved"));
         void queryClient.invalidateQueries({
           queryKey: taskKeys.detail(variables.taskId),
         });

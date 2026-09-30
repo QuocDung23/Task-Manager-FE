@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useMemo } from "react";
 import { Loader2, MessageSquare, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +42,7 @@ function CommentListSkeleton() {
 }
 
 export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
+  const t = useT();
   const { data: currentUserRes } = useCurrentUser();
   const currentUser = currentUserRes?.data ?? null;
 
@@ -109,7 +112,7 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
   };
 
   return (
-    <section aria-label="Comments" className="flex flex-col gap-3">
+    <section aria-label={t("task.comments")} className="flex flex-col gap-3">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MessageSquare
@@ -117,9 +120,9 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
             strokeWidth={1.75}
             aria-hidden="true"
           />
-          <p className="text-[13px] font-medium text-foreground">Comments</p>
+          <p className="text-[13px] font-medium text-foreground"><TranslateText id="task.comments" /></p>
           <span className="text-[11.5px] text-muted-foreground tabular-nums">
-            {isLoading ? "Loading…" : `${totalCount} total`}
+            {isLoading ? t("task.loadingComments") : t("task.totalComments", { count: totalCount })}
           </span>
         </div>
         <Button
@@ -127,7 +130,7 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
           size="icon-xs"
           onClick={refreshTimeline}
           disabled={isRefreshing}
-          aria-label="Refresh comments and activity"
+          aria-label={t("task.refreshComments")}
           className="text-muted-foreground"
         >
           <RotateCw
@@ -140,8 +143,8 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
 
       <TaskCommentComposer
         currentUser={currentUser}
-        placeholder="Write a comment…"
-        submitLabel="Comment"
+        placeholder={t("task.writeComment")}
+        submitLabel={t("task.comment")}
         isSubmitting={isCreating}
         variant="root"
         onSubmit={(content) => createComment({ taskId, content })}
@@ -152,10 +155,10 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
       ) : (isError || activityQuery.isError) ? (
         <ErrorState
           variant="inline"
-          title="Could not load comments and activity"
+          title={t("task.commentsLoadError")}
           message={getApiErrorMessage(
             isError ? error : activityQuery.error,
-            "Please check your connection and try again.",
+            t("project.connectionError"),
           )}
           onRetry={refreshTimeline}
         />
@@ -172,7 +175,7 @@ export function TaskCommentsSection({ taskId }: TaskCommentsSectionProps) {
                 {isLoadingOlder ? (
                   <Loader2 className="size-3 animate-spin motion-reduce:animate-none" />
                 ) : null}
-                Load older
+                {t("task.loadOlder")}
               </Button>
             </div>
           ) : null}

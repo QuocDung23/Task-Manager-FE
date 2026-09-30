@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useDeleteTask } from "@/features/tasks/hooks/useDeleteTask";
 import type { TaskResponse } from "@/features/tasks/types";
+import { useT } from "@/services/i18n";
 
 type DeleteTaskDialogProps = {
   task: TaskResponse;
@@ -27,6 +28,7 @@ export function DeleteTaskDialog({
   onOpenChange,
   onDeleted,
 }: DeleteTaskDialogProps) {
+  const t = useT();
   const { mutate: deleteTask, isPending } = useDeleteTask(listId);
 
   const handleConfirm = () => {
@@ -54,19 +56,19 @@ export function DeleteTaskDialog({
             />
           </span>
           <div className="min-w-0 flex-1 space-y-1">
-            <DialogTitle>Delete task</DialogTitle>
+            <DialogTitle>{t("task.delete")}</DialogTitle>
             <DialogDescription className="max-w-[36ch]">
               <span className="font-medium text-foreground/85">
                 {task.name}
               </span>{" "}
-              will be removed from its list. This cannot be undone.
+              {t("task.deleteHelp")}
             </DialogDescription>
           </div>
           <DialogClose asChild>
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Close"
+              aria-label={t("crud.close")}
               disabled={isPending}
               className="text-muted-foreground"
             >
@@ -76,7 +78,7 @@ export function DeleteTaskDialog({
         </DialogHeader>
 
         <p className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-[12.5px] leading-relaxed text-destructive">
-          The task and its assignment history will be removed permanently.
+          {t("task.deleteWarning")}
         </p>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
@@ -85,7 +87,7 @@ export function DeleteTaskDialog({
             disabled={isPending}
             onClick={() => onOpenChange?.(false)}
           >
-            Cancel
+            {t("crud.cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -93,7 +95,7 @@ export function DeleteTaskDialog({
             aria-live="polite"
             onClick={handleConfirm}
           >
-            {isPending ? "Deleting" : "Delete task"}
+            {isPending ? t("task.deleting") : t("task.delete")}
           </Button>
         </div>
       </DialogContent>

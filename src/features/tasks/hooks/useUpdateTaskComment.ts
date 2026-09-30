@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -45,7 +46,7 @@ export const useUpdateTaskComment = () => {
     onError: (error: ApiError) => {
       const status = error.response?.status;
       if (status === 403) {
-        toast.error("You can only edit your own comments.");
+        toast.error(t("toast.ownCommentOnly"));
         return;
       }
       toast.error(getApiErrorMessage(error, "Failed to update comment."));

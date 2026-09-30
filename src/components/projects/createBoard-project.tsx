@@ -1,3 +1,5 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
+import { useT } from "@/services/i18n";
 import { useEffect, useId, useState } from "react";
 import { ArrowRight, FolderPlus, Loader2, Plus, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -36,6 +38,7 @@ interface CreateBoardDialogProps {
 
 export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
   const [open, setOpen] = useState(false);
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const formId = useId();
   const nameId = `${formId}-name`;
@@ -44,6 +47,7 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
 
   const {
     formState: { errors },
+    clearErrors,
     handleSubmit,
     register,
     reset,
@@ -54,6 +58,7 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
       description: "",
     },
   });
+  useClearOnLocaleChange(() => clearErrors());
 
   useEffect(() => {
     if (!open) reset({ name: "", description: "" });
@@ -82,13 +87,13 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
       <DialogTrigger asChild>
         <motion.button
           type="button"
-          aria-label="New board"
+          aria-label={t("crud.newBoard")}
           whileHover={pressHoverStrong(reduceMotion)}
           whileTap={pressTapStrong(reduceMotion)}
           transition={SPRING_PRESS}
           className="group inline-flex h-11 items-center gap-2.5 rounded-full bg-primary pl-5 pr-1.5 text-[13px] font-medium text-primary-foreground shadow-[0_18px_50px_-22px_color-mix(in_oklab,var(--primary)_65%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/90 focus-visible:ring-4 focus-visible:ring-primary/20"
         >
-          <span className="whitespace-nowrap">New board</span>
+          <span className="whitespace-nowrap">{t("crud.newBoard")}</span>
           <span className="grid size-8 place-items-center rounded-full bg-primary-foreground/12">
             <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
           </span>
@@ -119,17 +124,17 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
 
               <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
                 <DialogTitle className="font-heading text-[19px] font-medium leading-tight tracking-[-0.02em] text-foreground sm:text-[20px]">
-                  Create board
+                  {t("crud.createBoard")}
                 </DialogTitle>
                 <DialogDescription className="max-w-[34ch] text-[13px] font-normal leading-relaxed text-muted-foreground">
-                  Set a clear name and a short brief for the team.
+                  {t("crud.boardCreateHelp")}
                 </DialogDescription>
               </DialogHeader>
 
               <DialogClose asChild>
                 <motion.button
                   type="button"
-                  aria-label="Close"
+                  aria-label={t("crud.close")}
                   disabled={isPending}
                   whileHover={iconHover(reduceMotion)}
                   whileTap={iconTap(reduceMotion)}
@@ -158,20 +163,20 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
                     htmlFor={nameId}
                     className="text-[12.5px] font-medium text-foreground/85"
                   >
-                    Board name
+                    {t("crud.boardName")}
                   </Label>
                   <Input
                     id={nameId}
                     autoFocus
                     autoComplete="off"
                     aria-invalid={Boolean(errors.name)}
-                    placeholder="Sprint board"
+                    placeholder={t("crud.boardPlaceholder")}
                     maxLength={200}
                     className="h-12 rounded-2xl border border-foreground/8 bg-background/65 px-4 text-[13.5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-background focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 aria-invalid:border-destructive/45 aria-invalid:ring-destructive/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     {...register("name", {
                       maxLength: {
                         value: 200,
-                        message: "Keep the board name under 200 characters.",
+                        message: t("crud.boardLength"),
                       },
                     })}
                   />
@@ -190,22 +195,22 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
                       htmlFor={descriptionId}
                       className="text-[12.5px] font-medium text-foreground/85"
                     >
-                      Description
+                      {t("crud.description")}
                     </Label>
                     <span className="text-[11.5px] font-normal text-muted-foreground/75">
-                      Optional
+                      {t("crud.optional")}
                     </span>
                   </div>
                   <Textarea
                     id={descriptionId}
                     aria-invalid={Boolean(errors.description)}
-                    placeholder="What this board tracks"
+                    placeholder={t("crud.boardDescription")}
                     maxLength={500}
                     className="min-h-24 resize-none rounded-2xl border border-foreground/8 bg-background/65 px-4 py-3 text-[13.5px] leading-relaxed shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-background focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 aria-invalid:border-destructive/45 aria-invalid:ring-destructive/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     {...register("description", {
                       maxLength: {
                         value: 500,
-                        message: "Keep the description under 500 characters.",
+                        message: t("crud.descriptionLength"),
                       },
                     })}
                   />
@@ -226,7 +231,7 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
                   transition={SPRING_PRESS}
                   className="h-11 whitespace-nowrap rounded-full px-5 text-[13px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Cancel
+                  {t("crud.cancel")}
                 </motion.button>
 
                 <motion.button
@@ -242,7 +247,7 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
                   transition={SPRING_PRESS}
                   className="group inline-flex h-11 items-center justify-center gap-3 whitespace-nowrap rounded-full bg-primary pl-5 pr-1.5 text-[13px] font-medium text-primary-foreground shadow-[0_10px_30px_-16px_color-mix(in_oklab,var(--primary)_70%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/90 focus-visible:ring-4 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-38.5"
                 >
-                  <span>{isPending ? "Creating" : "Create board"}</span>
+                  <span>{isPending ? t("crud.creating") : t("crud.createBoard")}</span>
                   <span className="grid size-8 place-items-center rounded-full bg-primary-foreground/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:scale-105">
                     {isPending ? (
                       <motion.span

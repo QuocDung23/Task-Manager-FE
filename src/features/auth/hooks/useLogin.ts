@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth-error-message";
 import type { LoginRequest, LoginResponse } from "../types";
 import type { ApiError } from "@/lib/api-error";
+import { t } from "@/services/i18n";
 
 export type LoginAuthErrorContext = {
   result: AuthErrorResult;
@@ -29,13 +30,13 @@ export function useLogin(options?: {
     onSuccess: (data, variables) => {
       if (data.verify === false) {
         authStorage.clearToken();
-        toast.warning("Please verify your account");
+        toast.warning(t("auth.verifyReminder"));
         navigate(
           `${APP_ROUTES.VERIFY_ACCOUNT}?email=${encodeURIComponent(variables.email)}&flow=verify-account`,
         );
       } else {
         authStorage.setToken(data.accessToken);
-        toast.success("Login successful");
+        toast.success(t("auth.loginSuccess"));
         navigate(APP_ROUTES.MAIN, { replace: true });
         queryClient.invalidateQueries({ queryKey: ["current-user"] });
       }

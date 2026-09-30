@@ -9,6 +9,7 @@ import {
   Wrench,
 } from "@phosphor-icons/react";
 import type { TaskResponse, TaskStatusAction } from "../types";
+import { t, type TranslationKey } from "@/services/i18n";
 
 export const TASK_STATUS_ACTION_VALUES: readonly TaskStatusAction[] = [
   "TODO",
@@ -87,6 +88,22 @@ export const STATUS_ACTION_META: Record<TaskStatusAction, StatusActionMeta> = {
   },
 };
 
+const STATUS_KEYS: Record<TaskStatusAction, { label: TranslationKey; description: TranslationKey }> = {
+  TODO: { label: "status.todo", description: "status.todoDescription" },
+  IN_PROGRESS: { label: "status.inProgress", description: "status.progressDescription" },
+  IN_REVIEW: { label: "status.inReview", description: "status.reviewDescription" },
+  DONE: { label: "status.done", description: "status.doneDescription" },
+  PAUSED: { label: "status.paused", description: "status.pausedDescription" },
+  FIXED: { label: "status.fixed", description: "status.fixedDescription" },
+  CANCELLED: { label: "status.cancelled", description: "status.cancelledDescription" },
+};
+
+export function getLocalizedStatusActionMeta(value: TaskStatusAction): StatusActionMeta {
+  const meta = STATUS_ACTION_META[value];
+  const keys = STATUS_KEYS[value];
+  return { ...meta, label: t(keys.label), description: t(keys.description) };
+}
+
 export function isKnownTaskStatusAction(
   value: string | null | undefined,
 ): value is TaskStatusAction {
@@ -97,11 +114,11 @@ export function getStatusActionMeta(
   value: TaskStatusAction | string | null | undefined,
 ): StatusActionMeta {
   if (value && isKnownTaskStatusAction(value)) {
-    return STATUS_ACTION_META[value];
+    return getLocalizedStatusActionMeta(value);
   }
   return {
     value: "TODO",
-    label: "No activity yet",
+    label: t("status.noActivity"),
     description: "",
     tone: "muted",
     icon: Circle,

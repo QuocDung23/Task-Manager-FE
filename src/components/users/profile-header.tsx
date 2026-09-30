@@ -1,3 +1,5 @@
+import { TranslateText } from "@/services/i18n";
+import { t } from "@/services/i18n";
 import { Camera, PencilIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -50,13 +52,13 @@ export function ProfileHeader({
       "image/webp",
     ].includes(file.type);
     if (!validTypesImg) {
-      toast.error("Please select a valid image file (jpeg, png, gif, webp)");
+      toast.error(t("toast.invalidImage"));
       return;
     }
 
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      toast.error("File size must be less than 5MB");
+      toast.error(t("toast.fileTooLarge"));
       return;
     }
 
@@ -126,7 +128,7 @@ export function ProfileHeader({
               type="button"
             >
               <PencilIcon className="size-3.5" />
-              Edit
+              <TranslateText id="common.edit" />
             </Button>
           )}
         </div>

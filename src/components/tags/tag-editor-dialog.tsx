@@ -1,4 +1,7 @@
 "use client";
+import { useClearOnLocaleChange } from "@/services/i18n";
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 
 import { useCallback, useId, useMemo, useState } from "react";
 import {
@@ -60,6 +63,7 @@ export function TagEditorDialog({
   tag,
   onSuccess,
 }: TagEditorDialogProps) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const formId = useId();
   const nameId = `${formId}-name`;
@@ -71,6 +75,7 @@ export function TagEditorDialog({
   const [color, setColor] = useState(initialState.color);
   const [nameError, setNameError] = useState<string | null>(null);
   const [colorError, setColorError] = useState<string | null>(null);
+  useClearOnLocaleChange(() => { setNameError(null); setColorError(null); });
 
   const createTag = useCreateTag(boardId);
   const updateTag = useUpdateTag(boardId);
@@ -83,14 +88,14 @@ export function TagEditorDialog({
 
       const normalized = normalizeTagName(value);
       if (normalized.length === 0) {
-        setNameError("Name is required");
+        setNameError(t("tag.required"));
       } else if (normalized.length > 50) {
-        setNameError("Name must be 50 characters or less");
+        setNameError(t("tag.nameLength"));
       } else {
         setNameError(null);
       }
     },
-    [nameError],
+    [nameError, t],
   );
 
   const handleColorChange = useCallback((value: string) => {
@@ -103,24 +108,24 @@ export function TagEditorDialog({
     let valid = true;
 
     if (normalizedName.length === 0) {
-      setNameError("Name is required");
+      setNameError(t("tag.required"));
       valid = false;
     } else if (normalizedName.length > 50) {
-      setNameError("Name must be 50 characters or less");
+      setNameError(t("tag.nameLength"));
       valid = false;
     } else {
       setNameError(null);
     }
 
     if (color && !isValidHexColor(color)) {
-      setColorError("Use a valid hex color");
+      setColorError(t("tag.invalidColor"));
       valid = false;
     } else {
       setColorError(null);
     }
 
     return valid;
-  }, [color, name]);
+  }, [color, name, t]);
 
   const handleSubmit = useCallback(() => {
     if (!validate()) return;
@@ -211,19 +216,19 @@ export function TagEditorDialog({
 
               <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
                 <DialogTitle className="font-heading text-[19px] font-medium leading-tight tracking-[-0.02em] text-foreground sm:text-[20px]">
-                  {isEditing ? "Edit label" : "Create label"}
+                  {isEditing ? t("tag.edit") : t("tag.create")}
                 </DialogTitle>
                 <DialogDescription className="max-w-[34ch] text-[13px] font-normal leading-relaxed text-muted-foreground">
                   {isEditing
-                    ? "Update the name or color of this label."
-                    : "Create a new label to organize tasks."}
+                    ? t("tag.updateHelp")
+                    : t("tag.createHelp")}
                 </DialogDescription>
               </DialogHeader>
 
               <DialogClose asChild>
                 <motion.button
                   type="button"
-                  aria-label="Close"
+                  aria-label={t("common.close")}
                   disabled={isPending}
                   whileHover={iconHover(reduceMotion)}
                   whileTap={iconTap(reduceMotion)}
@@ -256,7 +261,7 @@ export function TagEditorDialog({
                       htmlFor={nameId}
                       className="text-[12.5px] font-medium text-foreground/85"
                     >
-                      Label name
+                      <TranslateText id="tag.name" />
                     </Label>
                     <span className="tabular-nums text-[11.5px] font-normal text-muted-foreground/75">
                       {name.length}/50
@@ -267,7 +272,7 @@ export function TagEditorDialog({
                     autoComplete="off"
                     autoFocus
                     aria-invalid={Boolean(nameError)}
-                    placeholder="e.g. Priority"
+                    placeholder={t("tag.name")}
                     value={name}
                     onChange={(event) => handleNameChange(event.target.value)}
                     maxLength={50}
@@ -282,9 +287,9 @@ export function TagEditorDialog({
 
                 <div className="flex flex-col gap-2">
                   <Label className="text-[12.5px] font-medium text-foreground/85">
-                    Color
+                    <TranslateText id="tag.color" />
                   </Label>
-                  <div className="flex flex-wrap gap-2" role="group" aria-label="Color presets">
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={t("tag.colorPresets")}>
                     {TAG_COLOR_PRESETS.map((preset) => {
                       const selected = normalizeColor(color).toLowerCase() === preset;
                       return (
@@ -292,7 +297,7 @@ export function TagEditorDialog({
                           key={preset}
                           type="button"
                           onClick={() => handleColorChange(preset)}
-                          aria-label={`Select color ${preset}`}
+                          aria-label={t("tag.selectColor", { color: preset })}
                           aria-pressed={selected}
                           className="size-8 rounded-full outline-none transition-[box-shadow,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105 focus-visible:ring-4 focus-visible:ring-accent/15"
                           style={{
@@ -318,7 +323,7 @@ export function TagEditorDialog({
                     />
                     <input
                       type="color"
-                      aria-label="Choose a custom color"
+                      aria-label={t("tag.customColor")}
                       value={previewColor}
                       onChange={(event) => handleColorChange(event.target.value)}
                       className="size-11 shrink-0 cursor-pointer rounded-2xl border border-foreground/8 bg-background/65 p-1 outline-none transition-[border-color,box-shadow] duration-500 focus-visible:border-accent/40 focus-visible:ring-4 focus-visible:ring-accent/10"
@@ -333,7 +338,7 @@ export function TagEditorDialog({
 
                 <div className="flex flex-col gap-2">
                   <Label className="text-[12.5px] font-medium text-foreground/85">
-                    Preview
+                    <TranslateText id="tag.preview" />
                   </Label>
                   <div
                     className="flex min-h-15 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
@@ -348,7 +353,7 @@ export function TagEditorDialog({
                       aria-hidden="true"
                     />
                     <span className="min-w-0 truncate text-[13.5px] font-medium text-foreground">
-                      {name.trim() || "Label preview"}
+                      {name.trim() || t("tag.preview")}
                     </span>
                     <span
                       className="ml-auto shrink-0 text-[11.5px] font-medium"
@@ -371,7 +376,7 @@ export function TagEditorDialog({
                   transition={SPRING_PRESS}
                   className="h-11 whitespace-nowrap rounded-full px-5 text-[13px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Cancel
+                  <TranslateText id="common.cancel" />
                 </motion.button>
                 <motion.button
                   type="submit"
@@ -385,11 +390,11 @@ export function TagEditorDialog({
                   <span>
                     {isPending
                       ? isEditing
-                        ? "Saving"
-                        : "Creating"
+                        ? t("crud.saving")
+                        : t("crud.creating")
                       : isEditing
-                        ? "Save changes"
-                        : "Create label"}
+                        ? t("crud.save")
+                        : t("tag.create")}
                   </span>
                   <span className="grid size-8 place-items-center rounded-full bg-primary-foreground/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:scale-105">
                     {isPending ? (

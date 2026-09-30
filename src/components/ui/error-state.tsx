@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
+import { useT } from "@/services/i18n";
 
 const EASE_FLUID = [0.32, 0.72, 0, 1] as const;
 
@@ -16,13 +17,16 @@ type ErrorStateProps = {
 };
 
 export function ErrorState({
-  title = "Something went wrong",
+  title,
   message,
   onRetry,
-  retryLabel = "Retry",
+  retryLabel,
   variant = "block",
   className,
 }: ErrorStateProps) {
+  const t = useT();
+  const resolvedTitle = title ?? t("error.unknown");
+  const resolvedRetryLabel = retryLabel ?? t("common.retry");
   const reduceMotion = useReducedMotion();
 
   if (variant === "inline") {
@@ -36,7 +40,7 @@ export function ErrorState({
           className,
         )}
       >
-        <p className="text-[13px] font-medium text-destructive">{title}</p>
+        <p className="text-[13px] font-medium text-destructive">{resolvedTitle}</p>
         {message ? (
           <p className="text-[12.5px] leading-relaxed text-destructive/80">
             {message}
@@ -50,7 +54,7 @@ export function ErrorState({
             className="mt-1"
           >
             <RotateCw className="size-3.5" />
-            {retryLabel}
+            {resolvedRetryLabel}
           </Button>
         ) : null}
       </motion.div>
@@ -72,7 +76,7 @@ export function ErrorState({
           <AlertTriangle className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </div>
         <h3 className="mt-4 font-heading text-[17px] font-semibold leading-tight text-foreground">
-          {title}
+          {resolvedTitle}
         </h3>
         {message ? (
           <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
@@ -82,7 +86,7 @@ export function ErrorState({
         {onRetry ? (
           <Button onClick={onRetry} className="mt-5">
             <RotateCw className="size-4" />
-            {retryLabel}
+            {resolvedRetryLabel}
           </Button>
         ) : null}
       </div>

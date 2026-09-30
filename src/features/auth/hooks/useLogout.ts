@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { authStorage } from "../storage/auth-storage";
 import type { ApiError } from "@/lib/api-error";
 import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 
 export const useLogout = () => {
   const navigate = useNavigate();
@@ -16,14 +17,14 @@ export const useLogout = () => {
       toast.error(
         getApiErrorMessage(
           error,
-          "Logout failed. Local session has been cleared.",
+          t("auth.logoutFailure"),
         ),
       );
     },
     onSettled: () => {
       authStorage.clearToken();
       queryClient.clear();
-      toast.success("Logout Successfully");
+      toast.success(t("auth.logoutSuccess"));
       navigate("/login", { replace: true });
     },
   });

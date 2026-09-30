@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { tagApi } from "../api/tag-api";
@@ -29,7 +31,7 @@ export const useUpdateTag = (boardId: string | null | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tagKeys.all });
-      toast.success("Tag updated successfully");
+      toast.success(t("toast.tagUpdated"));
     },
     onError: (error: unknown, _variables, context) => {
       if (context?.previousTags) {
@@ -42,13 +44,13 @@ export const useUpdateTag = (boardId: string | null | undefined) => {
       const message =
         err?.response?.data?.message ?? "Failed to update tag";
       if (message.toLowerCase().includes("already exists")) {
-        toast.error("A tag with this name already exists");
+        toast.error(t("toast.tagExists"));
       } else if (message.toLowerCase().includes("permission") || message.toLowerCase().includes("forbidden")) {
-        toast.error("You do not have permission to update tags");
+        toast.error(t("toast.tagsForbidden"));
       } else if (message.toLowerCase().includes("not found")) {
-        toast.error("Tag not found");
+        toast.error(t("toast.tagMissing"));
       } else {
-        toast.error(message);
+        toast.error(getApiErrorMessage(error, "Failed to update tag"));
       }
     },
   });

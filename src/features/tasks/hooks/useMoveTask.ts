@@ -9,6 +9,7 @@ import type {
   TaskResponse,
 } from "../types";
 import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
+import { getApiErrorMessage } from "@/lib/error-message";
 
 export type MoveTaskVariables = {
   taskId: string;
@@ -62,10 +63,7 @@ export const useMoveTask = () => {
           variables.targetListId,
         );
       }
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to move task. Please try again.",
-      );
+      toast.error(getApiErrorMessage(error, "Failed to move task. Please try again."));
     },
   });
 };

@@ -1,3 +1,4 @@
+import { TranslateText, useT } from "@/services/i18n";
 import {
   Clipboard,
   DotsThree,
@@ -59,6 +60,7 @@ export function ListColumn({
   taskSortableItems,
   isTaskDragOver,
 }: ListColumnProps) {
+  const t = useT();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -104,7 +106,7 @@ export function ListColumn({
               </h3>
               <p className="mt-0.5 text-[11px] font-medium text-muted-foreground/85">
                 <span className="tabular-nums">{tasks.length}</span>{" "}
-                {tasks.length === 1 ? "task" : "tasks"}
+                {tasks.length === 1 ? t("task.countOne") : t("task.countMany")}
               </p>
             </div>
           </div>
@@ -118,7 +120,7 @@ export function ListColumn({
                 {...stopDropdownTriggerPropagation}
               >
                 <DotsThree className="h-4 w-4" weight="bold" />
-                <span className="sr-only">List actions</span>
+                <span className="sr-only"><TranslateText id="list.actions" /></span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -128,7 +130,7 @@ export function ListColumn({
                 className="gap-2"
               >
                 <PencilSimple className="h-4 w-4 text-muted-foreground" />
-                <span>Edit</span>
+                <span><TranslateText id="common.edit" /></span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
@@ -137,7 +139,7 @@ export function ListColumn({
                 className="gap-2"
               >
                 <Trash className="h-4 w-4" />
-                <span>Delete</span>
+                <span><TranslateText id="common.delete" /></span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -160,10 +162,10 @@ export function ListColumn({
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-foreground">
-                    Unable to load tasks
+                    <TranslateText id="list.loadTasksError" />
                   </p>
                   <p className="text-xs leading-relaxed text-muted-foreground">
-                    Try again in a moment or refresh the board.
+                    <TranslateText id="list.retryRefresh" />
                   </p>
                 </div>
               </div>
@@ -202,10 +204,10 @@ export function ListColumn({
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-foreground">
-                    No tasks yet
+                    <TranslateText id="board.noTasks" />
                   </p>
                   <p className="text-xs leading-relaxed text-muted-foreground">
-                    Add the first task to start filling this list.
+                    <TranslateText id="board.addFirstTask" />
                   </p>
                 </div>
               </div>
@@ -223,7 +225,7 @@ export function ListColumn({
                   <span className="grid size-5 place-items-center rounded-full bg-secondary text-muted-foreground transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
                     <Plus className="size-3" weight="bold" />
                   </span>
-                  <span>Add task</span>
+                  <span><TranslateText id="list.addTask" /></span>
                 </button>
               }
             />

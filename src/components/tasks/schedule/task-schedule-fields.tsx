@@ -1,5 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { format } from "date-fns";
+import { enUS, vi } from "date-fns/locale";
+import { useLocale, useT } from "@/services/i18n";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,14 +29,16 @@ export const TaskScheduleDateField = forwardRef<
   HTMLButtonElement,
   TaskScheduleDateFieldProps
 >(function TaskScheduleDateField({ id, value, onChange, min, disabled }, ref) {
+  const t = useT();
+  const { locale } = useLocale();
   const triggerRef = useRef<HTMLButtonElement>(null);
   useImperativeHandle(ref, () => triggerRef.current as HTMLButtonElement);
 
   const selectedDate = value ? parseLocalDateValue(value) : undefined;
   const minDate = min ? parseLocalDateValue(min) : undefined;
   const displayLabel = selectedDate
-    ? format(selectedDate, "MMM d, yyyy")
-    : "Pick a date";
+    ? format(selectedDate, locale === "vi" ? "d MMM yyyy" : "MMM d, yyyy", { locale: locale === "vi" ? vi : enUS })
+    : t("schedule.pickDate");
 
   const [open, setOpen] = useState(false);
 

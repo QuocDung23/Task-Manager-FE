@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Loader2, Plus, Search, Tag, X } from "lucide-react";
 import {
@@ -33,6 +35,7 @@ export function TaskTagsPicker({
   isUpdating,
   onTaskUpdated,
 }: TaskTagsPickerProps) {
+  const t = useT();
   const { boardId } = useTaskDetail();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,8 +102,8 @@ export function TaskTagsPicker({
   const draftCount = draftTagIds.size;
   const committedTagCountLabel =
     committedCount === 0
-      ? "No labels"
-      : `${committedCount} label${committedCount > 1 ? "s" : ""}`;
+      ? t("tag.noLabel")
+      : t("tag.count", { count: committedCount });
 
   const handleToggle = useCallback((tagId: string) => {
     setDraftTagIds((prev) => {
@@ -198,14 +201,14 @@ export function TaskTagsPicker({
           <button
             type="button"
             className="group flex h-15.5 min-w-0 items-center gap-2.5 rounded-lg bg-background/80 px-3 text-left outline-none ring-1 ring-foreground/7 transition-[background-color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-background hover:ring-foreground/12 focus-visible:ring-3 focus-visible:ring-ring/30 active:scale-[0.985] data-[state=open]:bg-background data-[state=open]:ring-foreground/15"
-            aria-label={`Edit labels. ${committedTagCountLabel}`}
+            aria-label={t("tag.editAria", { count: committedTagCountLabel })}
           >
             <span className="grid size-8 shrink-0 place-items-center rounded-md bg-secondary/70 text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:bg-secondary">
               <Tag className="size-4" strokeWidth={1.5} aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] leading-4 text-muted-foreground">
-                Labels
+                <TranslateText id="tag.labels" />
               </span>
               <span
                 className={`block truncate text-[12.5px] font-medium leading-5 ${
@@ -229,7 +232,7 @@ export function TaskTagsPicker({
             <div className="flex items-center justify-between gap-3 px-3 pb-2.5 pt-3">
               <div className="flex items-center gap-2">
                 <h3 className="text-[13px] font-medium text-foreground">
-                  Labels
+                  <TranslateText id="tag.labels" />
                 </h3>
                 <span className="rounded-lg bg-muted/70 px-2 py-1 text-[11px] font-semibold text-foreground tabular-nums">
                   {draftCount}/{activeTags.length}
@@ -243,7 +246,7 @@ export function TaskTagsPicker({
                   className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[11.5px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-wait disabled:opacity-60"
                 >
                   <X className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
-                  Clear all
+                  <TranslateText id="tag.clearAll" />
                 </button>
               )}
             </div>
@@ -257,7 +260,7 @@ export function TaskTagsPicker({
               />
               <Input
                 type="search"
-                placeholder="Search labels"
+                placeholder={t("tag.search")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-10 rounded-full border border-foreground/8 bg-card/70 pl-10 pr-4 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-card focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
@@ -280,12 +283,12 @@ export function TaskTagsPicker({
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/70 bg-card/40 px-4 py-8 text-center">
                   <Tag className="size-5 text-muted-foreground/55" strokeWidth={1.75} aria-hidden="true" />
                   <p className="mt-3 text-[12.5px] font-medium text-foreground">
-                    {deferredSearch ? "No labels match your search" : "No labels yet"}
+                    {deferredSearch ? t("tag.noMatches") : t("tag.noLabels")}
                   </p>
                   <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/75">
                     {deferredSearch
-                      ? "Try a different keyword."
-                      : "Create one from the board menu."}
+                      ? t("tag.tryKeyword")
+                      : t("tag.createOneFromBoard")}
                   </p>
                 </div>
               ) : (
@@ -330,7 +333,7 @@ export function TaskTagsPicker({
             {isTaskLocked && (
               <div className="border-t border-destructive/20 bg-destructive/5 px-3 py-2.5">
                 <p className="text-[11.5px] text-destructive">
-                  This task is overdue. Reschedule it before changing labels.
+                  <TranslateText id="task.overdueLabels" />
                 </p>
               </div>
             )}
@@ -338,14 +341,14 @@ export function TaskTagsPicker({
             {hasRemoteConflict && (
               <div className="flex items-center justify-between gap-3 border-t border-amber-500/25 bg-amber-500/8 px-3 py-2.5">
                 <p className="text-[11.5px] text-amber-800 dark:text-amber-200">
-                  Labels changed elsewhere.
+                  <TranslateText id="tag.changedElsewhere" />
                 </p>
                 <button
                   type="button"
                   onClick={handleReloadSelection}
                   className="shrink-0 rounded-full px-2.5 py-1 text-[11.5px] font-medium text-amber-900 underline decoration-amber-500/60 underline-offset-2 hover:bg-amber-500/10 dark:text-amber-100"
                 >
-                  Reload selection
+                  <TranslateText id="tag.reloadSelection" />
                 </button>
               </div>
             )}
@@ -360,7 +363,7 @@ export function TaskTagsPicker({
                 className="h-9 rounded-full px-3 text-[12.5px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15"
               >
                   <Plus className="size-3.5" strokeWidth={2} aria-hidden="true" />
-                Create label
+                <TranslateText id="tag.create" />
               </Button>
               <div className="flex items-center gap-2">
                 <Button
@@ -371,7 +374,7 @@ export function TaskTagsPicker({
                   disabled={isBusy}
                   className="h-9 rounded-full px-3 text-[12.5px] font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15"
                 >
-                  Cancel
+                  <TranslateText id="common.cancel" />
                 </Button>
                 <Button
                   type="button"
@@ -383,7 +386,7 @@ export function TaskTagsPicker({
                   {isReplacing ? (
                     <Loader2 className="size-3.5 animate-spin" />
                   ) : (
-                    "Apply"
+                    t("common.apply")
                   )}
                 </Button>
               </div>

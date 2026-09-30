@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { boardApi } from "../api/board-api";
@@ -22,7 +24,7 @@ export const useUpdateBoardMemberRole = (
     mutationFn: (params: { userId: string; roleId: string }) =>
       boardApi.updateMemberRole(boardId, params.userId, params.roleId),
     onSuccess: (response) => {
-      toast.success("Update Member Role Successfully");
+      toast.success(t("toast.roleUpdated"));
       const member: BoardMemberUser | undefined = response?.data;
       if (member) {
         applyBoardMemberRoleUpdated(queryClient, boardId, member);
@@ -36,7 +38,7 @@ export const useUpdateBoardMemberRole = (
       });
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message ?? "Update Member Role Failed");
+      toast.error(getApiErrorMessage(error, "Update Member Role Failed"));
     },
   });
 };

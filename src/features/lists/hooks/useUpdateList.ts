@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UpdateListRequest } from "../types";
 import { listApi } from "../api/list-api";
@@ -10,11 +12,11 @@ export const useUpdateList = (boardId: string) => {
     mutationFn: ({ id, data }: { id: string; data: UpdateListRequest }) =>
       listApi.update(id, data),
     onSuccess: () => {
-      toast.success("Update List Successfully");
+      toast.success(t("toast.listUpdated"));
       queryClient.invalidateQueries({ queryKey: ["lists", boardId] });
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "Update Failed");
+      toast.error(getApiErrorMessage(error, "Update Failed"));
     },
   });
 };

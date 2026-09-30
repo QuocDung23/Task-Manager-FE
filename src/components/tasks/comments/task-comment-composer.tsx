@@ -1,3 +1,4 @@
+import { useT } from "@/services/i18n";
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Send, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,15 +22,16 @@ type TaskCommentComposerProps = {
 
 export function TaskCommentComposer({
   currentUser,
-  placeholder = "Add a comment…",
+  placeholder,
   initialValue = "",
-  submitLabel = "Comment",
+  submitLabel,
   isSubmitting = false,
   autoFocus = false,
   onSubmit,
   onCancel,
   variant = "root",
 }: TaskCommentComposerProps) {
+  const t = useT();
   const [value, setValue] = useState(initialValue);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -93,7 +95,7 @@ export function TaskCommentComposer({
               handleCancel();
             }
           }}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("task.addComment")}
           rows={variant === "reply" ? 2 : 3}
           disabled={isSubmitting}
           maxLength={MAX_COMMENT_LENGTH + 100}
@@ -112,7 +114,7 @@ export function TaskCommentComposer({
             }`}
           >
             {counterVisible ? `${length}/${MAX_COMMENT_LENGTH}` : "0"}
-            {length > MAX_COMMENT_LENGTH ? " over limit" : ""}
+            {length > MAX_COMMENT_LENGTH ? ` ${t("task.overLimit")}` : ""}
           </span>
 
           <div className="flex items-center gap-1.5">
@@ -122,7 +124,7 @@ export function TaskCommentComposer({
                 size="icon-xs"
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                aria-label="Cancel"
+                aria-label={t("common.cancel")}
               >
                 <X />
               </Button>
@@ -132,14 +134,14 @@ export function TaskCommentComposer({
               size="sm"
               onClick={handleSubmit}
               disabled={!canSubmit || isSubmitting}
-              aria-label={submitLabel}
+              aria-label={submitLabel ?? t("task.comment")}
             >
               {isSubmitting ? (
                 <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
               ) : (
                 <Send className="size-3.5" />
               )}
-              {submitLabel}
+              {submitLabel ?? t("task.comment")}
             </Button>
           </div>
         </div>

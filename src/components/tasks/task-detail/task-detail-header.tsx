@@ -1,3 +1,4 @@
+import { useT } from "@/services/i18n";
 import { useEffect, useRef, useState } from "react";
 import { Check, ListChecks, Pencil, X } from "lucide-react";
 import { DialogClose } from "@/components/ui/dialog";
@@ -22,6 +23,7 @@ export function TaskDetailHeader({
   isUpdating,
   onSaveName,
 }: TaskDetailHeaderProps) {
+  const t = useT();
   const [nameValue, setNameValue] = useState(task.name);
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,7 +54,7 @@ export function TaskDetailHeader({
     <header className="flex shrink-0 flex-col gap-3 border-b border-foreground/8 bg-card/45 px-5 pb-4 pt-4 sm:px-7">
       <div className="flex items-center justify-between gap-3">
         <nav
-          aria-label="Breadcrumb"
+          aria-label={t("task.breadcrumb")}
           className="flex min-w-0 items-center gap-1.5 text-[12px] text-muted-foreground"
         >
           {boardTitle ? (
@@ -78,7 +80,7 @@ export function TaskDetailHeader({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Close detail"
+              aria-label={t("task.closeDetail")}
               className="text-muted-foreground"
             >
               <X />
@@ -110,7 +112,7 @@ export function TaskDetailHeader({
               variant="default"
               onClick={handleSubmit}
               disabled={isUpdating}
-              aria-label="Save task name"
+              aria-label={t("task.saveName")}
             >
               <Check />
             </Button>
@@ -121,7 +123,7 @@ export function TaskDetailHeader({
                 setNameValue(task.name);
                 setIsEditing(false);
               }}
-              aria-label="Cancel task name edit"
+              aria-label={t("task.cancelName")}
             >
               <X />
             </Button>

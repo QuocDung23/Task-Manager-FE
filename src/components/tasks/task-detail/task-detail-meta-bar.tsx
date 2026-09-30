@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useMemo, useState } from "react";
 import { Activity, ChevronDown, Check, Loader2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,19 +15,13 @@ import {
 } from "@/features/tasks/utils/task-schedule";
 import {
   TASK_STATUS_ACTION_VALUES,
-  STATUS_ACTION_META,
   isOptionDisabled,
   isKnownTaskStatusAction,
   getStatusActionMeta as resolveStatusMeta,
+  getLocalizedStatusActionMeta,
   type StatusActionMeta,
 } from "@/features/tasks/utils/status-action";
 import type { TaskResponse, TaskStatusAction } from "@/features/tasks/types";
-import {
-  STATUS_ACTION_LABEL,
-  STATUS_ACTION_TONE,
-  getStatusActionMeta,
-  type StatusActionTone,
-} from "./task-detail-status";
 import { useAssignTask } from "@/features/tasks/hooks/useAssignTask";
 import { useUnassignTask } from "@/features/tasks/hooks/useUnassignTask";
 import { useUpdateTaskStatusAction } from "@/features/tasks/hooks/useUpdateTaskStatusAction";
@@ -48,8 +44,9 @@ export function TaskDetailMetaBar({
   isUpdating,
   onTaskUpdated,
 }: TaskDetailMetaBarProps) {
+  const t = useT();
   return (
-    <div aria-label="Task details" className="px-5 pb-4 pt-4 sm:px-6">
+    <div aria-label={t("task.details")} className="px-5 pb-4 pt-4 sm:px-6">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <TaskTagsPicker
           task={task}
@@ -72,7 +69,7 @@ export function TaskDetailMetaBar({
       {task.tags?.length ? (
         <div className="mt-3 flex min-w-0 items-center gap-4">
           <span className="shrink-0 text-[11.5px] font-medium text-muted-foreground/75">
-            Labels
+            <TranslateText id="tag.labels" />
           </span>
           <TaskTagBadge tags={task.tags} maxVisible={4} />
         </div>
@@ -87,6 +84,7 @@ type AssignChipProps = {
 };
 
 function AssignChip({ task, onTaskUpdated }: AssignChipProps) {
+  const t = useT();
   const { boardId } = useTaskDetail();
   const { data: members = [], isLoading } = useBoardMembers(boardId);
   const { mutate: assignTask, isPending: isAssigning } = useAssignTask();
@@ -106,8 +104,7 @@ function AssignChip({ task, onTaskUpdated }: AssignChipProps) {
   const isMutating = isAssigning || isUnassigning;
   const isTaskLockedState = isTaskLocked(task);
   const count = assignedIds.size;
-  const memberCountLabel =
-    count === 0 ? "Unassigned" : count === 1 ? "1 member" : `${count} members`;
+  const memberCountLabel = count === 0 ? t("task.unassigned") : t("task.memberCount", { count });
 
   const toggleMember = (userId: string) => {
     if (isMutating || isTaskLockedState) return;
@@ -143,14 +140,14 @@ function AssignChip({ task, onTaskUpdated }: AssignChipProps) {
         <button
           type="button"
           className="group flex h-15.5 min-w-0 items-center gap-2.5 rounded-lg bg-background/80 px-3 text-left outline-none ring-1 ring-foreground/7 transition-[background-color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-background hover:ring-foreground/12 focus-visible:ring-3 focus-visible:ring-ring/30 active:scale-[0.985] data-[state=open]:bg-background data-[state=open]:ring-foreground/15"
-          aria-label={`Edit assignees. ${memberCountLabel}`}
+          aria-label={t("task.editAssigneesAria", { label: memberCountLabel })}
         >
           <span className="grid size-8 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
             <Users className="size-4" strokeWidth={1.5} aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[10.5px] leading-4 text-muted-foreground">
-              Assign
+              <TranslateText id="task.assign" />
             </span>
             <span
               className={`block truncate text-[12.5px] font-medium leading-5 ${
@@ -178,12 +175,12 @@ function AssignChip({ task, onTaskUpdated }: AssignChipProps) {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-[13px] font-medium text-foreground">
-                  Assignees
+                  <TranslateText id="task.assignees" />
                 </h3>
                 <p className="mt-0.5 text-[11.5px] leading-4 text-muted-foreground">
                   {isTaskLockedState
-                    ? "Reschedule this task before changing assignees."
-                    : "Pick who is responsible for this task."}
+                    ? t("task.assigneeLocked")
+                    : t("task.assigneeHelp")}
                 </p>
               </div>
               <span className="text-[11px] text-muted-foreground tabular-nums">
@@ -204,7 +201,7 @@ function AssignChip({ task, onTaskUpdated }: AssignChipProps) {
               </div>
             ) : sortedMembers.length === 0 ? (
               <p className="px-3 py-7 text-center text-[12px] text-muted-foreground">
-                No active board members.
+                <TranslateText id="member.noActiveMembers" />
               </p>
             ) : (
               <ul className="space-y-1">
@@ -267,37 +264,28 @@ type StatusActionEntry = {
   value: TaskStatusAction;
   label: string;
   description: string;
-  tone: StatusActionTone;
+  tone: StatusActionMeta["tone"];
   meta: StatusActionMeta;
 };
-
-const STATUS_ACTIONS: StatusActionEntry[] = TASK_STATUS_ACTION_VALUES.map(
-  (value) => ({
-    value,
-    label: STATUS_ACTION_LABEL[value],
-    description: STATUS_ACTION_META[value].description,
-    tone: STATUS_ACTION_TONE[value],
-    meta: STATUS_ACTION_META[value],
-  }),
-);
-
-function humanizeAction(value: TaskStatusAction | undefined): string {
-  return getStatusActionMeta(value).label;
-}
 
 export function StatusActionChip({
   task,
   isUpdating,
   onTaskUpdated,
 }: StatusActionChipProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<TaskStatusAction | null>(
     null,
   );
 
   const terminal = isTerminalTask(task);
-  const currentLabel = humanizeAction(task.statusAction);
-  const currentEntry = STATUS_ACTIONS.find(
+  const statusActions: StatusActionEntry[] = TASK_STATUS_ACTION_VALUES.map((value) => {
+    const meta = getLocalizedStatusActionMeta(value);
+    return { value, label: meta.label, description: meta.description, tone: meta.tone, meta };
+  });
+  const currentLabel = resolveStatusMeta(task.statusAction).label;
+  const currentEntry = statusActions.find(
     (option) => option.value === task.statusAction,
   );
   const overdueLocked = task.lockStatus === "OVERDUE_LOCKED";
@@ -346,7 +334,7 @@ export function StatusActionChip({
           disabled={terminal}
           aria-busy={isBusy || undefined}
           className="group flex h-15.5 min-w-0 items-center gap-2.5 rounded-lg bg-background/80 px-3 text-left outline-none ring-1 ring-foreground/7 transition-[background-color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-background hover:ring-foreground/12 focus-visible:ring-3 focus-visible:ring-ring/30 active:scale-[0.985] data-[state=open]:bg-background data-[state=open]:ring-foreground/15 disabled:cursor-default disabled:opacity-70"
-          aria-label={`Change status action. Currently ${currentLabel}`}
+          aria-label={t("task.statusActionAria", { label: currentLabel })}
         >
           <span
             className={`grid size-8 shrink-0 place-items-center rounded-md ${
@@ -359,7 +347,7 @@ export function StatusActionChip({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[10.5px] leading-4 text-muted-foreground">
-              Status action
+              <TranslateText id="status.heading" />
             </span>
             <span
               className={`block truncate text-[12.5px] font-medium leading-5 ${
@@ -385,17 +373,15 @@ export function StatusActionChip({
         <div className="overflow-hidden rounded-lg bg-background ring-1 ring-foreground/7">
           <div className="px-3 pb-2 pt-2.5">
             <h3 className="text-[13px] font-medium text-foreground">
-              Status action
+              <TranslateText id="status.heading" />
             </h3>
             <p className="mt-0.5 text-[11.5px] leading-4 text-muted-foreground">
-              {overdueLocked
-                ? "Task is overdue. Only marking it done is allowed."
-                : "Pick the action that best describes the current state."}
+              {overdueLocked ? t("task.statusOverdueHelp") : t("task.statusHelp")}
             </p>
           </div>
           <div className="max-h-72 overflow-y-auto border-t border-foreground/7 p-1.5">
             <ul className="space-y-1">
-              {STATUS_ACTIONS.map((option) => {
+              {statusActions.map((option) => {
                 const selected = option.value === task.statusAction;
                 const pending = pendingAction === option.value;
                 const disabled = isBusy || isOptionDisabled(task, option.value);
@@ -411,7 +397,7 @@ export function StatusActionChip({
                       aria-disabled={disabled || undefined}
                       title={
                         overdueLocked && option.value !== "DONE"
-                          ? "Reschedule first or mark done."
+                          ? t("status.rescheduleHint")
                           : undefined
                       }
                       className="flex w-full items-start gap-2.5 rounded-md px-2 py-1.5 text-left outline-none transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
@@ -461,7 +447,7 @@ export function StatusActionChip({
               onClick={() => setOpen(false)}
               disabled={isBusy}
             >
-              Close
+              <TranslateText id="common.close" />
             </Button>
           </div>
         </div>
@@ -469,5 +455,3 @@ export function StatusActionChip({
     </Popover>
   );
 }
-
-void resolveStatusMeta;

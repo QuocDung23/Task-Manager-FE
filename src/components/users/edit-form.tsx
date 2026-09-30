@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 
@@ -28,6 +30,7 @@ export function EditForm({
   onCancel,
   isSaving,
 }: EditFormProps) {
+  const t = useT();
   const fieldClass =
     "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:outline-none";
   const labelClass =
@@ -36,31 +39,31 @@ export function EditForm({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <label className={labelClass}>Display Name</label>
+        <label className={labelClass}><TranslateText id="profile.displayName" /></label>
         <input
           className={fieldClass}
           value={formData.name}
           onChange={(e) =>
             setFormData({ ...formData, name: e.target.value })
           }
-          placeholder="Your name"
+          placeholder={t("profile.yourName")}
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className={labelClass}>Address</label>
+        <label className={labelClass}><TranslateText id="profile.address" /></label>
         <input
           className={fieldClass}
           value={formData.address}
           onChange={(e) =>
             setFormData({ ...formData, address: e.target.value })
           }
-          placeholder="Where do you live?"
+          placeholder={t("profile.yourAddress")}
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className={labelClass}>Phone Number</label>
+        <label className={labelClass}><TranslateText id="profile.phone" /></label>
         <input
           className={fieldClass}
           value={formData.phoneNumber}
@@ -73,21 +76,21 @@ export function EditForm({
       </div>
 
       <div className="space-y-1.5">
-        <label className={labelClass}>Bio</label>
+        <label className={labelClass}><TranslateText id="profile.bio" /></label>
         <Textarea
           className="min-h-20 resize-none"
           value={formData.bio}
           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-          placeholder="Tell us about yourself..."
+          placeholder={t("profile.yourBio")}
         />
       </div>
 
       <div className="flex justify-end gap-2 pt-1">
         <Button variant="outline" size="sm" onClick={onCancel}>
-          Cancel
+          <TranslateText id="common.cancel" />
         </Button>
         <Button size="sm" onClick={onSave} disabled={isSaving}>
-          {isSaving ? "Saving…" : "Save Changes"}
+          {isSaving ? t("profile.saving") : t("profile.saveChanges")}
         </Button>
       </div>
     </div>

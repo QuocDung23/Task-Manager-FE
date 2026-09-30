@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useMemo, useState } from "react";
 import { UserPlus, Users } from "lucide-react";
 import { useAssignTask } from "@/features/tasks/hooks/useAssignTask";
@@ -16,6 +18,7 @@ type TaskAssigneesProps = {
 };
 
 export function TaskAssignees({ task, onTaskUpdated }: TaskAssigneesProps) {
+  const t = useT();
   const { boardId } = useTaskDetail();
   const { data: members = [], isLoading: isLoadingMembers } =
     useBoardMembers(boardId);
@@ -57,14 +60,14 @@ export function TaskAssignees({ task, onTaskUpdated }: TaskAssigneesProps) {
       <div className="flex items-center justify-between">
         <div className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Users className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
-          <span>Assignees</span>
+          <span><TranslateText id="task.assignees" /></span>
         </div>
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={() => setPickerOpen(true)}
           disabled={isMutating}
-          aria-label="Add assignees"
+          aria-label={t("member.addAssignees")}
           className="text-muted-foreground"
         >
           <UserPlus className="size-3.5" strokeWidth={1.75} />
@@ -74,7 +77,7 @@ export function TaskAssignees({ task, onTaskUpdated }: TaskAssigneesProps) {
       {currentAssignIds.length === 0 ? (
         <div className="inline-flex items-center gap-2 rounded-md border border-dashed border-border bg-card/40 px-2.5 py-1 text-[12px] text-muted-foreground">
           <Users className="size-3" strokeWidth={1.75} aria-hidden="true" />
-          No assignees yet
+          <TranslateText id="task.noAssignees" />
         </div>
       ) : (
         <ul className="flex flex-wrap gap-1.5">

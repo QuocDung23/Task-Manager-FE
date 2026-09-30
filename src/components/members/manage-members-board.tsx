@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -69,7 +70,7 @@ export function DialogManageMembersBoard({
   const handleChangeRole = async (member: MemberItem, roleName: string) => {
     const roleId = roleUuidByName.get(roleName);
     if (!roleId) {
-      toast.error(`Could not resolve role "${roleName}"`);
+      toast.error(t("member.resolveRoleFailed", { role: roleName }));
       return;
     }
     try {

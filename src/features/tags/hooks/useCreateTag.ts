@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { tagApi } from "../api/tag-api";
@@ -11,7 +13,7 @@ export const useCreateTag = (boardId: string | null | undefined) => {
     mutationFn: (data: CreateTagRequest) => tagApi.create(boardId!, data),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: tagKeys.all });
-      toast.success("Tag created successfully");
+      toast.success(t("toast.tagCreated"));
       return response.data;
     },
     onError: (error: unknown) => {
@@ -19,11 +21,11 @@ export const useCreateTag = (boardId: string | null | undefined) => {
       const message =
         err?.response?.data?.message ?? "Failed to create tag";
       if (message.toLowerCase().includes("already exists")) {
-        toast.error("A tag with this name already exists");
+        toast.error(t("toast.tagExists"));
       } else if (message.toLowerCase().includes("permission") || message.toLowerCase().includes("forbidden")) {
-        toast.error("You do not have permission to create tags");
+        toast.error(t("toast.tagCreateForbidden"));
       } else {
-        toast.error(message);
+        toast.error(getApiErrorMessage(error, "Failed to create tag"));
       }
     },
   });

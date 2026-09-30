@@ -1,8 +1,11 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
 import { useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useChangePassword } from "@/features/users/hooks/useChangePassword";
 import type { ChangePasswordPayload } from "@/features/users/types";
 import type { ApiError } from "@/lib/api-error";
+import { useT } from "@/services/i18n";
+import { getApiErrorMessage } from "@/lib/error-message";
 
 const MIN_PASSWORD_LENGTH = 6;
 const MAX_PASSWORD_LENGTH = 20;
@@ -26,7 +29,9 @@ const mapErrorToField = (message: string): ChangePasswordField => {
 };
 
 export function useChangePasswordForm() {
+  const t = useT();
   const [fieldErrors, setFieldErrors] = useState<ChangePasswordFieldErrors>({});
+  useClearOnLocaleChange(() => setFieldErrors({}));
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -57,35 +62,34 @@ export function useChangePasswordForm() {
     const { currentPassword, newPassword, confirmPassword } = payload;
 
     if (!currentPassword) {
-      nextErrors.currentPassword = "Please enter your current password.";
+      nextErrors.currentPassword = t("passwordError.currentRequired");
     } else if (
       currentPassword.length < MIN_PASSWORD_LENGTH ||
       currentPassword.length > MAX_PASSWORD_LENGTH
     ) {
-      nextErrors.currentPassword = `Current password must be between ${MIN_PASSWORD_LENGTH} and ${MAX_PASSWORD_LENGTH} characters.`;
+      nextErrors.currentPassword = t("passwordError.currentLength", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH });
     }
 
     if (!newPassword) {
-      nextErrors.newPassword = "Please enter your new password.";
+      nextErrors.newPassword = t("passwordError.newRequired");
     } else if (
       newPassword.length < MIN_PASSWORD_LENGTH ||
       newPassword.length > MAX_PASSWORD_LENGTH
     ) {
-      nextErrors.newPassword = `Password must be between ${MIN_PASSWORD_LENGTH} and ${MAX_PASSWORD_LENGTH} characters.`;
+      nextErrors.newPassword = t("passwordError.newLength", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH });
     } else if (newPassword === currentPassword) {
-      nextErrors.newPassword =
-        "New password must be different from your current password.";
+      nextErrors.newPassword = t("passwordError.same");
     }
 
     if (!confirmPassword) {
-      nextErrors.confirmPassword = "Please confirm your new password.";
+      nextErrors.confirmPassword = t("passwordError.confirmRequired");
     } else if (
       confirmPassword.length < MIN_PASSWORD_LENGTH ||
       confirmPassword.length > MAX_PASSWORD_LENGTH
     ) {
-      nextErrors.confirmPassword = `Password must be between ${MIN_PASSWORD_LENGTH} and ${MAX_PASSWORD_LENGTH} characters.`;
+      nextErrors.confirmPassword = t("passwordError.newLength", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH });
     } else if (newPassword && confirmPassword !== newPassword) {
-      nextErrors.confirmPassword = "Passwords do not match.";
+      nextErrors.confirmPassword = t("passwordError.mismatch");
     }
 
     return nextErrors;
@@ -119,9 +123,9 @@ export function useChangePasswordForm() {
     changePassword.mutate(payload, {
       onSuccess: () => resetForm(),
       onError: (error: ApiError) => {
-        const message =
-          error.response?.data?.message || "Change password failed";
-        setFieldErrors({ [mapErrorToField(message)]: message });
+        const backendMessage = error.response?.data?.message || "";
+        const field = mapErrorToField(backendMessage);
+        setFieldErrors({ [field]: getApiErrorMessage(error, t("passwordError.changeFailed")) });
       },
     });
   };

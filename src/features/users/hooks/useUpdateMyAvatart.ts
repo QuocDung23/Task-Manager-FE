@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "../api/user-api";
 import { toast } from "sonner";
@@ -38,13 +39,13 @@ export const useUpdateMyAvatar = () => {
           };
         },
       );
-      toast.success("Update Avatar Successfully");
+      toast.success(t("toast.avatarUpdated"));
     },
     onError: (_error, _variables, context) => {
       if (context?.previousUser) {
         queryClient.setQueryData(["current-user"], context.previousUser);
       }
-      toast.error("Update Avatar Failed");
+      toast.error(t("toast.avatarFailed"));
     },
   });
 };

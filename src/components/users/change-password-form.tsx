@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { Button } from "../ui/button";
 import { FieldError } from "../ui/field";
 import { PasswordField } from "./password-field";
@@ -8,6 +10,7 @@ interface ChangePasswordFormProps {
 }
 
 export function ChangePasswordForm({ onCancel }: ChangePasswordFormProps) {
+  const t = useT();
   const {
     fieldErrors,
     formRef,
@@ -28,10 +31,9 @@ export function ChangePasswordForm({ onCancel }: ChangePasswordFormProps) {
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate className="grid gap-5">
       <div className="space-y-1.5">
-        <h3 className="text-sm font-semibold text-foreground">Change password</h3>
+        <h3 className="text-sm font-semibold text-foreground"><TranslateText id="profile.changePassword" /></h3>
         <p className="text-xs text-muted-foreground">
-          Use {minPasswordLength}-{maxPasswordLength} characters. Your new password must be
-          different from your current one.
+          {t("profile.passwordHint", { min: minPasswordLength, max: maxPasswordLength })}
         </p>
       </div>
 
@@ -39,8 +41,8 @@ export function ChangePasswordForm({ onCancel }: ChangePasswordFormProps) {
 
       <PasswordField
         id="currentPassword"
-        label="Current password"
-        placeholder="Enter your current password"
+        label={t("profile.currentPassword")}
+        placeholder={t("profile.currentPasswordPlaceholder")}
         autoComplete="current-password"
         isVisible={showCurrentPassword}
         onVisibilityToggle={() => setShowCurrentPassword((previous) => !previous)}
@@ -53,8 +55,8 @@ export function ChangePasswordForm({ onCancel }: ChangePasswordFormProps) {
 
       <PasswordField
         id="newPassword"
-        label="New password"
-        placeholder="Enter a new password"
+        label={t("profile.newPassword")}
+        placeholder={t("auth.enterNewPassword")}
         autoComplete="new-password"
         isVisible={showNewPassword}
         onVisibilityToggle={() => setShowNewPassword((previous) => !previous)}
@@ -66,8 +68,8 @@ export function ChangePasswordForm({ onCancel }: ChangePasswordFormProps) {
 
       <PasswordField
         id="confirmPassword"
-        label="Confirm new password"
-        placeholder="Re-enter the new password"
+        label={t("profile.confirmNewPassword")}
+        placeholder={t("auth.reenterNewPassword")}
         autoComplete="new-password"
         isVisible={showConfirmPassword}
         onVisibilityToggle={() => setShowConfirmPassword((previous) => !previous)}
@@ -87,10 +89,10 @@ export function ChangePasswordForm({ onCancel }: ChangePasswordFormProps) {
             onCancel();
           }}
         >
-          Cancel
+          <TranslateText id="common.cancel" />
         </Button>
         <Button type="submit" size="sm" disabled={isPending}>
-          {isPending ? "Updating…" : "Update password"}
+          {isPending ? t("profile.updating") : t("profile.updatePassword")}
         </Button>
       </div>
     </form>

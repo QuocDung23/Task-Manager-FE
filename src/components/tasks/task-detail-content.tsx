@@ -1,3 +1,4 @@
+import { TranslateText } from "@/services/i18n";
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -119,7 +120,7 @@ export default function TaskDetailContent({
           <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-foreground/8 bg-card/50 px-5 py-3 sm:px-6">
             <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
               <Trash2 strokeWidth={1.5} />
-              Delete task
+              <TranslateText id="task.delete" />
             </Button>
           </footer>
         </DialogContent>

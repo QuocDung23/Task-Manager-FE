@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -31,6 +33,7 @@ const EASE_FLUID = [0.32, 0.72, 0, 1] as const;
 const PAGE_SIZE = 12;
 
 export function DetailProject() {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const location = useLocation();
   const { projectName: initialProjectName } =
@@ -55,7 +58,7 @@ export function DetailProject() {
   }, [search]);
 
   const { editing, setEditing, title, setTitle, handleSave, handleKeyBoard } =
-    useEditTitleProject(projectId ?? "", initialProjectName || "Project");
+    useEditTitleProject(projectId ?? "", initialProjectName || t("project.untitled"));
 
   // Refcount join `project:{projectId}` socket room khi mở trang chi tiết.
   // Khi ack thành công sẽ refetch detail + members + boards list qua
@@ -67,10 +70,10 @@ export function DetailProject() {
 
     return subscribeToProjectDeleted((deletedProjectId) => {
       if (deletedProjectId !== projectId) return;
-      toast.info("Project no longer available");
+      toast.info(t("toast.projectGone"));
       navigate(APP_ROUTES.MAIN, { replace: true });
     });
-  }, [projectId, navigate]);
+  }, [projectId, navigate, t]);
 
   const {
     data: responseData,
@@ -111,7 +114,7 @@ export function DetailProject() {
     return (
       <div className="flex h-[calc(100dvh-4rem)] min-h-0 items-center justify-center overflow-hidden">
         <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-[13.5px] text-destructive">
-          Project id is missing.
+          <TranslateText id="project.missingId" />
         </div>
       </div>
     );
@@ -127,7 +130,7 @@ export function DetailProject() {
           className="flex flex-col items-center gap-3 text-muted-foreground"
         >
           <Loader2 className="h-6 w-6 animate-spin motion-reduce:animate-none" />
-          <span className="text-[13px] tracking-tight">Loading boards</span>
+          <span className="text-[13px] tracking-tight"><TranslateText id="project.loadingBoards" /></span>
         </motion.div>
       </div>
     );
@@ -136,10 +139,10 @@ export function DetailProject() {
   if (isError) {
     return (
       <ErrorState
-        title="Could not load boards"
+        title={t("project.loadBoardsError")}
         message={getApiErrorMessage(
           error,
-          "Please check your connection and try again.",
+          t("project.connectionError"),
         )}
         onRetry={() => {
           void refetch();
@@ -155,7 +158,7 @@ export function DetailProject() {
           <div className="flex min-w-0 items-center gap-2">
             {editing ? (
               <Input
-                aria-label="Project title"
+                aria-label={t("project.title")}
                 autoFocus
                 className="h-auto min-w-0 max-w-75 py-1 px-2 text-base font-semibold text-zinc-900 bg-zinc-100 dark:text-zinc-100 dark:bg-white/10 border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-md"
                 value={title}
@@ -168,7 +171,7 @@ export function DetailProject() {
                 type="button"
                 onClick={() => setEditing(true)}
                 className="cursor-pointer truncate rounded-md px-2 py-1 font-semibold text-foreground transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                title="Click to rename"
+                title={t("project.clickRename")}
               >
                 {title}
               </button>
@@ -179,7 +182,7 @@ export function DetailProject() {
               aria-hidden="true"
             />
             <span className="shrink-0 text-sm text-muted-foreground">
-              Boards
+              <TranslateText id="project.boards" />
             </span>
           </div>
         </HeaderLayout>
@@ -196,8 +199,8 @@ export function DetailProject() {
             <Search className="size-4" strokeWidth={1.75} aria-hidden="true" />
           </span>
           <Input
-            aria-label="Search boards"
-            placeholder="Search boards..."
+            aria-label={t("project.searchBoards")}
+            placeholder={t("project.searchBoardsPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-11 w-full rounded-full border-border/80 bg-card pl-10 pr-4 text-[13.5px] shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/70 hover:border-primary/20 focus-visible:border-primary/35 focus-visible:ring-4 focus-visible:ring-primary/10"
@@ -207,11 +210,11 @@ export function DetailProject() {
         <div className="flex items-center justify-end gap-4 pr-2">
           <div className="hidden items-center gap-3 text-xs font-medium text-muted-foreground sm:flex">
             <span>
-              {totalItems} board{totalItems === 1 ? "" : "s"}
+              {t("project.boardCount", { count: totalItems })}
             </span>
             <span className="h-3 w-px bg-border" aria-hidden="true" />
             <span>
-              Page {page} of {Math.max(totalPage, 1)}
+              {t("project.page", { page, total: Math.max(totalPage, 1) })}
             </span>
           </div>
 
@@ -250,7 +253,7 @@ export function DetailProject() {
               <Card
                 role="link"
                 tabIndex={0}
-                aria-label={`Open ${board.name}`}
+                aria-label={t("project.openBoard", { name: board.name })}
                 onClick={() =>
                   navigate(`/${APP_ROUTES.BOARD}/${board.id}`, {
                     state: {
@@ -315,12 +318,12 @@ export function DetailProject() {
                 </div>
 
                 <h3 className="mt-4 font-heading text-[17px] font-semibold leading-tight text-foreground">
-                  {debouncedSearch ? "No matches" : "No boards yet"}
+                  {debouncedSearch ? t("project.noMatches") : t("project.noBoards")}
                 </h3>
                 <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
                   {debouncedSearch
-                    ? `Nothing matches "${debouncedSearch}". Try a different keyword.`
-                    : "Create your first board from the button above."}
+                    ? t("project.noMatchDetail", { query: debouncedSearch })
+                    : t("project.createFirstBoard")}
                 </p>
               </div>
             </div>

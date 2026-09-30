@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, Users, Tag } from "lucide-react";
@@ -42,6 +44,7 @@ const contentTransition = (reduceMotion: boolean | null) =>
     : { duration: 0.6, delay: 0.06, ease: EASE_FLUID };
 
 export function DetailBoard({ boardId }: DetailBoardProps) {
+  const t = useT();
   const { data: boardData, isLoading: isLoadingBoard } = useBoard(boardId);
   const [page] = useState(1);
   const limit = 200;
@@ -101,7 +104,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
             aria-hidden="true"
           />
           <span className="text-[12.5px] font-medium text-muted-foreground">
-            Loading board
+            <TranslateText id="board.loading" />
           </span>
         </div>
       </div>
@@ -112,7 +115,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
     return (
       <div className="flex min-h-[60dvh] items-center justify-center px-4">
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-[13px] font-medium text-destructive">
-          Board not found.
+          <TranslateText id="board.notFound" />
         </div>
       </div>
     );
@@ -127,7 +130,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
             aria-hidden="true"
           />
           <span className="text-[12.5px] font-medium text-muted-foreground">
-            Loading lists
+            <TranslateText id="board.loadingLists" />
           </span>
         </div>
       </div>
@@ -138,7 +141,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
     return (
       <div className="flex min-h-[60dvh] items-center justify-center px-4">
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-[13px] font-medium text-destructive">
-          Error loading lists.
+          <TranslateText id="board.listsError" />
         </div>
       </div>
     );
@@ -156,7 +159,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/70">
-                Board
+                <TranslateText id="project.boards" />
               </p>
               <h1 className="mt-2 truncate font-heading text-[28px] font-semibold leading-none tracking-[-0.02em] text-foreground sm:text-[32px]">
                 {board.name}
@@ -166,21 +169,21 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
                   {orderedLists.length}
                 </span>
                 <span className="text-muted-foreground/70">
-                  {orderedLists.length === 1 ? "list" : "lists"}
+                  {orderedLists.length === 1 ? t("list.countOne") : t("list.countMany")}
                 </span>
                 <span
                   className="size-1 rounded-full bg-muted-foreground/30"
                   aria-hidden="true"
                 />
                 <span className="text-muted-foreground/80">
-                  Drag to reorder lanes
+                  <TranslateText id="board.dragHint" />
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <motion.button
                 type="button"
-                aria-label="Manage board members"
+                aria-label={t("board.manageMembers")}
                 onClick={() => setOpenManageMembers(true)}
                 whileHover={reduceMotion ? undefined : { y: -1 }}
                 whileTap={reduceMotion ? undefined : { scale: 0.97 }}
@@ -235,7 +238,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
                 </span>
                 <Input
                   type="search"
-                  placeholder="Search lists"
+                  placeholder={t("board.searchLists")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="h-10 rounded-full border border-foreground/8 bg-card/70 pl-10 pr-4 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-card focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
@@ -258,7 +261,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => setTagsManagerOpen(true)}
-                aria-label="Manage labels"
+                aria-label={t("tag.manage")}
                 className="group h-9 gap-2 rounded-full border border-foreground/8 bg-card/70 px-3 text-[12.5px] font-medium text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,background-color,color,box-shadow] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/20 hover:bg-card hover:text-foreground focus-visible:border-accent/40 focus-visible:ring-4 focus-visible:ring-accent/15 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
               >
                 <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-primary transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
@@ -268,7 +271,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
                     aria-hidden="true"
                   />
                 </span>
-                Manage labels
+                <TranslateText id="tag.manage" />
               </Button>
             </div>
           </div>
@@ -293,10 +296,10 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
               </div>
               <div className="space-y-1">
                 <p className="text-[13.5px] font-medium text-foreground">
-                  No lists yet
+                  <TranslateText id="board.noLists" />
                 </p>
                 <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-                  Add the first lane to start grouping tasks on this board.
+                  <TranslateText id="board.firstLane" />
                 </p>
               </div>
             </div>

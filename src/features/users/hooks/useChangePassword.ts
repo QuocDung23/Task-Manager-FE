@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation } from "@tanstack/react-query";
 import { userApi } from "../api/user-api";
 import type { ChangePasswordPayload } from "../types";
@@ -8,10 +10,10 @@ export const useChangePassword = () => {
   return useMutation({
     mutationFn: (data: ChangePasswordPayload) => userApi.changePassword(data),
     onSuccess: () => {
-      toast.success("Password changed successfully");
+      toast.success(t("toast.passwordChanged"));
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "Change password failed");
+      toast.error(getApiErrorMessage(error, "Change password failed"));
     },
   });
 };

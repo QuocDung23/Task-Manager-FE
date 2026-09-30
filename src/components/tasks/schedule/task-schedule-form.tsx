@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,7 @@ export function TaskScheduleForm({
   onTaskUpdated,
   onClose,
 }: TaskScheduleFormProps) {
+  const t = useT();
   const [draft, setDraft] = useState<TaskScheduleDraft>(() => buildDraft(task));
   // FE-4: Use fresh Date.now() at validation time instead of capturing once at mount
   const validation = useMemo(
@@ -151,19 +154,19 @@ export function TaskScheduleForm({
     <div className="rounded-lg bg-background p-3 ring-1 ring-foreground/7">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <h3 className="text-[13px] font-medium text-foreground">Schedule</h3>
+          <h3 className="text-[13px] font-medium text-foreground"><TranslateText id="task.schedule" /></h3>
           <p className="mt-0.5 text-[11.5px] leading-4 text-muted-foreground">
             {locked
-              ? "Set a new deadline to unlock this task."
+              ? t("schedule.unlockHelp")
               : hasExistingSchedule
-                ? "Update or remove the current deadline."
-                : "Pick a deadline and an optional reminder."}
+                ? t("schedule.updateHelp")
+                : t("schedule.createHelp")}
           </p>
         </div>
         <Button
           variant="ghost"
           size="icon-xs"
-          aria-label="Close schedule"
+          aria-label={t("task.closeSchedule")}
           onClick={onClose}
           disabled={isBusy}
           className="text-muted-foreground"
@@ -187,7 +190,7 @@ export function TaskScheduleForm({
             htmlFor={`task-schedule-start-date-${task.id}`}
             className="mb-1.5 block text-[11px] font-medium text-foreground/80"
           >
-            Start date
+            <TranslateText id="task.startDate" />
           </Label>
           <TaskScheduleDateField
             id={`task-schedule-start-date-${task.id}`}
@@ -196,7 +199,7 @@ export function TaskScheduleForm({
             onChange={(value) => updateDraft({ startDate: value })}
           />
           <p className="mt-1 h-4 text-[11px] leading-4 text-muted-foreground">
-            {validation.errors.startDate ?? "When work begins"}
+            {validation.errors.startDate ?? t("schedule.startHint")}
           </p>
         </div>
         <div>
@@ -204,7 +207,7 @@ export function TaskScheduleForm({
             htmlFor={`task-schedule-date-${task.id}`}
             className="mb-1.5 block text-[11px] font-medium text-foreground/80"
           >
-            Due date
+            <TranslateText id="task.dueDate" />
           </Label>
           <TaskScheduleDateField
             id={`task-schedule-date-${task.id}`}
@@ -214,7 +217,7 @@ export function TaskScheduleForm({
             onChange={(value) => updateDraft({ date: value })}
           />
           <p className="mt-1 h-4 text-[11px] leading-4 text-muted-foreground">
-            {validation.errors.date ?? "The deadline"}
+            {validation.errors.date ?? t("schedule.deadlineHint")}
           </p>
         </div>
       </div>
@@ -225,7 +228,7 @@ export function TaskScheduleForm({
             htmlFor={`task-schedule-time-${task.id}`}
             className="mb-1.5 block text-[11px] font-medium text-foreground/80"
           >
-            Due time
+            <TranslateText id="task.dueTime" />
           </Label>
           <TaskScheduleTimeField
             id={`task-schedule-time-${task.id}`}
@@ -234,12 +237,12 @@ export function TaskScheduleForm({
             onChange={(value) => updateDraft({ time: value })}
           />
           <p className="mt-1 h-4 text-[11px] leading-4 text-muted-foreground">
-            {validation.errors.time ?? "24-hour clock"}
+            {validation.errors.time ?? t("schedule.clockHint")}
           </p>
         </div>
         <div>
           <span className="mb-1.5 block text-[11px] font-medium text-foreground/80">
-            Reminder
+            <TranslateText id="task.reminder" />
           </span>
           <TaskScheduleReminderMenu
             preset={draft.reminderPreset}
@@ -251,7 +254,7 @@ export function TaskScheduleForm({
             }
           />
           <p className="mt-1 h-4 text-[11px] leading-4 text-muted-foreground">
-            {validation.errors.reminder ?? "Optional nudges"}
+            {validation.errors.reminder ?? t("schedule.optionalNudges")}
           </p>
         </div>
       </div>
@@ -263,7 +266,7 @@ export function TaskScheduleForm({
               htmlFor={`task-schedule-reminder-date-${task.id}`}
               className="mb-1.5 block text-[11px] font-medium text-foreground/80"
             >
-              Reminder date
+              <TranslateText id="task.reminderDate" />
             </Label>
             <TaskScheduleDateField
               id={`task-schedule-reminder-date-${task.id}`}
@@ -278,7 +281,7 @@ export function TaskScheduleForm({
               htmlFor={`task-schedule-reminder-time-${task.id}`}
               className="mb-1.5 block text-[11px] font-medium text-foreground/80"
             >
-              Reminder time
+              <TranslateText id="task.reminderTime" />
             </Label>
             <TaskScheduleTimeField
               id={`task-schedule-reminder-time-${task.id}`}
@@ -298,7 +301,7 @@ export function TaskScheduleForm({
           disabled={isBusy || !hasExistingSchedule || clearBlocked || terminal}
           className="text-muted-foreground"
         >
-          Clear schedule
+          <TranslateText id="task.clearSchedule" />
         </Button>
         <Button
           size="sm"
@@ -311,13 +314,13 @@ export function TaskScheduleForm({
           ) : (
             <Check className="size-3.5" strokeWidth={1.75} />
           )}
-          {hasExistingSchedule ? "Reschedule task" : "Set schedule"}
+          {hasExistingSchedule ? t("schedule.reschedule") : t("schedule.set")}
         </Button>
       </div>
 
       {clearBlocked ? (
         <p className="mt-2 text-[11.5px] leading-4 text-muted-foreground">
-          Overdue tasks need a new date before the schedule can be cleared.
+          <TranslateText id="task.overdueClearWarning" />
         </p>
       ) : null}
     </div>

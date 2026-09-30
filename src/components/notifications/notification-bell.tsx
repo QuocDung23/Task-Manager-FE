@@ -7,22 +7,25 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUnreadNotificationCount } from "@/features/notifications/hooks/useNotifications";
 import { NotificationCenter } from "./notification-center";
+import { useT } from "@/services/i18n";
 
 function BellButton({ count }: { count: number }) {
+  const t = useT();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative rounded-full" aria-label={`Notifications, ${count} unread`}>
+        <Button variant="ghost" size="icon" className="relative rounded-full" aria-label={t("notification.bellAria", { count })}>
           <Bell className="size-4.5" />
           {count > 0 ? <span className="absolute -right-0.5 -top-0.5 grid min-w-4.5 place-items-center rounded-full bg-destructive px-1 text-[9px] font-semibold leading-4 text-destructive-foreground">{count > 99 ? "99+" : count}</span> : null}
         </Button>
       </TooltipTrigger>
-      <TooltipContent sideOffset={6}>Notifications</TooltipContent>
+      <TooltipContent sideOffset={6}>{t("notification.title")}</TooltipContent>
     </Tooltip>
   );
 }
 
 export function NotificationBell() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
   const count = useUnreadNotificationCount().data?.data.count ?? 0;
@@ -30,7 +33,7 @@ export function NotificationBell() {
     return (
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild><span><BellButton count={count} /></span></SheetTrigger>
-        <SheetContent className="w-[min(100vw,420px)] gap-0 p-0"><SheetTitle className="sr-only">Notifications</SheetTitle><NotificationCenter onNavigate={() => setOpen(false)} /></SheetContent>
+        <SheetContent className="w-[min(100vw,420px)] gap-0 p-0"><SheetTitle className="sr-only">{t("notification.title")}</SheetTitle><NotificationCenter onNavigate={() => setOpen(false)} /></SheetContent>
       </Sheet>
     );
   }

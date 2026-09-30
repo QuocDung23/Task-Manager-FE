@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -20,7 +22,7 @@ export const useReplaceTaskTags = () => {
     onSuccess: (response) => {
       const updatedTask = response.data;
       applyCanonicalTaskSnapshot(queryClient, updatedTask, { source: "http" });
-      toast.success("Tags updated successfully");
+      toast.success(t("toast.tagsUpdated"));
       return updatedTask;
     },
     onError: (error: unknown) => {
@@ -29,15 +31,15 @@ export const useReplaceTaskTags = () => {
         err?.response?.data?.message ?? "Failed to update tags";
 
       if (message.toLowerCase().includes("overdue")) {
-        toast.error("This task is overdue. Reschedule it before changing tags.");
+        toast.error(t("toast.overdueTags"));
       } else if (message.toLowerCase().includes("permission") || message.toLowerCase().includes("forbidden")) {
-        toast.error("You do not have permission to update tags");
+        toast.error(t("toast.tagsForbidden"));
       } else if (message.toLowerCase().includes("not found")) {
-        toast.error("Task or tag not found");
+        toast.error(t("toast.taskTagMissing"));
       } else if (message.toLowerCase().includes("invalid")) {
-        toast.error("Invalid tag selection");
+        toast.error(t("toast.invalidTag"));
       } else {
-        toast.error(message);
+        toast.error(getApiErrorMessage(error, "Failed to update tags"));
       }
     },
   });
@@ -58,9 +60,9 @@ export const useAttachTaskTag = () => {
       const message =
         err?.response?.data?.message ?? "Failed to attach tag";
       if (message.toLowerCase().includes("overdue")) {
-        toast.error("This task is overdue. Reschedule it before changing tags.");
+        toast.error(t("toast.overdueTags"));
       } else {
-        toast.error(message);
+        toast.error(getApiErrorMessage(error, "Failed to attach tag"));
       }
     },
   });
@@ -81,9 +83,9 @@ export const useDetachTaskTag = () => {
       const message =
         err?.response?.data?.message ?? "Failed to remove tag";
       if (message.toLowerCase().includes("not found")) {
-        toast.error("Tag not found on this task");
+        toast.error(t("toast.tagNotOnTask"));
       } else {
-        toast.error(message);
+        toast.error(getApiErrorMessage(error, "Failed to remove tag"));
       }
     },
   });

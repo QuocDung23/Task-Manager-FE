@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { Check, ListChecks, Loader2, X } from "lucide-react";
 import {
@@ -80,6 +82,7 @@ function PickerBody({
   onConfirm,
   isSubmitting,
 }: PickerBodyProps) {
+  const t = useT();
   const { data: members = [], isLoading } = useBoardMembers(boardId);
 
   const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
@@ -156,16 +159,16 @@ function PickerBody({
           />
         </span>
         <div className="min-w-0 flex-1 space-y-1">
-          <DialogTitle>Add assignees</DialogTitle>
+          <DialogTitle><TranslateText id="member.addAssignees" /></DialogTitle>
           <DialogDescription className="max-w-[34ch]">
-            Pick active board members. Already-assigned members are marked.
+            <TranslateText id="member.pickerHelp" />
           </DialogDescription>
         </div>
         <DialogClose asChild>
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Close"
+            aria-label={t("common.close")}
             disabled={isSubmitting}
             className="text-muted-foreground"
           >
@@ -178,11 +181,11 @@ function PickerBody({
         {isLoading ? (
           <div className="flex items-center justify-center gap-2 p-3 text-[12px] text-muted-foreground">
             <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
-            Loading members…
+            <TranslateText id="member.loading" />
           </div>
         ) : sortedMembers.length === 0 ? (
           <div className="p-3 text-[12px] text-muted-foreground">
-            No active members in this board.
+            <TranslateText id="member.noActiveBoard" />
           </div>
         ) : (
           <ul className="divide-y divide-border/60">
@@ -203,8 +206,8 @@ function PickerBody({
       <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-[11.5px] text-muted-foreground">
           {pendingIds.size > 0
-            ? `${pendingIds.size} selected`
-            : "Select members to add"}
+            ? t("member.selected", { count: pendingIds.size })
+            : t("member.selectToAdd")}
         </span>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
           <Button
@@ -212,7 +215,7 @@ function PickerBody({
             disabled={isSubmitting}
             onClick={handleCancel}
           >
-            Cancel
+            <TranslateText id="common.cancel" />
           </Button>
           <Button
             disabled={isSubmitting || pendingIds.size === 0}
@@ -225,10 +228,10 @@ function PickerBody({
               <Check className="size-3.5" strokeWidth={2.25} />
             ) : null}
             {isSubmitting
-              ? "Adding"
+              ? t("member.adding")
               : pendingIds.size > 0
-                ? `Add ${pendingIds.size}`
-                : "Add"}
+                ? t("member.addCount", { count: pendingIds.size })
+                : t("member.add")}
           </Button>
         </div>
       </div>

@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -11,12 +13,12 @@ export const useCreateTask = (listId: string) => {
   return useMutation({
     mutationFn: (data: CreateTaskRequest) => taskApi.create(listId, data),
     onSuccess: (response) => {
-      toast.success("Create Task Successfully");
+      toast.success(t("toast.taskCreated"));
       const task: TaskResponse = response.data;
       applyCanonicalTaskSnapshot(queryClient, task, { source: "http" });
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "Create Task Failed");
+      toast.error(getApiErrorMessage(error, "Create Task Failed"));
     },
   });
 };

@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useEffect, useRef, useState } from "react";
 import { AlignLeft, Check, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,7 @@ export function TaskDetailDescription({
   isUpdating,
   onSaveDescription,
 }: TaskDetailDescriptionProps) {
+  const t = useT();
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(task.description ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -58,7 +61,7 @@ export function TaskDetailDescription({
             id="task-description-heading"
             className="text-[13px] font-medium text-foreground"
           >
-            Description
+            <TranslateText id="crud.description" />
           </h2>
         </div>
 
@@ -67,7 +70,7 @@ export function TaskDetailDescription({
             variant="ghost"
             size="icon-sm"
             onClick={() => setIsEditing(true)}
-            aria-label="Edit description"
+            aria-label={t("task.editDescription")}
             className="text-muted-foreground"
           >
             <Pencil className="size-3.5" strokeWidth={1.5} />
@@ -91,7 +94,7 @@ export function TaskDetailDescription({
                 cancel();
               }
             }}
-            placeholder="Add context, requirements, or acceptance criteria..."
+            placeholder={t("task.descriptionPlaceholder")}
             disabled={isUpdating}
             className="min-h-64 flex-1 resize-none bg-card/60 px-4 py-3 text-[13.5px] leading-6 shadow-none focus-visible:ring-ring/30"
           />
@@ -99,7 +102,7 @@ export function TaskDetailDescription({
           <div className="flex items-center gap-2">
             <Button size="sm" onClick={save} disabled={isUpdating}>
               <Check className="size-3.5" strokeWidth={1.75} />
-              Save
+              <TranslateText id="common.save" />
             </Button>
             <Button
               size="sm"
@@ -108,7 +111,7 @@ export function TaskDetailDescription({
               disabled={isUpdating}
             >
               <X className="size-3.5" strokeWidth={1.5} />
-              Cancel
+              <TranslateText id="common.cancel" />
             </Button>
           </div>
         </div>
@@ -127,8 +130,8 @@ export function TaskDetailDescription({
             <div className="flex min-h-56 items-center justify-center text-center">
               <p className="max-w-[28ch] text-[13px] leading-5 text-muted-foreground">
                 {isTaskLockedState
-                  ? "Reschedule this task to unlock description editing."
-                  : "Add a description to keep scope and decisions in one place."}
+                  ? t("task.descriptionLocked")
+                  : t("task.descriptionEmpty")}
               </p>
             </div>
           )}

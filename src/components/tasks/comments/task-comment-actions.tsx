@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +22,7 @@ export function TaskCommentActions({
   onEdit,
   onDelete,
 }: TaskCommentActionsProps) {
+  const t = useT();
   if (!canEdit && !canDelete) return null;
 
   return (
@@ -28,7 +31,7 @@ export function TaskCommentActions({
         <Button
           variant="ghost"
           size="icon-xs"
-          aria-label="Comment actions"
+          aria-label={t("task.commentActions")}
           className="text-muted-foreground"
         >
           <EllipsisVertical className="size-3.5" />
@@ -38,7 +41,7 @@ export function TaskCommentActions({
         {canEdit ? (
           <DropdownMenuItem onSelect={onEdit} className="cursor-pointer">
             <Pencil />
-            Edit
+            <TranslateText id="common.edit" />
           </DropdownMenuItem>
         ) : null}
         {canDelete ? (
@@ -48,7 +51,7 @@ export function TaskCommentActions({
             className="cursor-pointer"
           >
             <Trash2 />
-            Delete
+            <TranslateText id="common.delete" />
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>

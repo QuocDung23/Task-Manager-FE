@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -38,17 +40,17 @@ import { MemberListRow } from "./member-list-row";
 
 const SCOPE_COPY: Record<
   MemberScope,
-  { title: string; description: string; empty: string }
+  { title: "member.projectMembers" | "member.boardMembers"; description: "member.projectAccess" | "member.boardAccess"; empty: "member.emptyProject" | "member.emptyBoard" }
 > = {
   project: {
-    title: "Project members",
-    description: "Everyone with access to this project.",
-    empty: "No members in this project yet.",
+    title: "member.projectMembers",
+    description: "member.projectAccess",
+    empty: "member.emptyProject",
   },
   board: {
-    title: "Board members",
-    description: "Everyone with access to this board.",
-    empty: "No members on this board yet.",
+    title: "member.boardMembers",
+    description: "member.boardAccess",
+    empty: "member.emptyBoard",
   },
 };
 
@@ -87,6 +89,7 @@ export function MemberListDialog({
   onRemoveMember,
   onChangeRole,
 }: MemberListDialogProps) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -162,21 +165,20 @@ export function MemberListDialog({
 
               <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
                 <DialogTitle className="font-heading text-[19px] font-medium leading-tight tracking-[-0.02em] text-foreground sm:text-[20px]">
-                  {copy.title}
+                  {t(copy.title)}
                 </DialogTitle>
                 <DialogDescription className="text-[13px] font-normal leading-relaxed text-muted-foreground">
-                  {copy.description}{" "}
+                  {t(copy.description)}{" "}
                   <span className="tabular-nums text-foreground/70">
-                    {totalMembers}
-                  </span>{" "}
-                  {totalMembers === 1 ? "member" : "members"}.
+                    {t("task.memberCount", { count: totalMembers })}
+                  </span>.
                 </DialogDescription>
               </DialogHeader>
 
               <DialogClose asChild>
                 <motion.button
                   type="button"
-                  aria-label="Close"
+                  aria-label={t("common.close")}
                   whileHover={iconHover(reduceMotion)}
                   whileTap={iconTap(reduceMotion)}
                   transition={SPRING_PRESS}
@@ -202,10 +204,10 @@ export function MemberListDialog({
                   <Input
                     type="search"
                     autoComplete="off"
-                    placeholder="Search members..."
+                    placeholder={t("member.searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    aria-label="Search members"
+                    aria-label={t("member.search")}
                     className="h-12 rounded-2xl border border-foreground/8 bg-background/65 pl-10 pr-4 text-[13.5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-background focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   />
                 </div>
@@ -217,7 +219,7 @@ export function MemberListDialog({
                     className="size-4 animate-spin text-muted-foreground motion-reduce:animate-none"
                     aria-hidden="true"
                   />
-                  <span>Loading members...</span>
+                  <span><TranslateText id="member.loading" /></span>
                 </MembersStatus>
               ) : isError && normalizedMembers.length === 0 ? (
                 <MembersStatus hasError>
@@ -225,7 +227,7 @@ export function MemberListDialog({
                     className="size-4 text-destructive"
                     aria-hidden="true"
                   />
-                  <span>Could not load members.</span>
+                  <span><TranslateText id="member.loadError" /></span>
                   <motion.button
                     type="button"
                     onClick={onRetry}
@@ -235,19 +237,19 @@ export function MemberListDialog({
                     className="ml-1 inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-[12px] font-medium text-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 focus-visible:ring-4 focus-visible:ring-accent/15"
                   >
                     <RefreshCw className="size-3.5" aria-hidden="true" />
-                    Retry
+                    <TranslateText id="common.retry" />
                   </motion.button>
                 </MembersStatus>
               ) : filteredMembers.length === 0 ? (
                 <MembersStatus>
                   {searchQuery.trim()
-                    ? "No members match your search."
-                    : copy.empty}
+                    ? t("member.noMatches")
+                    : t(copy.empty)}
                 </MembersStatus>
               ) : (
                 <ul
                   role="list"
-                  aria-label="Member list"
+                  aria-label={t("member.list")}
                   className="flex max-h-80 flex-col gap-0.5 overflow-y-auto rounded-2xl border border-foreground/8 bg-card p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                 >
                   {filteredMembers.map((member) => (

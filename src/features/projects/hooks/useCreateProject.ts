@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateProjectDto } from "../types";
 import { projectApi } from "../api/project-api";
@@ -12,14 +14,14 @@ export const useCreateProject = () => {
   return useMutation({
     mutationFn: (data: CreateProjectDto) => projectApi.create(data),
     onSuccess: (response) => {
-      toast.success("Create Successfully");
+      toast.success(t("toast.created"));
       if (response?.data) {
         applyProjectCreated(queryClient, response.data);
       }
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
     },
     onError: (error: ApiError) => {
-        toast.error(error.response?.data?.message || 'Create Failed');
+        toast.error(getApiErrorMessage(error, 'Create Failed'));
     }
   });
 };

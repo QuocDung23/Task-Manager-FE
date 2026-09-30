@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { boardApi } from "../api/board-api";
@@ -25,7 +27,7 @@ export const useRemoveMemberBoard = (boardId: string, projectId: string) => {
   return useMutation({
     mutationFn: (userId: string) => boardApi.removeMember(boardId, userId),
     onSuccess: (response, userId) => {
-      toast.success("Remove Member Successfully");
+      toast.success(t("toast.memberRemoved"));
       const member: BoardMemberUser | undefined = response?.data;
       if (member?.boardMemberId) {
         applyBoardMemberRemoved(
@@ -49,12 +51,10 @@ export const useRemoveMemberBoard = (boardId: string, projectId: string) => {
       void userId;
     },
     onError: (error: ApiError) => {
-      const message =
-        error.response?.data?.message ?? "Remove Member Failed";
       if (error.response?.status === 404) {
-        toast.error("Member not found in board.");
+        toast.error(t("toast.boardMemberMissing"));
       } else {
-        toast.error(message);
+        toast.error(getApiErrorMessage(error, "Remove Member Failed"));
       }
     },
   });

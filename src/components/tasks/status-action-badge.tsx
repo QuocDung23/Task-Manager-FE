@@ -4,10 +4,11 @@ import { Lock } from "lucide-react";
 import { Circle } from "@phosphor-icons/react";
 import type { TaskResponse, TaskStatusAction } from "@/features/tasks/types";
 import {
-  STATUS_ACTION_META,
+  getLocalizedStatusActionMeta,
   type StatusActionMeta,
   isKnownTaskStatusAction,
 } from "@/features/tasks/utils/status-action";
+import { t, useT } from "@/services/i18n";
 
 type TaskStatusActionBadgeProps = {
   statusAction: TaskResponse["statusAction"];
@@ -28,10 +29,10 @@ function getMeta(
   action: TaskStatusAction | string | null | undefined,
 ): StatusActionMeta {
   if (action && isKnownTaskStatusAction(action))
-    return STATUS_ACTION_META[action];
+    return getLocalizedStatusActionMeta(action);
   return {
     value: "TODO",
-    label: "No status",
+    label: t("status.noStatus"),
     description: "",
     tone: "muted",
     icon: Circle,
@@ -42,13 +43,14 @@ export function TaskStatusActionBadge({
   statusAction,
   lockStatus,
 }: TaskStatusActionBadgeProps) {
+  const t = useT();
   const meta = getMeta(statusAction);
   const Icon = meta.icon;
   const overdueLocked = lockStatus === "OVERDUE_LOCKED";
   const toneClass = TONE_CLASSES[meta.tone];
   const ariaLabel = overdueLocked
-    ? `${meta.label} status. Task overdue and locked.`
-    : `${meta.label} status.`;
+    ? t("status.lockedAria", { label: meta.label })
+    : t("status.statusAria", { label: meta.label });
 
   return (
     <span

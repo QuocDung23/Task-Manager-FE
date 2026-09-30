@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import {
   useCallback,
   useEffect,
@@ -64,7 +65,7 @@ export function TaskDetailProvider({
       })
       .catch(() => {
         if (cancelled) return;
-        toast.error("You no longer have access to this item.");
+        toast.error(t("toast.accessLost"));
         const next = new URLSearchParams(searchParams);
         next.delete("taskId");
         next.delete("tab");

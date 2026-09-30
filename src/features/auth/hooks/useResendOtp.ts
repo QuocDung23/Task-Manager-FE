@@ -6,6 +6,7 @@ import {
   getAuthErrorMessage,
   type AuthErrorResult,
 } from "@/lib/auth-error-message";
+import { t } from "@/services/i18n";
 
 export type ResendOtpAuthErrorContext = {
   result: AuthErrorResult;
@@ -23,7 +24,7 @@ export function useResendOtp(
   return useMutation<ForgotPasswordResponse, unknown, void>({
     mutationFn: () => authApi.sendOtp({ email }),
     onSuccess: () => {
-      toast.success("A new OTP has been sent to your email.");
+      toast.success(t("auth.otpResent"));
     },
     onError: (error: unknown) => {
       // Re-send uses the same endpoint as `sendOtp`, so reuse that mapping.

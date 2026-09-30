@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { projectApi } from "../api/project-api"
 import { toast } from "sonner"
@@ -11,12 +13,12 @@ export const useDeleteProject = () => {
     return useMutation({
         mutationFn: (id: string) => projectApi.delete(id),
         onSuccess: (_response, id) => {
-            toast.success('Delete Successfully')
+            toast.success(t("toast.deleted"))
             applyProjectDeleted(queryClient, id)
             queryClient.invalidateQueries({ queryKey: projectKeys.all })
         },
         onError: (error: ApiError) => {
-            toast.error(error.response?.data?.message || 'Delete Failed')
+            toast.error(getApiErrorMessage(error, 'Delete Failed'))
         }
     })
 }

@@ -1,7 +1,9 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useResetPassword } from "@/features/auth/hooks/useResetPassword";
+import { useT } from "@/services/i18n";
 
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -12,9 +14,11 @@ export type ResetPasswordFieldErrors = {
 };
 
 export function useResetPasswordForm() {
+  const t = useT();
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<ResetPasswordFieldErrors>({});
+  useClearOnLocaleChange(() => setFieldErrors({}));
   // The hook handles the toast; the form only mirrors errors into per-field
   // state.
   const resetPassword = useResetPassword({
@@ -53,14 +57,14 @@ export function useResetPasswordForm() {
 
     const nextErrors: ResetPasswordFieldErrors = {};
     if (!newPassword) {
-      nextErrors.newPassword = "Please enter your new password.";
+      nextErrors.newPassword = t("auth.newPasswordRequired");
     } else if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      nextErrors.newPassword = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+      nextErrors.newPassword = t("auth.passwordTooShort", { count: MIN_PASSWORD_LENGTH });
     }
     if (!confirmPassword) {
-      nextErrors.confirmPassword = "Please confirm your password.";
+      nextErrors.confirmPassword = t("auth.confirmRequired");
     } else if (newPassword !== confirmPassword) {
-      nextErrors.confirmPassword = "Passwords do not match.";
+      nextErrors.confirmPassword = t("auth.passwordMismatch");
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -73,9 +77,9 @@ export function useResetPasswordForm() {
 
     if (!hasValidResetParams) {
       setFieldErrors({
-        form: "Invalid request. Please restart the password reset process.",
+        form: t("auth.resetInvalid"),
       });
-      toast.error("Invalid request. Please restart the password reset process.");
+      toast.error(t("auth.resetInvalid"));
       return;
     }
 

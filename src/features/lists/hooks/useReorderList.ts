@@ -1,3 +1,4 @@
+import { getApiErrorMessage } from "@/lib/error-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   ApiResponse,
@@ -47,7 +48,7 @@ export const useReorderList = (boardId: string) => {
           queryKey: listKeys.boardPrefix(boardId),
         });
       }
-      toast.error(error.response?.data?.message || "Reorder List Failed");
+      toast.error(getApiErrorMessage(error, "Reorder List Failed"));
     },
   });
 };

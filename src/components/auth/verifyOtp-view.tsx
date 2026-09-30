@@ -1,3 +1,4 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
@@ -16,16 +17,19 @@ import { APP_ROUTES } from "../../router/constans";
 import { useVerifyOtp } from "../../features/auth/hooks/useVerifyOtp";
 import { ResendOtpButton } from "./resendOtp-button";
 import { InputOtp } from "./InputOtp-form";
+import { useT } from "@/services/i18n";
 
 const OTP_LENGTH = 6;
 const INITIAL_OTP = Array.from({ length: OTP_LENGTH }, () => "");
 
 export function ViewVerifyOtp() {
+  const t = useT();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") ?? "";
   const [otp, setOtp] = useState(INITIAL_OTP);
   const [otpError, setOtpError] = useState<string | undefined>();
+  useClearOnLocaleChange(() => setOtpError(undefined));
   // The hook fires its own toast; the view only mirrors the error under the
   // OTP input.
   const verifyOtp = useVerifyOtp({
@@ -40,14 +44,14 @@ export function ViewVerifyOtp() {
     event.preventDefault();
 
     if (otpValue.length !== OTP_LENGTH) {
-      const message = `Please enter the full ${OTP_LENGTH}-digit OTP code.`;
+      const message = t("auth.otpIncomplete", { count: OTP_LENGTH });
       setOtpError(message);
       toast.error(message);
       return;
     }
 
     if (!email) {
-      const message = "Email is missing. Please start the process again.";
+      const message = t("auth.emailMissing");
       setOtpError(message);
       toast.error(message);
       return;
@@ -70,14 +74,14 @@ export function ViewVerifyOtp() {
     return (
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle>Invalid request</CardTitle>
+          <CardTitle>{t("auth.invalidRequest")}</CardTitle>
           <CardDescription>
-            Please start the password reset process again.
+            {t("auth.restartReset")}
           </CardDescription>
         </CardHeader>
         <CardFooter className="justify-center">
           <Button asChild>
-            <Link to={APP_ROUTES.FORGOT_PASSWORD}>Go back</Link>
+            <Link to={APP_ROUTES.FORGOT_PASSWORD}>{t("common.back")}</Link>
           </Button>
         </CardFooter>
       </Card>
@@ -90,9 +94,9 @@ export function ViewVerifyOtp() {
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
           <CheckCircle className="size-6 text-primary" />
         </div>
-        <CardTitle>Enter OTP code</CardTitle>
+        <CardTitle>{t("auth.otpTitle")}</CardTitle>
         <CardDescription>
-          We sent a code to{" "}
+          {t("auth.codeSent")}{" "}
           <span className="font-medium text-foreground">{email}</span>
         </CardDescription>
       </CardHeader>
@@ -118,16 +122,16 @@ export function ViewVerifyOtp() {
           className="w-full"
           disabled={verifyOtp.isPending || !isOtpComplete}
         >
-          {verifyOtp.isPending ? "Verifying..." : "Verify OTP"}
+          {verifyOtp.isPending ? t("auth.verifying") : t("auth.verifyOtp")}
         </Button>
         <ResendOtpButton email={email} />
         <div className="text-sm text-muted-foreground">
-          Remember your password?{" "}
+          {t("auth.rememberPassword")}{" "}
           <Link
             to={APP_ROUTES.LOGIN}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            Back to sign in
+            {t("auth.backToSignIn")}
           </Link>
         </div>
       </CardFooter>

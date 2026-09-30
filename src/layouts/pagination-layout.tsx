@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/pagination";
 import { CaretLeft, CaretRight, DotsThree } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/services/i18n";
 
 interface PaginationLayoutProps {
   currentPage: number;
@@ -38,6 +39,7 @@ export function PaginationLayout({
   totalPage,
   onChangePage,
 }: PaginationLayoutProps) {
+  const t = useT();
   if (totalPage <= 1) return null;
 
   const pages = buildRange(totalPage, currentPage);
@@ -53,7 +55,7 @@ export function PaginationLayout({
       >
         <PaginationItem>
           <NavPill
-            label="Previous"
+            label={t("common.previousPage")}
             disabled={isFirst}
             onClick={() => !isFirst && onChangePage(currentPage - 1)}
             side="left"
@@ -84,7 +86,7 @@ export function PaginationLayout({
 
         <PaginationItem>
           <NavPill
-            label="Next"
+            label={t("common.nextPage")}
             disabled={isLast}
             onClick={() => !isLast && onChangePage(currentPage + 1)}
             side="right"

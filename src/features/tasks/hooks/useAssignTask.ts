@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -21,7 +22,7 @@ export const useAssignTask = () => {
 
     onSuccess: (res) => {
       applyCanonicalTaskSnapshot(queryClient, res.data, { source: "http" });
-      toast.success("Assignees updated");
+      toast.success(t("toast.assigneesUpdated"));
     },
 
     onError: (error: ApiError) => {
@@ -41,7 +42,7 @@ export const useAssignTask = () => {
         return;
       }
       if (status === 404) {
-        toast.error("Task no longer exists.");
+        toast.error(t("toast.taskMissing"));
         return;
       }
 

@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -36,6 +38,7 @@ export function TaskCard({
   isDragging,
   disabled,
 }: TaskCardProps) {
+  const t = useT();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { openTask, boardId } = useTaskDetail();
   const { data: members = [] } = useBoardMembers(boardId, {
@@ -111,7 +114,7 @@ export function TaskCard({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label="Task actions"
+                aria-label={t("task.taskActions")}
                 disabled={isDragging}
                 className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground/70 opacity-0 outline-none transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/40 group-hover/task:opacity-100 data-[state=open]:opacity-100 data-[state=open]:bg-muted data-[state=open]:text-foreground disabled:pointer-events-none"
                 {...stopDropdownTriggerPropagation}
@@ -124,14 +127,14 @@ export function TaskCard({
                 onClick={() => openTask(task)}
                 className="cursor-pointer"
               >
-                Open detail
+                <TranslateText id="task.openDetail" />
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
                 onClick={() => setDeleteOpen(true)}
                 className="cursor-pointer"
               >
-                Delete
+                <TranslateText id="common.delete" />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

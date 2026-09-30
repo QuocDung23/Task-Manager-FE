@@ -1,3 +1,4 @@
+import { TranslateText, useT } from "@/services/i18n";
 import { AlertTriangle } from "lucide-react";
 import { formatLocalDateTime } from "@/features/tasks/utils/task-schedule";
 
@@ -10,6 +11,7 @@ export function TaskScheduleLockAlert({
   lockReason,
   lockedAt,
 }: TaskScheduleLockAlertProps) {
+  const t = useT();
   return (
     <div
       role="alert"
@@ -19,13 +21,13 @@ export function TaskScheduleLockAlert({
         <AlertTriangle className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1 text-[12px] leading-5 text-destructive">
-        <p className="font-medium">This task is overdue and locked.</p>
+        <p className="font-medium"><TranslateText id="task.overdueLocked" /></p>
         <p className="mt-0.5 text-destructive/85">
-          {lockReason ? `Reason: ${lockReason}` : "Pick a new deadline to resume work on this task."}
+          {lockReason ? t("schedule.reason", { reason: lockReason }) : t("schedule.unlockPrompt")}
         </p>
         {lockedAt ? (
           <p className="mt-0.5 text-[11px] text-destructive/70">
-            Locked at {formatLocalDateTime(lockedAt)}
+            {t("schedule.lockedAt", { time: formatLocalDateTime(lockedAt) })}
           </p>
         ) : null}
       </div>

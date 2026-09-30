@@ -1,3 +1,4 @@
+import { TranslateText } from "@/services/i18n";
 import { Check } from "lucide-react";
 import { UserAvatar } from "../users/user-avatar";
 import type { BoardMemberUser } from "@/features/boards/types";
@@ -38,7 +39,7 @@ export default function AssigneeMemberRow({
         {isAssigned ? (
           <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary">
             <Check className="size-3" strokeWidth={2.25} aria-hidden="true" />
-            Assigned
+            <TranslateText id="task.assigned" />
           </span>
         ) : null}
       </label>

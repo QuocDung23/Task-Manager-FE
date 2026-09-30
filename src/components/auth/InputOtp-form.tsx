@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { ClipboardEvent, KeyboardEvent } from "react";
 import { Input } from "../ui/input";
+import { useT } from "@/services/i18n";
 
 type InputOtpProps = {
   value: string[];
@@ -10,6 +11,7 @@ type InputOtpProps = {
 };
 
 export function InputOtp({ value, onChange, length = 6, invalid }: InputOtpProps) {
+  const t = useT();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -75,6 +77,7 @@ export function InputOtp({ value, onChange, length = 6, invalid }: InputOtpProps
           maxLength={1}
           value={digit}
           aria-invalid={invalid}
+          aria-label={t("auth.otpDigit", { index: index + 1 })}
           onChange={(event) => handleInputChange(index, event.target.value)}
           onKeyDown={(event) => handleKeyDown(index, event)}
           className="h-12 w-12 text-center text-lg font-semibold"

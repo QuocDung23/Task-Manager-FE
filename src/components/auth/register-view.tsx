@@ -1,3 +1,4 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
 import {
   useEffect,
   useRef,
@@ -23,6 +24,7 @@ import { toast } from "sonner";
 import { useRegister } from "@/features/auth/hooks/useRegister";
 import type { RegisterRequest } from "@/features/auth/types";
 import type { AuthFieldKey } from "@/lib/auth-error-message";
+import { useT } from "@/services/i18n";
 
 type FieldErrors = {
   name?: string;
@@ -55,6 +57,7 @@ const FOCUS_ORDER: Array<Exclude<AuthFieldKey, "otp">> = [
 ];
 
 export function ViewRegister() {
+  const t = useT();
   // The hook fires its own toast; the view only mirrors errors into per-field
   // state so the inputs get red borders.
   const registerSubmit = useRegister({
@@ -99,6 +102,7 @@ export function ViewRegister() {
   });
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  useClearOnLocaleChange(() => setFieldErrors({}));
 
   // Build one ref-setter per field. We use a fresh `useRef` per field and
   // stash it into the shared `inputRefs` map inside `useEffect` — this keeps
@@ -139,24 +143,24 @@ export function ViewRegister() {
     // Client-side validation: clearer feedback than waiting for BE.
     const nextErrors: FieldErrors = {};
     if (!payload.name) {
-      nextErrors.name = "Please enter your name.";
+      nextErrors.name = t("auth.nameRequired");
     } else if (payload.name.length < 2) {
-      nextErrors.name = "Name must be at least 2 characters.";
+      nextErrors.name = t("auth.nameTooShort");
     }
     if (!payload.email) {
-      nextErrors.email = "Please enter your email.";
+      nextErrors.email = t("auth.emailRequired");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
-      nextErrors.email = "Please enter a valid email address.";
+      nextErrors.email = t("auth.emailInvalid");
     }
     if (!payload.password) {
-      nextErrors.password = "Please enter a password.";
+      nextErrors.password = t("auth.passwordChoose");
     } else if (payload.password.length < MIN_PASSWORD_LENGTH) {
-      nextErrors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+      nextErrors.password = t("auth.passwordTooShort", { count: MIN_PASSWORD_LENGTH });
     }
     if (!payload.confirmPassword) {
-      nextErrors.confirmPassword = "Please confirm your password.";
+      nextErrors.confirmPassword = t("auth.confirmRequired");
     } else if (payload.password !== payload.confirmPassword) {
-      nextErrors.confirmPassword = "Passwords do not match.";
+      nextErrors.confirmPassword = t("auth.passwordMismatch");
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -187,13 +191,13 @@ export function ViewRegister() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>Create your account</CardTitle>
+        <CardTitle>{t("auth.registerTitle")}</CardTitle>
         <CardDescription>
-          Sign up if you don't have an account yet.
+          {t("auth.registerDescription")}
         </CardDescription>
         <CardAction>
           <Button variant="link" asChild>
-            <Link to="/login">Sign in</Link>
+            <Link to="/login">{t("auth.signIn")}</Link>
           </Button>
         </CardAction>
       </CardHeader>
@@ -201,12 +205,12 @@ export function ViewRegister() {
         <form id="register-form" onSubmit={onSubmit} noValidate>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t("common.name")}</Label>
               <Input
                 id={FIELD_INPUT_ID.name}
                 name="name"
                 type="text"
-                placeholder="Enter your name"
+                placeholder={t("auth.enterName")}
                 required
                 aria-invalid={Boolean(fieldErrors.name)}
                 autoComplete="name"
@@ -215,7 +219,7 @@ export function ViewRegister() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("common.email")}</Label>
               <Input
                 id={FIELD_INPUT_ID.email}
                 name="email"
@@ -230,7 +234,7 @@ export function ViewRegister() {
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("common.password")}</Label>
               </div>
               <Input
                 id={FIELD_INPUT_ID.password}
@@ -245,7 +249,7 @@ export function ViewRegister() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="confirm-password">Confirm password</Label>
+              <Label htmlFor="confirm-password">{t("common.confirmPassword")}</Label>
               <Input
                 id={FIELD_INPUT_ID.confirmPassword}
                 name="confirm-password"
@@ -265,7 +269,7 @@ export function ViewRegister() {
               className="w-full"
               disabled={registerSubmit.isPending}
             >
-              {registerSubmit.isPending ? "Creating account..." : "Sign up"}
+              {registerSubmit.isPending ? t("auth.creatingAccount") : t("auth.signUp")}
             </Button>
           </CardFooter>
         </form>

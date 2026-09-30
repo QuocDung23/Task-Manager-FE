@@ -1,3 +1,4 @@
+import { useT, type TranslationKey } from "@/services/i18n";
 import { useState } from "react";
 import { Check, BellOff, BellRing } from "lucide-react";
 import {
@@ -23,11 +24,19 @@ type DisplayPreset = typeof NONE_PRESET_ID | ReminderPresetId;
 
 const NONE_PRESET = {
   id: NONE_PRESET_ID,
-  label: "No reminder",
-  description: "Skip the nudge.",
 } as const;
 
 const DISPLAY_PRESETS = [NONE_PRESET, ...REMINDER_PRESETS];
+
+const PRESET_COPY: Record<DisplayPreset, { label: TranslationKey; description: TranslationKey }> = {
+  NONE: { label: "schedule.noReminder", description: "schedule.noReminderHelp" },
+  AT_TIME: { label: "schedule.atTime", description: "schedule.atTimeHelp" },
+  BEFORE_15: { label: "schedule.before15", description: "schedule.before15Help" },
+  BEFORE_30: { label: "schedule.before30", description: "schedule.before30Help" },
+  BEFORE_60: { label: "schedule.before60", description: "schedule.before60Help" },
+  BEFORE_DAY: { label: "schedule.beforeDay", description: "schedule.beforeDayHelp" },
+  CUSTOM: { label: "schedule.custom", description: "schedule.customHelp" },
+};
 
 export function TaskScheduleReminderMenu({
   preset,
@@ -36,12 +45,11 @@ export function TaskScheduleReminderMenu({
   onPresetChange,
   onEnabledChange,
 }: TaskScheduleReminderMenuProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   const activeId: DisplayPreset = enabled ? preset : NONE_PRESET_ID;
-  const activeLabel = enabled
-    ? (REMINDER_PRESETS.find((p) => p.id === preset)?.label ?? "Reminder")
-    : NONE_PRESET.label;
+  const activeLabel = t(PRESET_COPY[activeId].label);
   const TriggerIcon = enabled ? BellRing : BellOff;
 
   const handlePick = (value: DisplayPreset) => {
@@ -87,7 +95,7 @@ export function TaskScheduleReminderMenu({
                 : "bg-muted text-muted-foreground",
             )}
           >
-            {enabled ? "On" : "Off"}
+            {enabled ? t("schedule.on") : t("schedule.off")}
           </span>
         </Button>
       </PopoverTrigger>
@@ -99,7 +107,7 @@ export function TaskScheduleReminderMenu({
       >
         <div
           role="radiogroup"
-          aria-label="Reminder"
+          aria-label={t("task.reminder")}
           className="flex flex-col gap-0.5"
         >
           {DISPLAY_PRESETS.map((option) => {
@@ -138,10 +146,10 @@ export function TaskScheduleReminderMenu({
                       isNone && "text-muted-foreground",
                     )}
                   >
-                    {option.label}
+                    {t(PRESET_COPY[option.id].label)}
                   </span>
                   <span className="text-[11px] leading-4 text-muted-foreground">
-                    {option.description}
+                    {t(PRESET_COPY[option.id].description)}
                   </span>
                 </span>
               </button>

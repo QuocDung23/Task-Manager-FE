@@ -1,3 +1,4 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
@@ -16,16 +17,19 @@ import { useVerifyAccount } from "@/features/auth/hooks/useVerifyAccount";
 import { APP_ROUTES } from "@/router/constans";
 import { InputOtp } from "./InputOtp-form";
 import { ResendOtpButton } from "./resendOtp-button";
+import { useT } from "@/services/i18n";
 
 const OTP_LENGTH = 6;
 const INITIAL_OTP = Array.from({ length: OTP_LENGTH }, () => "");
 
 export function VerifyAccountView() {
+  const t = useT();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") ?? "";
   const [otp, setOtp] = useState(INITIAL_OTP);
   const [otpError, setOtpError] = useState<string | undefined>();
+  useClearOnLocaleChange(() => setOtpError(undefined));
   // The hook fires its own toast; the view only mirrors the error and decides
   // whether to redirect on a 409 (already verified).
   const verifyAccount = useVerifyAccount({
@@ -46,14 +50,14 @@ export function VerifyAccountView() {
     event.preventDefault();
 
     if (otpValue.length !== OTP_LENGTH) {
-      const message = `Please enter the full ${OTP_LENGTH}-digit OTP code.`;
+      const message = t("auth.otpIncomplete", { count: OTP_LENGTH });
       setOtpError(message);
       toast.error(message);
       return;
     }
 
     if (!email) {
-      const message = "Email is missing. Please start the process again.";
+      const message = t("auth.emailMissing");
       setOtpError(message);
       toast.error(message);
       return;
@@ -67,14 +71,14 @@ export function VerifyAccountView() {
     return (
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle>Invalid request</CardTitle>
+          <CardTitle>{t("auth.invalidRequest")}</CardTitle>
           <CardDescription>
-            Please start the account verification process again.
+            {t("auth.restartVerify")}
           </CardDescription>
         </CardHeader>
         <CardFooter className="justify-center">
           <Button asChild>
-            <Link to={APP_ROUTES.LOGIN}>Go back</Link>
+            <Link to={APP_ROUTES.LOGIN}>{t("common.back")}</Link>
           </Button>
         </CardFooter>
       </Card>
@@ -87,9 +91,9 @@ export function VerifyAccountView() {
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
           <CheckCircle className="size-6 text-primary" />
         </div>
-        <CardTitle>Verify your account</CardTitle>
+        <CardTitle>{t("auth.verifyAccountTitle")}</CardTitle>
         <CardDescription>
-          Enter the code we sent to{" "}
+          {t("auth.accountCodeSent")}{" "}
           <span className="font-medium text-foreground">{email}</span>
         </CardDescription>
       </CardHeader>
@@ -115,16 +119,16 @@ export function VerifyAccountView() {
           className="w-full"
           disabled={verifyAccount.isPending || !isOtpComplete}
         >
-          {verifyAccount.isPending ? "Verifying..." : "Verify account"}
+          {verifyAccount.isPending ? t("auth.verifying") : t("auth.verifyAccount")}
         </Button>
         <ResendOtpButton email={email} />
         <div className="text-sm text-muted-foreground">
-          Already have an account?{" "}
+          {t("auth.alreadyAccount")}{" "}
           <Link
             to={APP_ROUTES.LOGIN}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            Back to sign in
+            {t("auth.backToSignIn")}
           </Link>
         </div>
       </CardFooter>

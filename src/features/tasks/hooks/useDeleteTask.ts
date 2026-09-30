@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -10,12 +12,12 @@ export const useDeleteTask = (listId: string) => {
   return useMutation({
     mutationFn: (taskId: string) => taskApi.delete(taskId),
     onSuccess: (_response, taskId) => {
-      toast.success("Delete Task Successfully");
+      toast.success(t("toast.taskDeleted"));
       removeTaskAcrossCaches(queryClient, taskId);
       queryClient.invalidateQueries({ queryKey: ["tasks", listId] });
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "Delete Task Failed");
+      toast.error(getApiErrorMessage(error, "Delete Task Failed"));
     },
   });
 };

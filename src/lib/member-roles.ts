@@ -1,3 +1,5 @@
+import { t } from "@/services/i18n";
+
 export type MemberScope = "project" | "board";
 
 export type MemberItem = {
@@ -19,8 +21,7 @@ export const MEMBER_ROLE_LABELS: Record<string, string> = {
 };
 
 export function getMemberRoleLabel(roleName?: string | null): string {
-  if (roleName && MEMBER_ROLE_LABELS[roleName]) return MEMBER_ROLE_LABELS[roleName];
-  return isAdminRole(roleName) ? "Admin" : "Member";
+  return t(roleName && isAdminRole(roleName) ? "member.admin" : "member.member");
 }
 
 export function isAdminRole(roleName?: string | null): boolean {

@@ -7,6 +7,7 @@ import {
   getAuthErrorMessage,
   type AuthErrorResult,
 } from "@/lib/auth-error-message";
+import { t } from "@/services/i18n";
 
 export type ResetPasswordAuthErrorContext = {
   result: AuthErrorResult;
@@ -22,7 +23,7 @@ export function useResetPassword(options?: {
   return useMutation<ResetPasswordResponse, unknown, ResetPasswordRequest>({
     mutationFn: (data) => authApi.resetPassword(data),
     onSuccess: () => {
-      toast.success("Password reset successfully");
+      toast.success(t("auth.resetSuccess"));
       navigate("/login", { replace: true });
     },
     onError: (error: unknown, variables) => {

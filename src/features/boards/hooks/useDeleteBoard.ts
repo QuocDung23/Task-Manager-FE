@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -13,12 +15,12 @@ export const useDeleteBoard = (projectId: string) => {
   return useMutation({
     mutationFn: (id: string) => boardApi.delete(id),
     onSuccess: (_response, boardId) => {
-      toast.success("Delete Successfully");
+      toast.success(t("toast.deleted"));
       applyBoardDeleted(queryClient, projectId, boardId);
       void queryClient.invalidateQueries({ queryKey: boardKeys.all });
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message ?? "Delete Failed");
+      toast.error(getApiErrorMessage(error, "Delete Failed"));
     },
   });
 };

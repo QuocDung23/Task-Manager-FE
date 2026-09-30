@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { projectApi } from "../api/project-api"
 import { toast } from "sonner"
@@ -11,14 +13,14 @@ export const useUpdateProject = () => {
     return useMutation({
         mutationFn: ({id, data}: {id: string, data: UpdateProjectDto}) => projectApi.update(id, data),
         onSuccess: (response, variables) => {
-            toast.success('Update Successfully')
+            toast.success(t("toast.updated"))
             if (response?.data) {
                 applyProjectUpdated(queryClient, response.data)
             }
             queryClient.invalidateQueries({ queryKey: projectKeys.detail(variables.id) })
         },
         onError: (error: ApiError) => {
-            toast.error(error.response?.data?.message || 'Update Failed')
+            toast.error(getApiErrorMessage(error, 'Update Failed'))
         }
     })
 }

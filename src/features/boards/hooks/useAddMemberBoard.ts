@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { boardApi } from "../api/board-api";
@@ -18,7 +19,7 @@ export const useAddMemberBoard = (boardId: string, projectId: string) => {
   return useMutation({
     mutationFn: (userId: string) => boardApi.addMember(boardId, userId),
     onSuccess: (response, userId) => {
-      toast.success("Add Member Successfully");
+      toast.success(t("toast.memberAdded"));
       const member: BoardMemberUser | undefined = response?.data;
       if (member) {
         applyBoardMemberAdded(queryClient, boardId, member);
@@ -45,15 +46,13 @@ export const useAddMemberBoard = (boardId: string, projectId: string) => {
         errorMessage.includes("Already in board") ||
         error.response?.status === 409
       ) {
-        toast.error("Already in board");
+        toast.error(t("toast.alreadyInBoard"));
       } else if (error.response?.status === 404) {
-        toast.error("No valid board or user found.");
+        toast.error(t("toast.boardUserMissing"));
       } else if (error.response?.status === 403) {
-        toast.error(
-          "User is not a member of this project. Add them to the project first.",
-        );
+        toast.error(t("toast.boardMemberNeedsProject"));
       } else {
-        toast.error("Add member to board fail");
+        toast.error(t("toast.boardAddFailed"));
       }
     },
   });

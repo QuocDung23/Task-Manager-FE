@@ -1,3 +1,4 @@
+import { useClearOnLocaleChange } from "@/services/i18n";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { KeyRound } from "lucide-react";
@@ -16,14 +17,17 @@ import { Label } from "../../components/ui/label";
 import { toast } from "sonner";
 import { APP_ROUTES } from "../../router/constans";
 import { useSendOtp } from "../../features/auth/hooks/useSendOtp";
+import { useT } from "@/services/i18n";
 
 export function ViewForgotPassword() {
+  const t = useT();
   const submitForgotPassword = useSendOtp({
     onAuthError: ({ result }) => {
       setEmailError(result.message);
     },
   });
   const [emailError, setEmailError] = useState<string | undefined>();
+  useClearOnLocaleChange(() => setEmailError(undefined));
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,13 +35,13 @@ export function ViewForgotPassword() {
     const nextEmail = String(formData.get("email") ?? "").trim();
 
     if (!nextEmail) {
-      const message = "Please enter your email.";
+      const message = t("auth.emailRequired");
       setEmailError(message);
       toast.error(message);
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
-      const message = "Please enter a valid email address.";
+      const message = t("auth.emailInvalid");
       setEmailError(message);
       toast.error(message);
       return;
@@ -53,15 +57,15 @@ export function ViewForgotPassword() {
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
           <KeyRound className="h-6 w-6 text-primary" />
         </div>
-        <CardTitle>Forgot your password?</CardTitle>
+        <CardTitle>{t("auth.forgotTitle")}</CardTitle>
         <CardDescription>
-          No worries — we'll send you reset instructions.
+          {t("auth.forgotDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form id="forgot-password-form" onSubmit={onSubmit} noValidate>
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("common.email")}</Label>
             <Input
               id="email"
               name="email"
@@ -82,15 +86,15 @@ export function ViewForgotPassword() {
           className="w-full"
           disabled={submitForgotPassword.isPending}
         >
-          {submitForgotPassword.isPending ? "Sending..." : "Reset password"}
+          {submitForgotPassword.isPending ? t("common.sending") : t("common.resetPassword")}
         </Button>
         <div className="text-sm text-muted-foreground">
-          Remember your password?{" "}
+          {t("auth.rememberPassword")}{" "}
           <Link
             to={APP_ROUTES.LOGIN}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            Back to sign in
+            {t("auth.backToSignIn")}
           </Link>
         </div>
       </CardFooter>

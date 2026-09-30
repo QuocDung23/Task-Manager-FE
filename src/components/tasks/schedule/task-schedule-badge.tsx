@@ -1,3 +1,4 @@
+import { TranslateText, useLocale } from "@/services/i18n";
 import { CalendarDays, Clock, Lock } from "lucide-react";
 import { formatDateRange, formatLocalDate } from "@/features/tasks/utils/task-schedule";
 import type { TaskResponse } from "@/features/tasks/types";
@@ -7,6 +8,7 @@ type TaskScheduleBadgeProps = {
 };
 
 export function TaskScheduleBadge({ task }: TaskScheduleBadgeProps) {
+  useLocale();
   if (!task.dueDate && !task.scheduleState) return null;
   if (task.scheduleState === "none") return null;
 
@@ -14,7 +16,7 @@ export function TaskScheduleBadge({ task }: TaskScheduleBadgeProps) {
     return (
       <span className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-1.5 py-0.5 text-[10.5px] font-medium text-destructive">
         <Lock className="size-3" strokeWidth={1.75} aria-hidden="true" />
-        Overdue
+        <TranslateText id="task.overdue" />
       </span>
     );
   }

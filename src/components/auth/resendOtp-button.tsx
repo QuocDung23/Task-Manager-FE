@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useResendOtp } from "@/features/auth/hooks/useResendOtp";
 import { formatTime } from "@/utils/formatTime";
+import { useT } from "@/services/i18n";
 
 type ResendOtpButtonProps = {
   email: string;
@@ -12,6 +13,7 @@ export function ResendOtpButton({
   email,
   cooldownSeconds = 60,
 }: ResendOtpButtonProps) {
+  const t = useT();
   const [secondsLeft, setSecondsLeft] = useState(cooldownSeconds);
   const resendOtp = useResendOtp(email);
 
@@ -47,10 +49,10 @@ export function ResendOtpButton({
           }
           disabled={resendOtp.isPending}
         >
-          {resendOtp.isPending ? "Resending..." : "Resend OTP"}
+          {resendOtp.isPending ? t("auth.resending") : t("auth.resendOtp")}
         </Button>
       ) : (
-        <span>Resend OTP in {formatTime(secondsLeft)}</span>
+        <span>{t("auth.resendIn", { time: formatTime(secondsLeft) })}</span>
       )}
     </div>
   );

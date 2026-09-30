@@ -1,5 +1,6 @@
 import { Crown, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/services/i18n";
 
 interface MembershipBadgeProps {
   owned?: boolean;
@@ -10,17 +11,18 @@ interface MembershipBadgeProps {
 
 export function MembershipBadge({
   owned,
-  labelOwner = "Owner",
-  labelMember = "Member",
+  labelOwner,
+  labelMember,
   className,
 }: MembershipBadgeProps) {
+  const t = useT();
   if (typeof owned !== "boolean") return null;
 
-  const label = owned ? labelOwner : labelMember;
+  const label = owned ? labelOwner ?? t("member.owner") : labelMember ?? t("member.member");
   const Icon = owned ? Crown : Share2;
   const titleText = owned
-    ? "You created this project/board"
-    : "Shared with you";
+    ? t("member.createdByYou")
+    : t("member.sharedWithYou");
 
   return (
     <span

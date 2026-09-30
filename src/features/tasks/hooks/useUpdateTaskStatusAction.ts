@@ -5,6 +5,7 @@ import { applyCanonicalTaskSnapshot } from "../utils/task-cache";
 import { taskKeys } from "../utils/task-query-keys";
 import type { ApiError } from "@/lib/api-error";
 import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import type { TaskResponse, TaskStatusAction } from "../types";
 
 export type UpdateTaskStatusActionVariables = {
@@ -39,10 +40,10 @@ export const useUpdateTaskStatusAction = () => {
 
     onError: (error, variables) => {
       const status = error.response?.status;
-      const backendMessage = getApiErrorMessage(error, "");
+      const backendMessage = error.response?.data?.message ?? "";
 
       if (status === 404) {
-        toast.error(backendMessage || "Task no longer exists.");
+        toast.error(t("toast.taskMissing"));
         void queryClient.invalidateQueries({
           queryKey: taskKeys.list(variables.listId),
         });
@@ -54,24 +55,19 @@ export const useUpdateTaskStatusAction = () => {
 
       if (status === 403) {
         if (isOverdueLockMessage(backendMessage)) {
-          toast.error(
-            "Task is overdue and locked. Reschedule it first, or mark it done.",
-          );
+          toast.error(t("toast.statusOverdueLocked"));
           return;
         }
-        toast.error(
-          backendMessage ||
-            "Only assigned members with permission can change this status.",
-        );
+        toast.error(getApiErrorMessage(error, t("toast.statusForbidden")));
         return;
       }
 
       if (status === 400) {
-        toast.error(backendMessage || "Invalid task status action.");
+        toast.error(getApiErrorMessage(error, t("toast.statusInvalid")));
         return;
       }
 
-      toast.error(backendMessage || "Could not update task status.");
+      toast.error(getApiErrorMessage(error, t("toast.statusUpdateFailed")));
     },
   });
 };

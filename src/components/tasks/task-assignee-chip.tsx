@@ -2,6 +2,7 @@ import type { BoardMemberUser } from "@/features/boards/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { UserAvatar } from "../users/user-avatar";
 import { UserMinus } from "lucide-react";
+import { useT } from "@/services/i18n";
 
 type AssigneeChipProps = {
   userId: string;
@@ -16,7 +17,8 @@ export default function AssigneeChip({
   onRemove,
   disabled,
 }: AssigneeChipProps) {
-  const label = member?.name?.trim() || member?.email || `Unknown user`;
+  const t = useT();
+  const label = member?.name?.trim() || member?.email || t("task.unknownUser");
   const subLabel =
     member && member.name && member.email && member.email !== member.name
       ? member.email
@@ -43,7 +45,7 @@ export default function AssigneeChip({
               onRemove(userId);
             }}
             disabled={disabled}
-            aria-label={`Remove ${label}`}
+            aria-label={t("task.removeAssignee", { name: label })}
             className="ml-0.5 inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50"
           >
             <UserMinus className="size-3" aria-hidden="true" />

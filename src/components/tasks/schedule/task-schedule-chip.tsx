@@ -1,4 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
+import { TranslateText, useLocale, useT } from "@/services/i18n";
+import { useState, useEffect } from "react";
 import { CalendarDays, Check, ChevronDown, Clock, Lock } from "lucide-react";
 import {
   Popover,
@@ -54,6 +55,8 @@ export function TaskScheduleChip({
   isUpdating,
   onTaskUpdated,
 }: TaskScheduleChipProps) {
+  const t = useT();
+  useLocale();
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
@@ -62,10 +65,7 @@ export function TaskScheduleChip({
     return () => clearInterval(interval);
   }, []);
 
-  const presentation = useMemo(
-    () => getTaskSchedulePresentation(task, now),
-    [task, now],
-  );
+  const presentation = getTaskSchedulePresentation(task, now);
   const tone = TONE_CLASSES[presentation.tone];
   const Icon = ICON_BY_NAME[presentation.icon];
 
@@ -74,7 +74,7 @@ export function TaskScheduleChip({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`Edit schedule. ${presentation.label}`}
+          aria-label={t("schedule.editAria", { label: presentation.label })}
           aria-busy={isUpdating}
           className="group flex h-15.5 min-w-0 items-center gap-2.5 rounded-lg bg-background/80 px-3 text-left outline-none ring-1 ring-foreground/7 transition-[background-color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-background hover:ring-foreground/12 focus-visible:ring-3 focus-visible:ring-ring/30 active:scale-[0.985] data-[state=open]:bg-background data-[state=open]:ring-foreground/15"
         >
@@ -85,7 +85,7 @@ export function TaskScheduleChip({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[10.5px] leading-4 text-muted-foreground">
-              Schedule
+              <TranslateText id="task.schedule" />
             </span>
             <span
               className={`block truncate text-[12.5px] font-medium leading-5 ${tone.triggerText}`}

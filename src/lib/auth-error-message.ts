@@ -1,5 +1,6 @@
 import type { ApiError } from "./api-error";
 import { getApiErrorMessage } from "./error-message";
+import { getLocale, t } from "@/services/i18n";
 
 /**
  * Auth-specific error helpers.
@@ -131,6 +132,48 @@ const TABLE: Record<AuthFlow, Partial<Record<number, string>>> = {
   resetPassword: RESET_PASSWORD_MESSAGE,
 };
 
+const VI_TABLE: Record<AuthFlow, Partial<Record<number, string>>> = {
+  login: {
+    400: "Email hoặc mật khẩu không đúng.", 401: "Mật khẩu không đúng. Vui lòng thử lại.",
+    403: "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.",
+    404: "Email này chưa được đăng ký. Vui lòng kiểm tra hoặc tạo tài khoản.",
+    409: "Email này đã được đăng ký. Vui lòng đăng nhập.",
+    422: "Email hoặc mật khẩu không hợp lệ.", 429: "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng đợi rồi thử lại.",
+  },
+  register: {
+    400: "Thông tin đăng ký không hợp lệ. Vui lòng kiểm tra lại.",
+    409: "Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.",
+    422: "Một số thông tin không hợp lệ. Vui lòng kiểm tra các trường được đánh dấu.",
+    429: "Bạn đã đăng ký quá nhiều lần. Vui lòng đợi rồi thử lại.",
+    500: "Máy chủ gặp lỗi khi tạo tài khoản. Vui lòng thử lại sau.",
+  },
+  sendOtp: {
+    400: "Email không hợp lệ.", 404: "Email này chưa được đăng ký. Vui lòng kiểm tra lại.",
+    409: "Mã OTP đã được gửi. Vui lòng đợi rồi thử lại.",
+    429: "Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng đợi rồi thử lại.",
+  },
+  verifyOtp: {
+    400: "Mã OTP không đúng hoặc đã hết hạn. Vui lòng thử lại.",
+    401: "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.",
+    404: "Email này không tồn tại trong hệ thống.",
+    429: "Bạn đã xác minh quá nhiều lần. Vui lòng đợi rồi thử lại.",
+  },
+  verifyAccount: {
+    400: "Mã OTP không đúng hoặc đã hết hạn. Vui lòng thử lại.",
+    401: "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.",
+    404: "Không tìm thấy tài khoản cần xác minh. Vui lòng đăng ký lại.",
+    409: "Tài khoản đã được xác minh. Bạn có thể đăng nhập.",
+    429: "Bạn đã xác minh quá nhiều lần. Vui lòng đợi rồi thử lại.",
+  },
+  resetPassword: {
+    400: "Mã OTP không đúng hoặc đã hết hạn. Vui lòng yêu cầu mã mới.",
+    401: "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.",
+    404: "Email này không tồn tại trong hệ thống.",
+    422: "Mật khẩu mới không hợp lệ.",
+    429: "Bạn đã thử đặt lại mật khẩu quá nhiều lần. Vui lòng đợi rồi thử lại.",
+  },
+};
+
 const FALLBACK: Record<AuthFlow, string> = {
   login: "Login failed. Please try again.",
   register: "Registration failed. Please try again.",
@@ -138,6 +181,15 @@ const FALLBACK: Record<AuthFlow, string> = {
   verifyOtp: "The OTP code is incorrect or has expired.",
   verifyAccount: "We could not verify your account. Please try again.",
   resetPassword: "Password reset failed. Please try again.",
+};
+
+const VI_FALLBACK: Record<AuthFlow, string> = {
+  login: "Đăng nhập thất bại. Vui lòng thử lại.",
+  register: "Đăng ký thất bại. Vui lòng thử lại.",
+  sendOtp: "Không thể gửi OTP. Vui lòng thử lại.",
+  verifyOtp: "Mã OTP không đúng hoặc đã hết hạn.",
+  verifyAccount: "Không thể xác minh tài khoản. Vui lòng thử lại.",
+  resetPassword: "Không thể đặt lại mật khẩu. Vui lòng thử lại.",
 };
 
 // ----------------------------------------------------------------------------
@@ -310,7 +362,8 @@ export function getAuthErrorMessage(
 ): AuthErrorResult {
   const apiError = error as ApiError | undefined;
   const status = apiError?.response?.status;
-  const table = TABLE[flow];
+  const isVietnamese = getLocale() === "vi";
+  const table = isVietnamese ? VI_TABLE[flow] : TABLE[flow];
   const localizedFromTable = status ? table[status] : undefined;
 
   const backendMessage =
@@ -325,7 +378,7 @@ export function getAuthErrorMessage(
     !apiError?.response;
 
   if (isNetworkOrTimeout) {
-    return { message: getApiErrorMessage(error, FALLBACK[flow]) };
+    return { message: getApiErrorMessage(error, isVietnamese ? VI_FALLBACK[flow] : FALLBACK[flow]) };
   }
 
   // 2. 422 from Zod → return per-field errors AND a generic summary.
@@ -333,8 +386,8 @@ export function getAuthErrorMessage(
     const fieldErrors = parseZod422Message(backendMessage);
     if (fieldErrors) {
       return {
-        message: localizedFromTable ?? FALLBACK[flow],
-        fieldErrors,
+        message: localizedFromTable ?? (isVietnamese ? VI_FALLBACK[flow] : FALLBACK[flow]),
+        fieldErrors: isVietnamese ? localizeFieldErrors(fieldErrors) : fieldErrors,
         field: firstField(fieldErrors),
       };
     }
@@ -344,16 +397,33 @@ export function getAuthErrorMessage(
   let message: string;
   if (localizedFromTable) {
     message = localizedFromTable;
-  } else if (backendMessage && backendMessage.trim().length > 0) {
+  } else if (!isVietnamese && backendMessage && backendMessage.trim().length > 0) {
     message = backendMessage;
   } else {
-    message = FALLBACK[flow];
+    message = isVietnamese ? VI_FALLBACK[flow] : FALLBACK[flow];
   }
 
   // 4. Field hint
-  const field = options?.preferField ?? detectField(message, status);
+  const field = options?.preferField ?? detectField(isVietnamese ? (status ? TABLE[flow][status] ?? "" : "") : message, status);
 
   return { message, field };
+}
+
+function localizeFieldErrors(fieldErrors: Partial<Record<AuthFieldKey, string>>): Partial<Record<AuthFieldKey, string>> {
+  const translated: Partial<Record<AuthFieldKey, string>> = {};
+  for (const field of Object.keys(fieldErrors) as AuthFieldKey[]) {
+    const message = fieldErrors[field] ?? "";
+    if (message.includes("at least 6")) translated[field] = t("auth.passwordTooShort", { count: 6 });
+    else if (message.includes("at least 2")) translated[field] = t("auth.nameTooShort");
+    else if (message.includes("do not match")) translated[field] = t("auth.passwordMismatch");
+    else if (message.includes("valid email")) translated[field] = t("auth.emailInvalid");
+    else if (message.includes("enter your name")) translated[field] = t("auth.nameRequired");
+    else if (message.includes("enter your email")) translated[field] = t("auth.emailRequired");
+    else if (message.includes("confirm your password")) translated[field] = t("auth.confirmRequired");
+    else if (message.includes("enter a password")) translated[field] = t("auth.passwordChoose");
+    else translated[field] = t("error.invalid");
+  }
+  return translated;
 }
 
 function firstField(

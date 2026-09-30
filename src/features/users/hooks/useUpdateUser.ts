@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "../api/user-api";
 import type { UserUpdatePayload } from "../types";
@@ -11,10 +13,10 @@ export const useUpdateUser = () => {
     mutationFn: (data: UserUpdatePayload) => userApi.updateMe(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
-      toast.success("Update Successfully");
+      toast.success(t("toast.updated"));
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "Update Failed");
+      toast.error(getApiErrorMessage(error, "Update Failed"));
     },
   });
 };

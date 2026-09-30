@@ -1,3 +1,4 @@
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -24,11 +25,11 @@ export const useDeleteTaskComment = () => {
     onError: (error: ApiError) => {
       const status = error.response?.status;
       if (status === 403) {
-        toast.error("You do not have permission to delete this comment.");
+        toast.error(t("toast.commentDeleteForbidden"));
         return;
       }
       if (status === 404) {
-        toast.error("Comment no longer exists.");
+        toast.error(t("toast.commentMissing"));
         return;
       }
       toast.error(getApiErrorMessage(error, "Failed to delete comment."));

@@ -15,6 +15,7 @@ import { MainLayout } from "@/layouts/main-layout";
 import { DetailProject } from "@/components/projects/detail-project";
 import { APP_ROUTES } from "./constans";
 import { BoardPage } from "@/pages/board/board-page";
+import { AuthLayout } from "@/layouts/auth-layout";
 
 export const router = createBrowserRouter([
   {
@@ -25,28 +26,15 @@ export const router = createBrowserRouter([
     element: <AuthRedirectRoute />,
     children: [
       {
-        path: `${APP_ROUTES.LOGIN}`,
-        element: <LoginPage />,
-      },
-      {
-        path: `${APP_ROUTES.REGISTER}`,
-        element: <RegisterPage />,
-      },
-      {
-        path: `${APP_ROUTES.FORGOT_PASSWORD}`,
-        element: <ForgotPasswordPage />,
-      },
-      {
-        path: `${APP_ROUTES.VERIFY_ACCOUNT}`,
-        element: <VerifyAccountPage />,
-      },
-      {
-        path: `${APP_ROUTES.VERIFY_OTP}`,
-        element: <VerifyOtpPage />,
-      },
-      {
-        path: `${APP_ROUTES.RESET_PASSWORD}`,
-        element: <ResetPasswordPage />,
+        element: <AuthLayout />,
+        children: [
+          { path: APP_ROUTES.LOGIN, element: <LoginPage /> },
+          { path: APP_ROUTES.REGISTER, element: <RegisterPage /> },
+          { path: APP_ROUTES.FORGOT_PASSWORD, element: <ForgotPasswordPage /> },
+          { path: APP_ROUTES.VERIFY_ACCOUNT, element: <VerifyAccountPage /> },
+          { path: APP_ROUTES.VERIFY_OTP, element: <VerifyOtpPage /> },
+          { path: APP_ROUTES.RESET_PASSWORD, element: <ResetPasswordPage /> },
+        ],
       },
     ],
   },

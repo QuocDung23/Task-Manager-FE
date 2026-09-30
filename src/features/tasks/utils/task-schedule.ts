@@ -1,45 +1,32 @@
+import { getLocale, t } from "@/services/i18n";
 import type { ReminderPresetId, TaskResponse } from "../types";
 
 export const REMINDER_PRESETS: ReadonlyArray<{
   id: ReminderPresetId;
-  label: string;
-  description: string;
   minutes: number | null;
 }> = [
   {
     id: "AT_TIME",
-    label: "At due time",
-    description: "Notify when the task is due",
     minutes: 0,
   },
   {
     id: "BEFORE_15",
-    label: "15 minutes before",
-    description: "Notify 15 minutes before the deadline",
     minutes: 15,
   },
   {
     id: "BEFORE_30",
-    label: "30 minutes before",
-    description: "Notify 30 minutes before the deadline",
     minutes: 30,
   },
   {
     id: "BEFORE_60",
-    label: "1 hour before",
-    description: "Notify 1 hour before the deadline",
     minutes: 60,
   },
   {
     id: "BEFORE_DAY",
-    label: "1 day before",
-    description: "Notify 1 day before the deadline",
     minutes: 60 * 24,
   },
   {
     id: "CUSTOM",
-    label: "Custom",
-    description: "Pick a custom date and time",
     minutes: null,
   },
 ];
@@ -147,15 +134,15 @@ export function validateTaskScheduleDraft(
   // First validate dueDate (it's required)
   let dueIso: string | null = null;
   if (!draft.date) {
-    errors.date = "Pick a deadline date.";
+    errors.date = t("schedule.dateRequired");
   } else if (!draft.time) {
-    errors.time = "Pick a deadline time.";
+    errors.time = t("schedule.timeRequired");
   } else {
     const combined = combineLocalDateTimeToIso(draft.date, draft.time);
     if (!combined) {
-      errors.date = "Invalid deadline.";
+      errors.date = t("schedule.invalidDeadline");
     } else if (new Date(combined).getTime() <= now.getTime()) {
-      errors.date = "Deadline must be in the future.";
+      errors.date = t("schedule.futureDeadline");
     } else {
       dueIso = combined;
     }
@@ -165,9 +152,9 @@ export function validateTaskScheduleDraft(
   if (draft.startDate && dueIso) {
     const startIso = combineLocalDateTimeToIso(draft.startDate, "00:00");
     if (!startIso) {
-      errors.startDate = "Invalid start date.";
+      errors.startDate = t("schedule.invalidStart");
     } else if (new Date(startIso).getTime() > new Date(dueIso).getTime()) {
-      errors.startDate = "Start date must be before the deadline.";
+      errors.startDate = t("schedule.startBeforeDue");
     }
   } else if (draft.startDate) {
     // startDate exists but dueDate didn't validate - skip startDate check
@@ -176,20 +163,20 @@ export function validateTaskScheduleDraft(
   if (draft.reminderEnabled && !errors.date && !errors.time && dueIso) {
     if (draft.reminderPreset === "CUSTOM") {
       if (!draft.reminderDate || !draft.reminderTime) {
-        errors.reminder = "Pick a custom reminder date and time.";
+        errors.reminder = t("schedule.customRequired");
       } else {
         const reminderIso = combineLocalDateTimeToIso(
           draft.reminderDate,
           draft.reminderTime,
         );
         if (!reminderIso) {
-          errors.reminder = "Invalid reminder time.";
+          errors.reminder = t("schedule.invalidReminder");
         } else if (new Date(reminderIso).getTime() <= now.getTime()) {
-          errors.reminder = "Reminder must be in the future.";
+          errors.reminder = t("schedule.reminderFuture");
         } else if (
           new Date(reminderIso).getTime() >= new Date(dueIso).getTime()
         ) {
-          errors.reminder = "Reminder must be before the deadline.";
+          errors.reminder = t("schedule.reminderBeforeDue");
         }
       }
     } else {
@@ -197,13 +184,13 @@ export function validateTaskScheduleDraft(
         (entry) => entry.id === draft.reminderPreset,
       );
       if (!presetEntry || presetEntry.minutes === null) {
-        errors.reminder = "Pick a reminder preset.";
+        errors.reminder = t("schedule.presetRequired");
       } else {
         const reminderIso = new Date(
           new Date(dueIso).getTime() - presetEntry.minutes * 60_000,
         ).toISOString();
         if (new Date(reminderIso).getTime() <= now.getTime()) {
-          errors.reminder = "Reminder must be in the future.";
+          errors.reminder = t("schedule.reminderFuture");
         }
       }
     }
@@ -231,7 +218,7 @@ export function getTaskSchedulePresentation(
     task.lockStatus === "OVERDUE_LOCKED"
   ) {
     return {
-      label: "Overdue · Locked",
+      label: t("schedule.overdueLocked"),
       helper: task.lockReason ?? undefined,
       tone: "destructive",
       icon: "lock",
@@ -239,7 +226,7 @@ export function getTaskSchedulePresentation(
   }
   if (task.scheduleState === "done" || isTerminalTask(task)) {
     return {
-      label: task.dueDate ? `Done · ${formatLocalDate(task.dueDate)}` : "Done",
+      label: task.dueDate ? t("schedule.doneOn", { date: formatLocalDate(task.dueDate) }) : t("schedule.done"),
       tone: "success",
       icon: "check",
     };
@@ -257,7 +244,7 @@ export function getTaskSchedulePresentation(
     }
     const relative = formatRelativeFromIso(task.dueDate, now);
     return {
-      label: relative ? `Due soon · ${relative}` : "Due soon",
+      label: relative ? t("schedule.dueSoonAt", { time: relative }) : t("schedule.dueSoon"),
       helper: task.reminderAt
         ? formatLocalDateTime(task.reminderAt)
         : undefined,
@@ -273,24 +260,24 @@ export function getTaskSchedulePresentation(
     return {
       label,
       helper: task.reminderAt
-        ? `Reminder ${formatLocalDateTime(task.reminderAt)}`
+        ? t("schedule.reminderAt", { time: formatLocalDateTime(task.reminderAt) })
         : undefined,
       tone: "neutral",
       icon: "calendar",
     };
   }
   return {
-    label: "No deadline",
+    label: t("schedule.noDeadline"),
     tone: "muted",
     icon: "none",
   };
 }
 
 export function formatLocalDate(iso: string | null | undefined): string {
-  if (!iso) return "Not set";
+  if (!iso) return t("schedule.notSet");
   const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return "Not set";
-  return parsed.toLocaleDateString("en-US", {
+  if (Number.isNaN(parsed.getTime())) return t("schedule.notSet");
+  return parsed.toLocaleDateString(getLocale() === "vi" ? "vi-VN" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -314,18 +301,18 @@ export function getDurationDays(startIso: string, endIso: string): number {
 
 export function formatLocalDateTime(iso: string): string {
   const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return "Not set";
+  if (Number.isNaN(parsed.getTime())) return t("schedule.notSet");
   const tzOffset = -parsed.getTimezoneOffset();
   const sign = tzOffset >= 0 ? "+" : "-";
   const abs = Math.abs(tzOffset);
   const tzHours = String(Math.floor(abs / 60)).padStart(2, "0");
   const tzMinutes = String(abs % 60).padStart(2, "0");
-  const datePart = parsed.toLocaleDateString("en-US", {
+  const datePart = parsed.toLocaleDateString(getLocale() === "vi" ? "vi-VN" : "en-US", {
     month: "short",
     day: "2-digit",
     year: "numeric",
   });
-  const timePart = parsed.toLocaleTimeString("en-US", {
+  const timePart = parsed.toLocaleTimeString(getLocale() === "vi" ? "vi-VN" : "en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -342,7 +329,7 @@ export function formatRelativeFromIso(
   if (Number.isNaN(due.getTime())) return null;
   const diffMs = due.getTime() - now.getTime();
   const diffMinutes = Math.round(diffMs / 60_000);
-  const rtf = new Intl.RelativeTimeFormat("en-US", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(getLocale() === "vi" ? "vi-VN" : "en-US", { numeric: "auto" });
   if (Math.abs(diffMinutes) < 60) {
     return rtf.format(diffMinutes, "minute");
   }

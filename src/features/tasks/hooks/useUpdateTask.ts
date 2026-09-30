@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { taskApi } from "../api/task-api";
@@ -24,10 +26,10 @@ export const useUpdateTask = () => {
     }) => taskApi.update(taskId, data),
     onSuccess: (response) => {
       applyCanonicalTaskSnapshot(queryClient, response.data, { source: "http" });
-      toast.success("Task updated successfully");
+      toast.success(t("toast.taskUpdated"));
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "Update Task Failed");
+      toast.error(getApiErrorMessage(error, "Update Task Failed"));
     },
   });
 };

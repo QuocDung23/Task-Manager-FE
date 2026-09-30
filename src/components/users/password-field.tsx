@@ -2,6 +2,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { FieldError } from "../ui/field";
+import { useT } from "@/services/i18n";
 
 interface PasswordFieldProps {
   id: string;
@@ -30,6 +31,7 @@ export function PasswordField({
   error,
   isAutoFocus = false,
 }: PasswordFieldProps) {
+  const t = useT();
   const isInvalid = Boolean(error);
 
   return (
@@ -53,7 +55,7 @@ export function PasswordField({
         <button
           type="button"
           onClick={onVisibilityToggle}
-          aria-label={isVisible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          aria-label={isVisible ? t("common.hideField", { label }) : t("common.showField", { label })}
           aria-pressed={isVisible}
           className="absolute top-1/2 right-1 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5"
         >

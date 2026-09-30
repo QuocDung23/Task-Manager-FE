@@ -16,8 +16,10 @@ import type { NotificationFilter, NotificationResponse } from "@/features/notifi
 import { getNotificationPath } from "@/features/notifications/utils/notification-navigation";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { getApiErrorMessage } from "@/lib/error-message";
+import { useT } from "@/services/i18n";
 
 export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) {
+  const t = useT();
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const query = useNotifications(filter);
   const countQuery = useUnreadNotificationCount();
@@ -40,8 +42,8 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
       <header className="shrink-0 border-b border-foreground/8 px-4 pb-3 pt-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-heading text-[15px] font-semibold">Notifications</h2>
-            <p className="mt-0.5 text-[11.5px] text-muted-foreground">{count} unread</p>
+            <h2 className="font-heading text-[15px] font-semibold">{t("notification.title")}</h2>
+            <p className="mt-0.5 text-[11.5px] text-muted-foreground">{t("notification.unread", { count })}</p>
           </div>
           <Button
             variant="ghost"
@@ -50,7 +52,7 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
             onClick={() => markAll.mutate(new Date().toISOString())}
           >
             {markAll.isPending ? <Loader2 className="animate-spin" /> : <CheckCheck />}
-            Mark all read
+            {t("notification.markAll")}
           </Button>
         </div>
         <div className="mt-3 inline-flex rounded-md bg-muted p-0.5" role="tablist">
@@ -63,7 +65,7 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
               onClick={() => setFilter(value)}
               className={`h-7 rounded-[5px] px-3 text-[11.5px] font-medium capitalize transition-colors ${filter === value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
             >
-              {value}
+              {value === "all" ? t("notification.all") : t("notification.unreadTab")}
             </button>
           ))}
         </div>
@@ -83,7 +85,7 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
           <div className="px-2 py-4">
             <ErrorState
               variant="inline"
-              title="Could not load notifications"
+              title={t("notification.loadError")}
               message={getApiErrorMessage(query.error)}
               onRetry={() => {
                 void query.refetch();
@@ -92,7 +94,7 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
           </div>
         ) : items.length === 0 ? (
           <div className="grid min-h-64 place-items-center text-center">
-            <div><Bell className="mx-auto size-5 text-muted-foreground" /><p className="mt-3 text-sm font-medium">{filter === "unread" ? "You're all caught up" : "No notifications yet"}</p></div>
+            <div><Bell className="mx-auto size-5 text-muted-foreground" /><p className="mt-3 text-sm font-medium">{filter === "unread" ? t("notification.allCaughtUp") : t("notification.empty")}</p></div>
           </div>
         ) : (
           <ul className="space-y-1">
@@ -115,8 +117,8 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
                 </button>
                 <button
                   type="button"
-                  aria-label={item.readAt ? "Mark as unread" : "Mark as read"}
-                  title={item.readAt ? "Mark as unread" : "Mark as read"}
+                  aria-label={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
+                  title={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
                   onClick={() => item.readAt ? markUnread.mutate(item.id) : markRead.mutate(item.id)}
                   className="absolute right-2 top-3 grid size-7 place-items-center rounded-md text-muted-foreground opacity-0 outline-none hover:bg-background hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 group-hover:opacity-100"
                 >
@@ -128,7 +130,7 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
         )}
         {query.hasNextPage ? (
           <Button variant="ghost" size="sm" className="mt-2 w-full" disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-            {query.isFetchingNextPage ? <Loader2 className="animate-spin" /> : null} Load more
+            {query.isFetchingNextPage ? <Loader2 className="animate-spin" /> : null} {t("notification.loadMore")}
           </Button>
         ) : null}
       </div>

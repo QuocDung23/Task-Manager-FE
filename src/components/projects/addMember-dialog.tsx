@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -50,17 +52,17 @@ interface AddMemberDialogProps {
 
 const SCOPE_COPY: Record<
   AddMemberScope,
-  { title: string; description: string; hint: string }
+  { title: "member.add"; description: "member.addToProjectHelp" | "member.addToBoardHelp"; hint: "member.addHint" }
 > = {
   project: {
-    title: "Add member",
-    description: "Search by email to invite a teammate to this project.",
-    hint: "Start typing an email to find a teammate to add.",
+    title: "member.add",
+    description: "member.addToProjectHelp",
+    hint: "member.addHint",
   },
   board: {
-    title: "Add member",
-    description: "Search by email to invite a teammate to this board.",
-    hint: "Start typing an email to find a teammate to add.",
+    title: "member.add",
+    description: "member.addToBoardHelp",
+    hint: "member.addHint",
   },
 };
 
@@ -71,6 +73,7 @@ export function AddMemberDialog({
   onOpenChange,
   onAdd,
 }: AddMemberDialogProps) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const [searchEmail, setSearchEmail] = useState("");
   const [debouncedEmail, setDebouncedEmail] = useState("");
@@ -176,17 +179,17 @@ export function AddMemberDialog({
 
               <DialogHeader className="min-w-0 gap-1.5 pt-0.5 text-left">
                 <DialogTitle className="font-heading text-[19px] font-medium leading-tight tracking-[-0.02em] text-foreground sm:text-[20px]">
-                  {copy.title}
+                  {t(copy.title)}
                 </DialogTitle>
                 <DialogDescription className="max-w-[34ch] text-[13px] font-normal leading-relaxed text-muted-foreground">
-                  {copy.description}
+                  {t(copy.description)}
                 </DialogDescription>
               </DialogHeader>
 
               <DialogClose asChild>
                 <motion.button
                   type="button"
-                  aria-label="Close"
+                  aria-label={t("common.close")}
                   disabled={isPending}
                   whileHover={iconHover(reduceMotion)}
                   whileTap={iconTap(reduceMotion)}
@@ -213,10 +216,10 @@ export function AddMemberDialog({
                   type="email"
                   inputMode="email"
                   autoComplete="off"
-                  placeholder="Search by email..."
+                  placeholder={t("member.searchByEmail")}
                   value={searchEmail}
                   onChange={(e) => setSearchEmail(e.target.value)}
-                  aria-label="Search user by email"
+                  aria-label={t("member.searchUserByEmail")}
                   className="h-12 rounded-2xl border border-foreground/8 bg-background/65 pl-10 pr-4 text-[13.5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-background focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                 />
               </div>
@@ -234,7 +237,7 @@ export function AddMemberDialog({
                     : isPlaceholderData
                 }
                 hasQuery={hasQuery}
-                hintText={copy.hint}
+                hintText={t(copy.hint)}
                 onSelect={handleSelect}
                 selectedUserId={selectedUser?.id ?? null}
               />
@@ -249,7 +252,7 @@ export function AddMemberDialog({
                   transition={SPRING_PRESS}
                   className="h-11 whitespace-nowrap rounded-full px-5 text-[13px] font-medium text-muted-foreground outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Cancel
+                  <TranslateText id="common.cancel" />
                 </motion.button>
 
                 <motion.button
@@ -270,7 +273,7 @@ export function AddMemberDialog({
                   transition={SPRING_PRESS}
                   className="group inline-flex h-11 items-center justify-center gap-3 whitespace-nowrap rounded-full bg-primary pl-5 pr-1.5 text-[13px] font-medium text-primary-foreground shadow-[0_10px_30px_-16px_color-mix(in_oklab,var(--primary)_70%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/90 focus-visible:ring-4 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-38.5"
                 >
-                  <span>{isPending ? "Adding" : "Add member"}</span>
+                  <span>{isPending ? t("member.adding") : t("member.add")}</span>
                   <span className="grid size-8 place-items-center rounded-full bg-primary-foreground/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:scale-105">
                     {isPending ? (
                       <motion.span
@@ -324,6 +327,7 @@ function SearchResults({
   onSelect,
   selectedUserId,
 }: SearchResultsProps) {
+  const t = useT();
   if (!hasQuery) {
     return <ResultsHint>{hintText}</ResultsHint>;
   }
@@ -335,19 +339,19 @@ function SearchResults({
           className="size-4 animate-spin text-muted-foreground"
           aria-hidden="true"
         />
-        <span>Searching users…</span>
+        <span><TranslateText id="member.searching" /></span>
       </ResultsStatus>
     );
   }
 
   if (users.length === 0) {
-    return <ResultsHint>No active users match this email.</ResultsHint>;
+    return <ResultsHint><TranslateText id="member.noActiveSearch" /></ResultsHint>;
   }
 
   return (
     <ul
       role="listbox"
-      aria-label="Search results"
+      aria-label={t("member.searchResults")}
       className={cn(
         "flex max-h-72 flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/8 bg-card p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] transition-opacity duration-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
         isPlaceholder && "opacity-60",
@@ -386,7 +390,7 @@ function SearchResults({
                       isSelected ? "text-accent-foreground" : "text-foreground",
                     )}
                   >
-                    {user.name || "Unnamed user"}
+                    {user.name || t("member.unnamed")}
                   </span>
                   <span
                     className={cn(
@@ -396,7 +400,7 @@ function SearchResults({
                         : "text-muted-foreground",
                     )}
                   >
-                    {user.email || "No email on file"}
+                    {user.email || t("member.noEmail")}
                   </span>
                 </span>
               </span>

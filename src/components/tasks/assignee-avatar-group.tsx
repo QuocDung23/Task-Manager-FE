@@ -4,6 +4,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/users/user-avatar";
+import { useT } from "@/services/i18n";
 
 /**
  * Tối thiểu các field cần để render avatar + tooltip:
@@ -36,6 +37,7 @@ export function AssigneeAvatarGroup({
   max = 3,
   size = "default",
 }: AssigneeAvatarGroupProps) {
+  const t = useT();
   if (totalCount === 0) return null;
 
   const visible = users.slice(0, max);
@@ -79,7 +81,7 @@ export function AssigneeAvatarGroup({
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {overflow} more assignee{overflow === 1 ? "" : "s"}
+            {t("task.moreAssignees", { count: overflow })}
           </TooltipContent>
         </Tooltip>
       ) : null}

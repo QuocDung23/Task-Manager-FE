@@ -1,3 +1,5 @@
+import { getApiErrorMessage } from "@/lib/error-message";
+import { t } from "@/services/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -15,7 +17,7 @@ export const useCreateBoard = () => {
     mutationFn: (params: { data: BoardRequest; projectId: string }) =>
       boardApi.create(params.data, params.projectId),
     onSuccess: (response, variables) => {
-      toast.success("Create Successfully");
+      toast.success(t("toast.created"));
       const board: BoardResponse | undefined = response?.data;
       if (board) {
         applyBoardCreated(queryClient, variables.projectId, board);
@@ -28,7 +30,7 @@ export const useCreateBoard = () => {
       });
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message ?? "Create Failed");
+      toast.error(getApiErrorMessage(error, "Create Failed"));
     },
   });
 };

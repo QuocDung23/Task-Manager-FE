@@ -1,3 +1,5 @@
+import { useT } from "@/services/i18n";
+import { TranslateText } from "@/services/i18n";
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -21,6 +23,7 @@ interface MenuSettingProps {
 }
 
 export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
+  const t = useT();
   const [openEdit, setOpenEdit] = useState(false);
   const [openAddMember, setOpenAddMember] = useState(false);
   const [openManageMembers, setOpenManageMembers] = useState(false);
@@ -40,7 +43,7 @@ export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label="Board actions"
+            aria-label={t("board.actions")}
             {...stopDropdownTriggerPropagation}
             className="group inline-flex size-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/4 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/20 data-[state=open]:bg-foreground/4 data-[state=open]:text-foreground"
           >
@@ -64,7 +67,7 @@ export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
             <span className="grid size-6 place-items-center rounded-full bg-foreground/4 text-foreground/80">
               <UserPlus className="size-3.5" aria-hidden="true" />
             </span>
-            <span>Add member</span>
+            <span><TranslateText id="member.add" /></span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -78,7 +81,7 @@ export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
             <span className="grid size-6 place-items-center rounded-full bg-foreground/4 text-foreground/80">
               <Users className="size-3.5" aria-hidden="true" />
             </span>
-            <span>Manage members</span>
+            <span><TranslateText id="member.manage" /></span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -92,7 +95,7 @@ export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
             <span className="grid size-6 place-items-center rounded-full bg-foreground/4 text-foreground/80">
               <SquarePen className="size-3.5" aria-hidden="true" />
             </span>
-            <span>Edit</span>
+            <span><TranslateText id="common.edit" /></span>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator className="my-1 h-px bg-foreground/6" />
@@ -109,7 +112,7 @@ export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
             <span className="grid size-6 place-items-center rounded-full bg-destructive/10 text-destructive">
               <Trash2 className="size-3.5" aria-hidden="true" />
             </span>
-            <span>{isPending ? "Deleting" : "Delete"}</span>
+            <span>{isPending ? t("task.deleting") : t("common.delete")}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
