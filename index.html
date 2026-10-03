@@ -2,9 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fe</title>
+    <title>Task Manager</title>
+    <script>
+      try {
+        document.documentElement.lang = localStorage.getItem("mt-locale") === "vi" ? "vi" : "en";
+      } catch (e) {
+        document.documentElement.lang = "en";
+      }
+    </script>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("mt-theme-mode");
+          var dark =
+            stored === "dark" ||
+            (stored !== "light" &&
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          var root = document.documentElement;
+          if (dark) root.classList.add("dark");
+          root.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

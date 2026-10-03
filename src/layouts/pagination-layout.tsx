@@ -1,0 +1,170 @@
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+} from "@/components/ui/pagination";
+import { CaretLeft, CaretRight, DotsThree } from "@phosphor-icons/react";
+import { cn } from "@/lib/utils";
+import { useT } from "@/services/i18n";
+
+interface PaginationLayoutProps {
+  currentPage: number;
+  totalPage: number;
+  onChangePage: (page: number) => void;
+}
+
+const buildRange = (
+  totalPage: number,
+  currentPage: number,
+): (number | "ellipsis")[] => {
+  if (totalPage <= 7) {
+    return Array.from({ length: totalPage }, (_, i) => i + 1);
+  }
+
+  const range: (number | "ellipsis")[] = [1];
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPage - 1, currentPage + 1);
+
+  if (start > 2) range.push("ellipsis");
+  for (let i = start; i <= end; i++) range.push(i);
+  if (end < totalPage - 1) range.push("ellipsis");
+
+  range.push(totalPage);
+  return range;
+};
+
+export function PaginationLayout({
+  currentPage,
+  totalPage,
+  onChangePage,
+}: PaginationLayoutProps) {
+  const t = useT();
+  if (totalPage <= 1) return null;
+
+  const pages = buildRange(totalPage, currentPage);
+  const isFirst = currentPage === 1;
+  const isLast = currentPage === totalPage;
+
+  return (
+    <Pagination className="mt-12">
+      <PaginationContent
+        className={cn(
+          "gap-1 rounded-full border border-border bg-card p-1 text-card-foreground",
+        )}
+      >
+        <PaginationItem>
+          <NavPill
+            label={t("common.previousPage")}
+            disabled={isFirst}
+            onClick={() => !isFirst && onChangePage(currentPage - 1)}
+            side="left"
+          >
+            <CaretLeft weight="bold" className="size-3.5" />
+          </NavPill>
+        </PaginationItem>
+
+        <AnimatePresence mode="popLayout" initial={false}>
+          {pages.map((page, idx) =>
+            page === "ellipsis" ? (
+              <PaginationItem key={`ellipsis-${idx}`}>
+                <span className="grid size-8 place-items-center text-muted-foreground">
+                  <DotsThree weight="bold" className="size-4" />
+                </span>
+              </PaginationItem>
+            ) : (
+              <PaginationItem key={page}>
+                <PagePill
+                  page={page}
+                  isActive={page === currentPage}
+                  onClick={() => onChangePage(page)}
+                />
+              </PaginationItem>
+            ),
+          )}
+        </AnimatePresence>
+
+        <PaginationItem>
+          <NavPill
+            label={t("common.nextPage")}
+            disabled={isLast}
+            onClick={() => !isLast && onChangePage(currentPage + 1)}
+            side="right"
+          >
+            <CaretRight weight="bold" className="size-3.5" />
+          </NavPill>
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+
+function NavPill({
+  children,
+  label,
+  disabled,
+  onClick,
+  side,
+}: {
+  children: React.ReactNode;
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  side: "left" | "right";
+}) {
+  return (
+    <motion.button
+      whileHover={!disabled ? { scale: 1.02 } : {}}
+      whileTap={!disabled ? { scale: 0.97 } : {}}
+      transition={{ type: "spring", stiffness: 400, damping: 26 }}
+      onClick={onClick}
+      aria-label={label}
+      disabled={disabled}
+      className={cn(
+        "group/nav inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium",
+        "transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        disabled
+          ? "cursor-not-allowed text-muted-foreground/40"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted",
+      )}
+    >
+      <motion.span
+        className="inline-flex items-center"
+        animate={{ x: 0 }}
+        whileHover={!disabled ? { x: side === "left" ? -2 : 2 } : {}}
+        transition={{ type: "spring", stiffness: 500, damping: 28 }}
+      >
+        {children}
+      </motion.span>
+    </motion.button>
+  );
+}
+
+function PagePill({
+  page,
+  isActive,
+  onClick,
+}: {
+  page: number;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileHover={!isActive ? { scale: 1.05 } : {}}
+      whileTap={{ scale: 0.94 }}
+      transition={{ type: "spring", stiffness: 420, damping: 28 }}
+      aria-current={isActive ? "page" : undefined}
+      className={cn(
+        "grid size-8 place-items-center rounded-full text-[12.5px] font-medium tabular-nums",
+        "transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        isActive
+          ? "bg-accent text-accent-foreground"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+      )}
+    >
+      {page}
+    </motion.button>
+  );
+}
