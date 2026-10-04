@@ -42,11 +42,22 @@ export type ProjectMemberListResponse = {
   totalMembers: number;
 };
 
+export type ProjectInvitationStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+
 export type ProjectInvitationResponse = {
   id: string;
   projectId: string;
+  projectName: string;
   inviteeId: string;
-  status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "REVOKED";
+  inviteeName: string;
+  inviteeEmail: string;
+  invitedById: string;
+  invitedByName: string;
+  role: string;
+  status: ProjectInvitationStatus;
+  expiresAt: string;
+  respondedAt: string | null;
+  createdAt: string;
 };
 
 export type CreateProjectDto = {
@@ -70,13 +81,6 @@ export type ProjectListResult = {
   pagination: PaginationResponse | null;
 };
 
-export type AddProjectMemberRequest = {
+export type InviteProjectMemberRequest = {
   userId: string;
-};
-
-export type AddProjectMemberResponse = {
-  id: string;
-  userId: string;
-  projectId: string;
-  roleId: string;
 };

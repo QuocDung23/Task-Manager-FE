@@ -299,7 +299,13 @@ export function DetailProject() {
               >
                 <div className="absolute right-3.5 top-3.5 z-10">
                   <div className="rounded-full p-1 hover:bg-foreground/5">
-                    <MenuSettingBoard board={board} projectId={projectId} />
+                    <MenuSettingBoard
+                      board={board}
+                      projectId={projectId}
+                      isCurrentUserMember={Boolean(
+                        currentUserId && membersByBoardId[board.id]?.some((member) => member.id === currentUserId),
+                      )}
+                    />
                   </div>
                 </div>
                 <BoardCard

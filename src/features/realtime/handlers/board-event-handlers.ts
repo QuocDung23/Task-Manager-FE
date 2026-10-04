@@ -10,6 +10,12 @@ import type {
 } from "../contracts/realtime-events";
 import type { BoardMemberUser, BoardResponse } from "@/features/boards/types";
 import { rememberEvent } from "../utils/event-dedupe";
+import { getCurrentUserId } from "../utils/current-user-id";
+import { boardApi } from "@/features/boards/api/board-api";
+import { boardKeys } from "@/features/boards/utils/board-query-keys";
+import { taskKeys } from "@/features/tasks/utils/task-query-keys";
+import { router } from "@/router";
+import { isProjectRoomAccessBlocked } from "../rooms/project-room-registry";
 import {
   applyBoardCreated,
   applyBoardDeleted,
@@ -159,6 +165,22 @@ export function registerBoardEventHandlers(
       payload.data.memberId,
       payload.data.userId,
     );
+    if (payload.data.userId === getCurrentUserId(socket)) {
+      void queryClient.invalidateQueries({ queryKey: boardKeys.detail(payload.data.boardId) });
+      void queryClient.invalidateQueries({ queryKey: boardKeys.membersByProject(payload.data.projectId) });
+      void queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      if (router.state.location.pathname === `/board/${payload.data.boardId}`) {
+        if (isProjectRoomAccessBlocked(payload.data.projectId)) {
+          void router.navigate("/projects", { replace: true });
+          return;
+        }
+        void boardApi.getById(payload.data.boardId).catch((error: { response?: { status?: number } }) => {
+          if (error.response?.status === 403 || error.response?.status === 404) {
+            void router.navigate(`/project/${payload.data.projectId}`, { replace: true });
+          }
+        });
+      }
+    }
   };
 
   const handleMemberRoleUpdated = (

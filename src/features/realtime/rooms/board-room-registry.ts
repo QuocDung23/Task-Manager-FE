@@ -57,6 +57,10 @@ function emitJoin(socket: TypedSocket, boardId: string): void {
     completed = true;
     window.clearTimeout(timeoutId);
     pendingJoins.delete(boardId);
+    if (blockedBoards.has(boardId)) {
+      if (response.success) socket.emit("board:leave", { boardId }, () => undefined);
+      return;
+    }
     if (response.success) {
       if (state.desiredRefs.has(boardId)) {
         state.joinedOnTransport.add(boardId);
@@ -101,6 +105,14 @@ export function releaseBoardRoom(boardId: string): void {
   if (pendingTimeout !== undefined) window.clearTimeout(pendingTimeout);
   pendingJoins.delete(boardId);
   emitLeave(socket, boardId);
+}
+
+export function revokeBoardRoomAccess(boardId: string): void {
+  blockedBoards.add(boardId);
+  const pendingTimeout = pendingJoins.get(boardId);
+  if (pendingTimeout !== undefined) window.clearTimeout(pendingTimeout);
+  pendingJoins.delete(boardId);
+  emitLeave(getSocket(), boardId);
 }
 
 export function rejoinBoardRooms(socket: TypedSocket = getSocket()): void {

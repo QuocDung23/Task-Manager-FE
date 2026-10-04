@@ -1,4 +1,4 @@
-import { useAddMemberProject } from "@/features/projects/hooks/useAddMemberProject";
+import { useInviteMemberProject } from "@/features/projects/hooks/useInviteMemberProject";
 import { AddMemberDialog } from "./addMember-dialog";
 
 interface AddMemberProps {
@@ -20,7 +20,7 @@ export function DialogAddMemberProject({
   open,
   onOpenChange,
 }: AddMemberProps) {
-  const { mutateAsync } = useAddMemberProject();
+  const { mutateAsync } = useInviteMemberProject();
 
   return (
     <AddMemberDialog

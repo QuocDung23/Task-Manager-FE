@@ -60,7 +60,7 @@ export function MemberListRow({
   const isSelf = member.userId === currentUserId;
   const isLastAdmin =
     (member.isOwner || isAdminRole(member.role)) && adminCount <= 1;
-  const canManageRow = isAdminViewer && !member.isOwner && !isLastAdmin;
+  const canManageRow = isAdminViewer && !isSelf && !member.isOwner && !isLastAdmin;
   const canDemote = isAdminViewer && !member.isOwner && !isLastAdmin;
 
   const roleNames = roleNamesForScope(scope);

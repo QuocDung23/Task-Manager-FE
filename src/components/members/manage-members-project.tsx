@@ -1,16 +1,17 @@
 import { t } from "@/services/i18n";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { AddMemberDialog } from "@/components/projects/addMember-dialog";
-import { useAddMemberProject } from "@/features/projects/hooks/useAddMemberProject";
+import { useInviteMemberProject } from "@/features/projects/hooks/useInviteMemberProject";
 import { useProjectMembers } from "@/features/projects/hooks/useProjectMembers";
 import { useRemoveProjectMember } from "@/features/projects/hooks/useRemoveProjectMember";
 import { useUpdateProjectMemberRole } from "@/features/projects/hooks/useUpdateProjectMemberRole";
 import { useCurrentUser } from "@/features/users/hooks/useCurrentUser";
 import type { MemberItem } from "@/lib/member-roles";
 import { MemberListDialog } from "./member-list-dialog";
+import { PendingProjectInvitations } from "./pending-project-invitations";
+import { isAdminRole } from "@/lib/member-roles";
 
 interface ManageMembersProjectProps {
   projectId: string;
@@ -25,13 +26,12 @@ export function DialogManageMembersProject({
   open,
   onOpenChange,
 }: ManageMembersProjectProps) {
-  const navigate = useNavigate();
   const [openAddMember, setOpenAddMember] = useState(false);
 
   const membersQuery = useProjectMembers(projectId, { enabled: open });
   const currentUserQuery = useCurrentUser();
 
-  const addMemberMutation = useAddMemberProject();
+  const addMemberMutation = useInviteMemberProject();
   const removeMemberMutation = useRemoveProjectMember();
   const changeRoleMutation = useUpdateProjectMemberRole();
 
@@ -67,10 +67,6 @@ export function DialogManageMembersProject({
         projectId,
         memberId: member.membershipId,
       });
-      if (member.userId === currentUserId) {
-        onOpenChange(false);
-        navigate("/projects");
-      }
     } catch {
       /* Ignore: the mutation hook surfaces the error toast. */
     }
@@ -99,6 +95,8 @@ export function DialogManageMembersProject({
   const changingRoleMemberId = changeRoleMutation.isPending
     ? (changeRoleMutation.variables?.memberId ?? null)
     : null;
+  const viewer = members.find((member) => member.userId === currentUserId);
+  const canManageInvitations = Boolean(viewer && (viewer.isOwner || isAdminRole(viewer.role)));
 
   return (
     <>
@@ -117,6 +115,7 @@ export function DialogManageMembersProject({
         onAddMember={() => setOpenAddMember(true)}
         onRemoveMember={handleRemoveMember}
         onChangeRole={handleChangeRole}
+        pendingContent={<PendingProjectInvitations projectId={projectId} enabled={open && canManageInvitations} />}
       />
       <AddMemberDialog
         scope="project"

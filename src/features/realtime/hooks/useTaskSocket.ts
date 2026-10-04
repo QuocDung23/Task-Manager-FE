@@ -16,6 +16,7 @@ import { registerStatusActionEventHandlers } from "../handlers/status-action-eve
 import { registerListOrderEventHandlers } from "../handlers/list-order-event-handlers";
 import { registerTaskOrderEventHandlers } from "../handlers/task-order-event-handlers";
 import { registerProjectEventHandlers } from "../handlers/project-event-handlers";
+import { projectInvitationKeys } from "@/features/projects/utils/project-invitation-query-keys";
 import { registerBoardEventHandlers } from "../handlers/board-event-handlers";
 import { registerTaskActivityEventHandlers } from "../handlers/task-activity-event-handlers";
 import { taskActivityKeys } from "@/features/task-activities/utils/task-activity-query-keys";
@@ -276,6 +277,7 @@ export function useGlobalRealtime(): void {
       rejoinBoardRooms(socket);
       rejoinProjectRooms(socket);
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: projectInvitationKeys.all });
       void queryClient.invalidateQueries({ queryKey: taskActivityKeys.all });
       void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     };

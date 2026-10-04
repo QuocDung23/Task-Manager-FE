@@ -92,6 +92,11 @@ export const boardApi = {
     );
     return response.data;
   },
+  leaveBoard: async (boardId: string): Promise<ApiResponse<BoardMemberUser>> => {
+    const response = await axiosLocal.delete<ApiResponse<BoardMemberUser>>(
+      `/board/${boardId}/members/me`);
+    return response.data;
+  },
   updateMemberRole: async (
     boardId: string,
     userId: string,

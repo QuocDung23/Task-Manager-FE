@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { MoreVertical, SquarePen, Trash2, UserPlus, Users } from "lucide-react";
+import { LogOut, MoreVertical, SquarePen, Trash2, UserPlus, Users } from "lucide-react";
 
 import { UpdateBoardDialog } from "./updateBoard-project";
 import { useDeleteBoard } from "@/features/boards/hooks/useDeleteBoard";
@@ -16,19 +16,24 @@ import { DialogAddMemberBoard } from "./addMember-board";
 import { DialogManageMembersBoard } from "../members/manage-members-board";
 import type { BoardResponse } from "@/features/boards/types";
 import { stopDropdownTriggerPropagation } from "@/lib/dropdown-trigger";
+import { getCurrentUserId } from "@/lib/membership";
+import { LeaveMembershipButton } from "@/components/members/leave-membership-button";
 
 interface MenuSettingProps {
   board: BoardResponse;
   projectId: string;
+  isCurrentUserMember: boolean;
 }
 
-export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
+export function MenuSettingBoard({ board, projectId, isCurrentUserMember }: MenuSettingProps) {
   const t = useT();
   const [openEdit, setOpenEdit] = useState(false);
   const [openAddMember, setOpenAddMember] = useState(false);
   const [openManageMembers, setOpenManageMembers] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
+  const [openLeave, setOpenLeave] = useState(false);
   const { mutate: deleteBoard, isPending } = useDeleteBoard(projectId);
+  const canLeave = isCurrentUserMember && board.userId !== getCurrentUserId();
 
   const handleDelete = () => {
     deleteBoard(board.id);
@@ -100,6 +105,18 @@ export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
 
           <DropdownMenuSeparator className="my-1 h-px bg-foreground/6" />
 
+          {canLeave ? <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              setOpenMenu(false);
+              setTimeout(() => setOpenLeave(true), 0);
+            }}
+            className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] text-destructive"
+          >
+            <span className="grid size-6 place-items-center rounded-full bg-destructive/10"><LogOut className="size-3.5" aria-hidden="true" /></span>
+            <TranslateText id="leave.board" />
+          </DropdownMenuItem> : null}
+
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -116,6 +133,16 @@ export function MenuSettingBoard({ board, projectId }: MenuSettingProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <LeaveMembershipButton
+        scope="board"
+        id={board.id}
+        projectId={projectId}
+        ownerUserId={board.userId}
+        open={openLeave}
+        onOpenChange={setOpenLeave}
+        hideTrigger
+      />
 
       <DialogAddMemberBoard
         boardId={board.id}

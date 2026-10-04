@@ -57,6 +57,10 @@ function emitJoin(socket: TypedSocket, projectId: string): void {
     completed = true;
     window.clearTimeout(timeoutId);
     pendingJoins.delete(projectId);
+    if (blockedProjects.has(projectId)) {
+      if (response.success) socket.emit("project:leave", { projectId }, () => undefined);
+      return;
+    }
     if (response.success) {
       if (state.desiredRefs.has(projectId)) {
         state.joinedOnTransport.add(projectId);
@@ -95,12 +99,23 @@ export function releaseProjectRoom(projectId: string): void {
     return;
   }
   state.desiredRefs.delete(projectId);
-  blockedProjects.delete(projectId);
   const socket = getSocket();
   const pendingTimeout = pendingJoins.get(projectId);
   if (pendingTimeout !== undefined) window.clearTimeout(pendingTimeout);
   pendingJoins.delete(projectId);
   emitLeave(socket, projectId);
+}
+
+export function revokeProjectRoomAccess(projectId: string): void {
+  blockedProjects.add(projectId);
+  const pendingTimeout = pendingJoins.get(projectId);
+  if (pendingTimeout !== undefined) window.clearTimeout(pendingTimeout);
+  pendingJoins.delete(projectId);
+  emitLeave(getSocket(), projectId);
+}
+
+export function isProjectRoomAccessBlocked(projectId: string): boolean {
+  return blockedProjects.has(projectId);
 }
 
 export function rejoinProjectRooms(socket: TypedSocket = getSocket()): void {
