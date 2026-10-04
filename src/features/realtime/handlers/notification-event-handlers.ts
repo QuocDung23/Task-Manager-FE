@@ -7,6 +7,7 @@ import type {
   UnreadCountResponse,
 } from "@/features/notifications/types";
 import { notificationKeys } from "@/features/notifications/utils/notification-query-keys";
+import { presentNotification } from "@/features/notifications/utils/notification-presenter";
 import type { ServerToClientEvents } from "../contracts/realtime-events";
 import type { TypedSocket } from "../socket";
 
@@ -82,11 +83,12 @@ export function registerNotificationEventHandlers(
       const memberRoleEvent =
         notification.type === "PROJECT_MEMBER_ROLE_CHANGED" ||
         notification.type === "BOARD_MEMBER_ROLE_CHANGED";
-      toast(notification.title, {
+      const content = presentNotification(notification);
+      toast(content.title, {
         id: memberRoleEvent
           ? `member-role:${notification.type}:${notification.body}`
           : notification.id,
-        description: notification.body,
+        description: content.body,
       });
     }
   };

@@ -14,6 +14,7 @@ import {
 } from "@/features/notifications/hooks/useNotifications";
 import type { NotificationFilter, NotificationResponse } from "@/features/notifications/types";
 import { getNotificationPath } from "@/features/notifications/utils/notification-navigation";
+import { presentNotification } from "@/features/notifications/utils/notification-presenter";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { getApiErrorMessage } from "@/lib/error-message";
 import { useT } from "@/services/i18n";
@@ -106,34 +107,37 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
           </div>
         ) : (
           <ul className="space-y-1">
-            {items.map((item) => (
-              <li key={item.id} className="group relative">
-                <button
-                  type="button"
-                  onClick={() => openItem(item)}
-                  className={`flex w-full gap-3 rounded-md px-2.5 py-3 pr-9 text-left outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 ${item.readAt ? "" : "bg-primary/5"}`}
-                >
-                  {item.actor ? <UserAvatar name={item.actor.name} avatar={item.actor.avatar} size="sm" /> : <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Bot className="size-4" /></span>}
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-start gap-2">
-                      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium">{item.title}</span>
-                      {!item.readAt ? <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" /> : null}
+            {items.map((item) => {
+              const content = presentNotification(item);
+              return (
+                <li key={item.id} className="group relative">
+                  <button
+                    type="button"
+                    onClick={() => openItem(item)}
+                    className={`flex w-full gap-3 rounded-md px-2.5 py-3 pr-9 text-left outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 ${item.readAt ? "" : "bg-primary/5"}`}
+                  >
+                    {item.actor ? <UserAvatar name={item.actor.name} avatar={item.actor.avatar} size="sm" /> : <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Bot className="size-4" /></span>}
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-start gap-2">
+                        <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium">{content.title}</span>
+                        {!item.readAt ? <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" /> : null}
+                      </span>
+                      <span className="mt-0.5 line-clamp-2 text-[11.5px] leading-4 text-muted-foreground">{content.body}</span>
+                      <time className="mt-1 block text-[10.5px] text-muted-foreground/70" dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
                     </span>
-                    <span className="mt-0.5 line-clamp-2 text-[11.5px] leading-4 text-muted-foreground">{item.body}</span>
-                    <time className="mt-1 block text-[10.5px] text-muted-foreground/70" dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  aria-label={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
-                  title={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
-                  onClick={() => item.readAt ? markUnread.mutate(item.id) : markRead.mutate(item.id)}
-                  className="absolute right-2 top-3 grid size-7 place-items-center rounded-md text-muted-foreground opacity-0 outline-none hover:bg-background hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 group-hover:opacity-100"
-                >
-                  <MoreHorizontal className="size-4" />
-                </button>
-              </li>
-            ))}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
+                    title={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
+                    onClick={() => item.readAt ? markUnread.mutate(item.id) : markRead.mutate(item.id)}
+                    className="absolute right-2 top-3 grid size-7 place-items-center rounded-md text-muted-foreground opacity-0 outline-none hover:bg-background hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 group-hover:opacity-100"
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
         {query.hasNextPage ? (
