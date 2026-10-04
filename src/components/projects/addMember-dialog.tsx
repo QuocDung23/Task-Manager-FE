@@ -5,6 +5,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   CheckCircle2,
+  Clock3,
+  LockKeyhole,
   Loader2,
   Search,
   UserPlus,
@@ -31,6 +33,8 @@ import {
   pressTap,
 } from "@/lib/motion";
 import { useProjectMembers } from "@/features/projects/hooks/useProjectMembers";
+import { usePendingProjectInvitations } from "@/features/projects/hooks/usePendingProjectInvitations";
+import { useBoardMembers } from "@/features/boards/hooks/useBoardMembers";
 import { useUsers } from "@/features/users/hooks/useUsers";
 
 export type AddMemberScope = "project" | "board";
@@ -42,13 +46,28 @@ export type AddMemberUser = {
   avatar?: string | null;
 };
 
-interface AddMemberDialogProps {
-  scope: AddMemberScope;
-  projectId?: string | null;
+type UnavailableReason =
+  | "alreadyInProject"
+  | "alreadyInBoard"
+  | "pendingInvitation"
+  | "needsProject"
+  | null;
+
+const UNAVAILABLE_LABEL_KEY = {
+  alreadyInProject: "memberSearch.alreadyInProject",
+  alreadyInBoard: "memberSearch.alreadyInBoard",
+  pendingInvitation: "memberSearch.pendingInvitation",
+  needsProject: "memberSearch.needsProject",
+} as const;
+
+type AddMemberDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (user: AddMemberUser) => Promise<unknown>;
-}
+} & (
+  | { scope: "project"; projectId: string; boardId?: never }
+  | { scope: "board"; projectId: string; boardId: string }
+);
 
 const SCOPE_COPY: Record<
   AddMemberScope,
@@ -69,6 +88,7 @@ const SCOPE_COPY: Record<
 export function AddMemberDialog({
   scope,
   projectId,
+  boardId,
   open,
   onOpenChange,
   onAdd,
@@ -88,36 +108,84 @@ export function AddMemberDialog({
   }, [searchEmail]);
 
   const trimmedEmail = debouncedEmail;
-  const hasQuery = trimmedEmail.length > 0;
+  const hasQuery = searchEmail.trim().length > 0;
+  const isSearchSettling = searchEmail.trim() !== trimmedEmail;
   const isBoardScope = scope === "board";
 
-  // Board scope searches inside the members of the parent project, not the
-  // whole system. `GET /project/:projectId/members` already returns only
-  // ACTIVE members of the project.
   const projectMembersQuery = useProjectMembers(
-    isBoardScope ? projectId : null,
-    { enabled: isBoardScope && hasQuery },
+    projectId,
+    { enabled: open },
+  );
+  const boardMembersQuery = useBoardMembers(isBoardScope ? boardId : null, {
+    enabled: open && isBoardScope,
+  });
+  const pendingInvitationsQuery = usePendingProjectInvitations(
+    isBoardScope ? null : projectId,
+    open && !isBoardScope,
   );
 
   const {
     data: usersResponse,
-    isLoading: isLoadingUsers,
+    isFetching: isFetchingUsers,
     isPlaceholderData,
-  } = useUsers(!isBoardScope && hasQuery ? trimmedEmail : undefined);
-  const users = useMemo((): AddMemberUser[] => {
-    if (isBoardScope) {
-      const email = trimmedEmail.toLowerCase();
-      return (projectMembersQuery.data?.data?.members ?? [])
-        .filter((member) => member.email.toLowerCase().includes(email))
-        .map((member) => ({
-          id: member.userId,
-          name: member.name,
-          email: member.email,
-          avatar: member.avatar ?? null,
-        }));
+    isError: isUsersError,
+    refetch: refetchUsers,
+  } = useUsers(hasQuery ? trimmedEmail : undefined);
+  const users: AddMemberUser[] = usersResponse?.data ?? [];
+  const projectMemberIds = useMemo(
+    () =>
+      new Set(
+        (projectMembersQuery.data?.data?.members ?? []).map(
+          (member) => member.userId,
+        ),
+      ),
+    [projectMembersQuery.data],
+  );
+  const boardMemberIds = useMemo(
+    () => new Set((boardMembersQuery.data ?? []).map((member) => member.id)),
+    [boardMembersQuery.data],
+  );
+  const pendingInviteeIds = useMemo(
+    () =>
+      new Set(
+        (pendingInvitationsQuery.data?.data ?? []).map(
+          (invitation) => invitation.inviteeId,
+        ),
+      ),
+    [pendingInvitationsQuery.data],
+  );
+  const membershipLoading =
+    projectMembersQuery.isFetching ||
+    (isBoardScope
+      ? boardMembersQuery.isFetching
+      : pendingInvitationsQuery.isFetching);
+  const resultsError =
+    projectMembersQuery.isError ||
+    (isBoardScope
+      ? boardMembersQuery.isError
+      : pendingInvitationsQuery.isError) ||
+    isUsersError;
+
+  const getUnavailableReason = (userId: string): UnavailableReason => {
+    if (!isBoardScope) {
+      if (projectMemberIds.has(userId)) return "alreadyInProject";
+      return pendingInviteeIds.has(userId) ? "pendingInvitation" : null;
     }
-    return usersResponse?.data ?? [];
-  }, [isBoardScope, trimmedEmail, projectMembersQuery.data, usersResponse?.data]);
+    if (boardMemberIds.has(userId)) return "alreadyInBoard";
+    return projectMemberIds.has(userId) ? null : "needsProject";
+  };
+
+  const canAdd = Boolean(
+    selectedUser &&
+    !isSubmitting &&
+    !membershipLoading &&
+    !resultsError &&
+    !isSearchSettling &&
+    !isFetchingUsers &&
+    !isPlaceholderData &&
+    users.some((user) => user.id === selectedUser.id) &&
+    !getUnavailableReason(selectedUser.id),
+  );
 
   const headerEnter = enterTransitionFor(reduceMotion);
   const bodyEnter = reduceMotion
@@ -137,11 +205,19 @@ export function AddMemberDialog({
   };
 
   const handleSelect = (user: AddMemberUser) => {
+    if (
+      membershipLoading ||
+      resultsError ||
+      isSearchSettling ||
+      isFetchingUsers ||
+      isPlaceholderData ||
+      getUnavailableReason(user.id)
+    ) return;
     setSelectedUser((current) => (current?.id === user.id ? null : user));
   };
 
   const handleAdd = async () => {
-    if (!selectedUser || isPending) return;
+    if (!selectedUser || !canAdd) return;
     setIsSubmitting(true);
     try {
       await onAdd(selectedUser);
@@ -218,7 +294,10 @@ export function AddMemberDialog({
                   autoComplete="off"
                   placeholder={t("member.searchByEmail")}
                   value={searchEmail}
-                  onChange={(e) => setSearchEmail(e.target.value)}
+                  onChange={(e) => {
+                    setSearchEmail(e.target.value);
+                    setSelectedUser(null);
+                  }}
                   aria-label={t("member.searchUserByEmail")}
                   className="h-12 rounded-2xl border border-foreground/8 bg-background/65 pl-10 pr-4 text-[13.5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-background focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                 />
@@ -227,19 +306,26 @@ export function AddMemberDialog({
               <SearchResults
                 users={users}
                 isLoading={
-                  isBoardScope
-                    ? projectMembersQuery.isLoading
-                    : isLoadingUsers
+                  isSearchSettling ||
+                  isFetchingUsers ||
+                  membershipLoading ||
+                  isPlaceholderData
                 }
-                isPlaceholder={
-                  isBoardScope
-                    ? projectMembersQuery.isPlaceholderData
-                    : isPlaceholderData
-                }
+                isError={resultsError && !isFetchingUsers && !membershipLoading}
                 hasQuery={hasQuery}
                 hintText={t(copy.hint)}
                 onSelect={handleSelect}
                 selectedUserId={selectedUser?.id ?? null}
+                getUnavailableReason={getUnavailableReason}
+                onRetry={() => {
+                  if (projectMembersQuery.isError)
+                    void projectMembersQuery.refetch();
+                  if (boardMembersQuery.isError)
+                    void boardMembersQuery.refetch();
+                  if (pendingInvitationsQuery.isError)
+                    void pendingInvitationsQuery.refetch();
+                  if (isUsersError) void refetchUsers();
+                }}
               />
 
               <div className="mt-2 flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-end">
@@ -258,15 +344,15 @@ export function AddMemberDialog({
                 <motion.button
                   type="button"
                   onClick={handleAdd}
-                  disabled={!selectedUser || isPending}
+                  disabled={!canAdd}
                   aria-live="polite"
                   whileHover={
-                    !selectedUser || isPending
+                    !canAdd
                       ? undefined
                       : pressHover(reduceMotion)
                   }
                   whileTap={
-                    !selectedUser || isPending
+                    !canAdd
                       ? undefined
                       : pressTap(reduceMotion)
                   }
@@ -311,28 +397,47 @@ export function AddMemberDialog({
 interface SearchResultsProps {
   users: AddMemberUser[];
   isLoading: boolean;
-  isPlaceholder: boolean;
+  isError: boolean;
   hasQuery: boolean;
   hintText: string;
   onSelect: (user: AddMemberUser) => void;
   selectedUserId: string | null;
+  getUnavailableReason: (userId: string) => UnavailableReason;
+  onRetry: () => void;
 }
 
 function SearchResults({
   users,
   isLoading,
-  isPlaceholder,
+  isError,
   hasQuery,
   hintText,
   onSelect,
   selectedUserId,
+  getUnavailableReason,
+  onRetry,
 }: SearchResultsProps) {
   const t = useT();
   if (!hasQuery) {
     return <ResultsHint>{hintText}</ResultsHint>;
   }
 
-  if (isLoading && !isPlaceholder && users.length === 0) {
+  if (isError) {
+    return (
+      <ResultsStatus>
+        <span><TranslateText id="memberSearch.loadError" /></span>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          <TranslateText id="common.retry" />
+        </button>
+      </ResultsStatus>
+    );
+  }
+
+  if (isLoading) {
     return (
       <ResultsStatus>
         <Loader2
@@ -352,24 +457,30 @@ function SearchResults({
     <ul
       role="listbox"
       aria-label={t("member.searchResults")}
-      className={cn(
-        "flex max-h-72 flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/8 bg-card p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] transition-opacity duration-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
-        isPlaceholder && "opacity-60",
-      )}
+      className="flex max-h-72 flex-col gap-1 overflow-y-auto rounded-2xl border border-foreground/8 bg-card p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
     >
       {users.map((user) => {
-        const isSelected = selectedUserId === user.id;
+        const unavailable = getUnavailableReason(user.id);
+        const isSelected = !unavailable && selectedUserId === user.id;
         return (
-          <li key={user.id} role="option" aria-selected={isSelected}>
+          <li
+            key={user.id}
+            role="option"
+            aria-selected={isSelected}
+            aria-disabled={Boolean(unavailable)}
+          >
             <button
               type="button"
               onClick={() => onSelect(user)}
+              disabled={Boolean(unavailable)}
               aria-pressed={isSelected}
               className={cn(
-                "group flex w-full items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-                isSelected
-                  ? "bg-accent text-accent-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-                  : "hover:bg-muted/70",
+                "group flex w-full items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed",
+                unavailable
+                  ? "bg-muted/55 text-muted-foreground"
+                  : isSelected
+                    ? "bg-accent text-accent-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                    : "hover:bg-muted/70",
               )}
             >
               <span className="flex min-w-0 items-center gap-3">
@@ -380,14 +491,20 @@ function SearchResults({
                     "size-9 rounded-xl text-[12px]",
                     isSelected
                       ? "bg-primary-foreground/15 text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground",
+                      : unavailable
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-secondary text-secondary-foreground",
                   )}
                 />
                 <span className="flex min-w-0 flex-col">
                   <span
                     className={cn(
                       "truncate text-[13.5px] font-medium",
-                      isSelected ? "text-accent-foreground" : "text-foreground",
+                      isSelected
+                        ? "text-accent-foreground"
+                        : unavailable
+                          ? "text-muted-foreground"
+                          : "text-foreground",
                     )}
                   >
                     {user.name || t("member.unnamed")}
@@ -404,15 +521,28 @@ function SearchResults({
                   </span>
                 </span>
               </span>
-              <CheckCircle2
-                className={cn(
-                  "size-4 shrink-0 transition-opacity",
-                  isSelected
-                    ? "opacity-100"
-                    : "text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
-                )}
-                aria-hidden="true"
-              />
+              {unavailable ? (
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                  {unavailable === "needsProject" ? (
+                    <LockKeyhole className="size-3.5" aria-hidden="true" />
+                  ) : unavailable === "pendingInvitation" ? (
+                    <Clock3 className="size-3.5" aria-hidden="true" />
+                  ) : (
+                    <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                  )}
+                  {t(UNAVAILABLE_LABEL_KEY[unavailable])}
+                </span>
+              ) : (
+                <CheckCircle2
+                  className={cn(
+                    "size-4 shrink-0 transition-opacity",
+                    isSelected
+                      ? "opacity-100"
+                      : "text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
+                  )}
+                  aria-hidden="true"
+                />
+              )}
             </button>
           </li>
         );

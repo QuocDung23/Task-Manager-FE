@@ -9,6 +9,13 @@ export const en = {
     pagination: "Pagination", showField: "Show {label}", hideField: "Hide {label}", previous: "Previous", next: "Next",
   },
   nav: { overview: "Overview", taskManager: "Task Manager", workspace: "Workspace" },
+  memberSearch: {
+    alreadyInProject: "In project",
+    alreadyInBoard: "In board",
+    pendingInvitation: "Invite pending",
+    needsProject: "Add to project first",
+    loadError: "Could not load search results or membership.",
+  },
   profile: { profile: "Profile", logout: "Logout", lightMode: "Light Mode", darkMode: "Dark Mode", password: "Password", changePassword: "Change password", displayName: "Display Name", address: "Address", phone: "Phone Number", bio: "Bio", yourName: "Your name", yourAddress: "Where do you live?", yourBio: "Tell us about yourself...", currentPasswordPlaceholder: "Enter your current password", currentPassword: "Current password", newPassword: "New password", confirmNewPassword: "Confirm new password", passwordHint: "Use {min}-{max} characters. Your new password must be different from your current one.", updating: "Updating…", updatePassword: "Update password", saving: "Saving…", saveChanges: "Save Changes", notSet: "Not set", noName: "No name", noEmail: "No email", noBio: "No bio", noAddress: "No address", noPhone: "No phone" },
   passwordError: { currentRequired: "Please enter your current password.", currentLength: "Current password must be between {min} and {max} characters.", newRequired: "Please enter your new password.", newLength: "Password must be between {min} and {max} characters.", same: "New password must be different from your current password.", confirmRequired: "Please confirm your new password.", mismatch: "Passwords do not match.", changeFailed: "Change password failed" },
   project: {

@@ -13,6 +13,13 @@ export const vi = {
     pagination: "Phân trang", showField: "Hiện {label}", hideField: "Ẩn {label}", previous: "Trước", next: "Sau",
   },
   nav: { overview: "Tổng quan", taskManager: "Quản lý công việc", workspace: "Không gian làm việc" },
+  memberSearch: {
+    alreadyInProject: "Đã trong dự án",
+    alreadyInBoard: "Đã trong bảng",
+    pendingInvitation: "Đã mời, chờ phản hồi",
+    needsProject: "Thêm vào dự án trước",
+    loadError: "Không thể tải kết quả tìm kiếm hoặc danh sách thành viên.",
+  },
   profile: { profile: "Hồ sơ", logout: "Đăng xuất", lightMode: "Chế độ sáng", darkMode: "Chế độ tối", password: "Mật khẩu", changePassword: "Đổi mật khẩu", displayName: "Tên hiển thị", address: "Địa chỉ", phone: "Số điện thoại", bio: "Giới thiệu", yourName: "Tên của bạn", yourAddress: "Bạn sống ở đâu?", yourBio: "Giới thiệu đôi chút về bản thân...", currentPasswordPlaceholder: "Nhập mật khẩu hiện tại", currentPassword: "Mật khẩu hiện tại", newPassword: "Mật khẩu mới", confirmNewPassword: "Xác nhận mật khẩu mới", passwordHint: "Dùng {min}-{max} ký tự. Mật khẩu mới phải khác mật khẩu hiện tại.", updating: "Đang cập nhật…", updatePassword: "Cập nhật mật khẩu", saving: "Đang lưu…", saveChanges: "Lưu thay đổi", notSet: "Chưa thiết lập", noName: "Chưa có tên", noEmail: "Chưa có email", noBio: "Chưa có giới thiệu", noAddress: "Chưa có địa chỉ", noPhone: "Chưa có số điện thoại" },
   passwordError: { currentRequired: "Vui lòng nhập mật khẩu hiện tại.", currentLength: "Mật khẩu hiện tại phải có {min}-{max} ký tự.", newRequired: "Vui lòng nhập mật khẩu mới.", newLength: "Mật khẩu phải có {min}-{max} ký tự.", same: "Mật khẩu mới phải khác mật khẩu hiện tại.", confirmRequired: "Vui lòng xác nhận mật khẩu mới.", mismatch: "Mật khẩu xác nhận không khớp.", changeFailed: "Đổi mật khẩu thất bại" },
   project: {

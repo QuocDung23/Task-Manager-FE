@@ -1,6 +1,6 @@
 import { useT } from "@/services/i18n";
 import { TranslateText } from "@/services/i18n";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, FolderOpen, Loader2, Search } from "lucide-react";
@@ -17,9 +17,14 @@ import { PaginationLayout } from "@/layouts/pagination-layout";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
 import { ErrorState } from "../ui/error-state";
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import { getApiErrorMessage } from "@/lib/error-message";
 import { getCurrentUserId, resolveMembership } from "@/lib/membership";
 import { APP_ROUTES } from "@/router/constans";
+import {
+  getBoardListUiState,
+  useWorkspaceUiStore,
+} from "@/store/workspace-ui-store";
 
 import { BoardCard } from "./boardCard-project";
 import { CreateBoardButton } from "./createBoardButton-project";
@@ -43,19 +48,29 @@ export function DetailProject() {
   const navigate = useNavigate();
 
   const boardGridRef = useRef<HTMLDivElement>(null);
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const boardList = useWorkspaceUiStore((state) =>
+    getBoardListUiState(state, projectId),
+  );
+  const setBoardSearch = useWorkspaceUiStore((state) => state.setBoardSearch);
+  const commitBoardSearch = useWorkspaceUiStore(
+    (state) => state.commitBoardSearch,
+  );
+  const setBoardPage = useWorkspaceUiStore((state) => state.setBoardPage);
+
+  const { page, search, debouncedSearch } = boardList;
 
   const currentUserId = useMemo(() => getCurrentUserId(), []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search.trim());
-      setPage(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+  useDebouncedSearch(
+    search,
+    debouncedSearch,
+    (value) => {
+      if (projectId) commitBoardSearch(projectId, value);
+    },
+    500,
+    projectId,
+  );
 
   const { editing, setEditing, title, setTitle, handleSave, handleKeyBoard } =
     useEditTitleProject(projectId ?? "", initialProjectName || t("project.untitled"));
@@ -78,6 +93,7 @@ export function DetailProject() {
   const {
     data: responseData,
     isLoading,
+    isPlaceholderData,
     isError,
     error,
     refetch,
@@ -94,16 +110,17 @@ export function DetailProject() {
   const isPageOutOfRange = Boolean(pagination && page > totalPage);
 
   useEffect(() => {
-    if (!pagination || page <= totalPage) return;
-    setPage(totalPage);
-  }, [pagination, page, totalPage]);
+    if (!pagination || isPlaceholderData || page <= totalPage || !projectId) return;
+    setBoardPage(projectId, totalPage);
+  }, [pagination, isPlaceholderData, page, totalPage, projectId, setBoardPage]);
 
   const { getCount: getListCount, isLoading: isListCountLoading } =
     useBoardListCounts(boards);
   const { membersByBoardId } = useBoardsMembers(boards);
 
   const handleChangePage = (newPage: number) => {
-    setPage(newPage);
+    if (!projectId) return;
+    setBoardPage(projectId, newPage);
     boardGridRef.current?.scrollTo({
       top: 0,
       behavior: reduceMotion ? "auto" : "smooth",
@@ -202,7 +219,10 @@ export function DetailProject() {
             aria-label={t("project.searchBoards")}
             placeholder={t("project.searchBoardsPlaceholder")}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              if (!projectId) return;
+              setBoardSearch(projectId, e.target.value);
+            }}
             className="h-11 w-full rounded-full border-border/80 bg-card pl-10 pr-4 text-[13.5px] shadow-[0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/70 hover:border-primary/20 focus-visible:border-primary/35 focus-visible:ring-4 focus-visible:ring-primary/10"
           />
         </div>

@@ -120,6 +120,7 @@ export function DialogManageMembersProject({
       />
       <AddMemberDialog
         scope="project"
+        projectId={projectId}
         open={open && openAddMember}
         onOpenChange={setOpenAddMember}
         onAdd={(user) =>
