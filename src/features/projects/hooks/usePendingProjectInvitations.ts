@@ -8,7 +8,7 @@ export function usePendingProjectInvitations(
 ) {
   return useQuery({
     queryKey: projectInvitationKeys.pending(projectId ?? ""),
-    queryFn: () => projectApi.getPendingInvitations(projectId!),
+    queryFn: () => projectApi.getProjectInvitations(projectId!, "PENDING"),
     enabled: Boolean(projectId) && enabled,
     staleTime: 0,
     meta: { silentError: true },

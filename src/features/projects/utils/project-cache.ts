@@ -331,9 +331,12 @@ export function applyProjectMemberAdded(
     return;
   }
   if (member.status !== undefined && member.status !== "ACTIVE") return;
+  const hasMembersCache = Boolean(queryClient.getQueryData(projectKeys.members(member.projectId)));
   const delta = applyMemberToMembersCache(queryClient, member);
   if (delta === 1) {
     adjustMembersTotal(queryClient, member.projectId, 1);
+  } else if (!hasMembersCache) {
+    void queryClient.invalidateQueries({ queryKey: projectKeys.detail(member.projectId) });
   }
   upsertMemberInProjectLists(
     queryClient,
@@ -352,10 +355,11 @@ export function applyProjectMemberRemoved(
   const delta = removeMemberFromMembersCache(queryClient, projectId, memberId);
   if (delta === -1) {
     adjustMembersTotal(queryClient, projectId, -1);
-    // ProjectCard lưu ProjectMemberUser (id = userId) trong cache list,
-    // nên phải filter bằng userId, không phải memberId.
-    removeMemberFromProjectLists(queryClient, projectId, userId || memberId);
+  } else {
+    void queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId) });
   }
+  // ProjectCard lưu ProjectMemberUser (id = userId), độc lập với members query.
+  removeMemberFromProjectLists(queryClient, projectId, userId || memberId);
 }
 
 export function applyProjectMemberRoleUpdated(

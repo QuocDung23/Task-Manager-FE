@@ -1,6 +1,7 @@
 import type { NotificationResponse } from "../types";
 
 export function getNotificationPath(notification: NotificationResponse): string | null {
+  if (notification.type === "PROJECT_INVITATION_RECEIVED") return null;
   const { projectId, boardId, taskId, commentId } = notification.context;
   if (boardId) {
     const params = new URLSearchParams();

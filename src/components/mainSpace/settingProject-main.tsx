@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { MoreVertical, UserPlus, Users, SquarePen, Trash2 } from "lucide-react";
+import { MoreVertical, UserPlus, Users, SquarePen, Trash2, LogOut } from "lucide-react";
 
 import { useDeleteProject } from "@/features/projects/hooks/useDeleteProject";
 import { UpdateProjectDialog } from "./updateProject-main";
@@ -15,6 +15,9 @@ import type { ProjectResponse } from "@/features/projects/types";
 import { DialogAddMemberProject } from "../projects/addMember-project";
 import { DialogManageMembersProject } from "../members/manage-members-project";
 import { stopDropdownTriggerPropagation } from "@/lib/dropdown-trigger";
+import { useCurrentUser } from "@/features/users/hooks/useCurrentUser";
+import { isAdminRole } from "@/lib/member-roles";
+import { LeaveMembershipButton } from "@/components/members/leave-membership-button";
 
 
 interface MenuSettingProps {
@@ -27,7 +30,11 @@ export function MenuSettingProject({ project }: MenuSettingProps) {
   const [openAddMember, setOpenAddMember] = useState(false);
   const [openManageMembers, setOpenManageMembers] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
+  const [openLeave, setOpenLeave] = useState(false);
   const { mutate: deleteProject, isPending } = useDeleteProject();
+  const currentUser = useCurrentUser();
+  const canInvite = Boolean(currentUser.data?.data?.id === project.userId || isAdminRole(project.role));
+  const canLeave = Boolean(currentUser.data?.data?.id && currentUser.data.data.id !== project.userId);
 
   const handleDelete = () => {
     deleteProject(project.id);
@@ -52,7 +59,7 @@ export function MenuSettingProject({ project }: MenuSettingProps) {
           sideOffset={8}
           className="w-48 rounded-2xl p-1.5 ring-0"
         >
-          <DropdownMenuItem
+          {canInvite ? <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
               setOpenMenu(false);
@@ -63,8 +70,8 @@ export function MenuSettingProject({ project }: MenuSettingProps) {
             <span className="grid size-6 place-items-center rounded-full bg-foreground/4 text-foreground/80">
               <UserPlus className="size-3.5" />
             </span>
-            <span><TranslateText id="member.add" /></span>
-          </DropdownMenuItem>
+            <span><TranslateText id="invitation.invite" /></span>
+          </DropdownMenuItem> : null}
 
           <DropdownMenuItem
             onSelect={(e) => {
@@ -96,6 +103,11 @@ export function MenuSettingProject({ project }: MenuSettingProps) {
 
           <div className="my-1 h-px bg-foreground/6" />
 
+          {canLeave ? <DropdownMenuItem
+            onSelect={(event) => { event.preventDefault(); setOpenMenu(false); setTimeout(() => setOpenLeave(true), 0); }}
+            className="cursor-pointer gap-2.5 rounded-xl px-2.5 py-2 text-[13px] text-destructive"
+          ><span className="grid size-6 place-items-center rounded-full bg-destructive/10"><LogOut className="size-3.5" /></span><TranslateText id="leave.project" /></DropdownMenuItem> : null}
+
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -112,6 +124,8 @@ export function MenuSettingProject({ project }: MenuSettingProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <LeaveMembershipButton scope="project" id={project.id} ownerUserId={project.userId} open={openLeave} onOpenChange={setOpenLeave} hideTrigger />
 
       <DialogAddMemberProject
         projectId={project.id}

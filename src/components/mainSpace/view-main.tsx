@@ -5,6 +5,7 @@ import { FolderOpen, Loader2, Search } from "lucide-react";
 
 import { useProjects } from "@/features/projects/hooks/useProjects";
 import { useProjectBoardCounts } from "@/features/projects/hooks/useProjectBoardCounts";
+import { useProjectListRooms } from "@/features/realtime/hooks/useProjectListRooms";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ErrorState } from "@/components/ui/error-state";
@@ -54,6 +55,7 @@ export function ViewMainPage() {
     () => (Array.isArray(responeData?.data) ? responeData.data : []),
     [responeData],
   );
+  useProjectListRooms(isPlaceholderData ? [] : projects.map((project) => project.id));
 
   const { getCount: getBoardCountFallback, isLoading: isBoardCountLoading } =
     useProjectBoardCounts(projects);

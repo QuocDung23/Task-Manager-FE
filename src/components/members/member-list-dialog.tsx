@@ -72,6 +72,7 @@ interface MemberListDialogProps {
     member: MemberItem,
     roleName: string,
   ) => Promise<unknown> | void;
+  pendingContent?: React.ReactNode;
 }
 
 export function MemberListDialog({
@@ -88,6 +89,7 @@ export function MemberListDialog({
   onRetry,
   onRemoveMember,
   onChangeRole,
+  pendingContent,
 }: MemberListDialogProps) {
   const t = useT();
   const reduceMotion = useReducedMotion();
@@ -272,6 +274,7 @@ export function MemberListDialog({
                   ))}
                 </ul>
               )}
+              {pendingContent}
             </motion.div>
           </div>
         </div>

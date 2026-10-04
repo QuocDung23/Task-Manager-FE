@@ -14,14 +14,17 @@ import {
 } from "@/features/notifications/hooks/useNotifications";
 import type { NotificationFilter, NotificationResponse } from "@/features/notifications/types";
 import { getNotificationPath } from "@/features/notifications/utils/notification-navigation";
+import { presentNotification } from "@/features/notifications/utils/notification-presenter";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { getApiErrorMessage } from "@/lib/error-message";
 import { useT } from "@/services/i18n";
+import { InvitationInbox } from "./invitation-inbox";
 
 export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) {
   const t = useT();
-  const [filter, setFilter] = useState<NotificationFilter>("all");
-  const query = useNotifications(filter);
+  const [filter, setFilter] = useState<NotificationFilter | "invitations">("all");
+  const [selectedInvitationId, setSelectedInvitationId] = useState<string | null>(null);
+  const query = useNotifications(filter === "invitations" ? "all" : filter);
   const countQuery = useUnreadNotificationCount();
   const markRead = useMarkNotificationRead();
   const markUnread = useMarkNotificationUnread();
@@ -32,6 +35,11 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
 
   const openItem = (item: NotificationResponse) => {
     if (!item.readAt) markRead.mutate(item.id);
+    if (item.type === "PROJECT_INVITATION_RECEIVED") {
+      setSelectedInvitationId(typeof item.data.invitationId === "string" ? item.data.invitationId : "missing-invitation");
+      setFilter("invitations");
+      return;
+    }
     const path = getNotificationPath(item);
     if (path) navigate(path);
     onNavigate?.();
@@ -56,7 +64,7 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
           </Button>
         </div>
         <div className="mt-3 inline-flex rounded-md bg-muted p-0.5" role="tablist">
-          {(["all", "unread"] as const).map((value) => (
+          {(["all", "unread", "invitations"] as const).map((value) => (
             <button
               key={value}
               type="button"
@@ -65,13 +73,14 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
               onClick={() => setFilter(value)}
               className={`h-7 rounded-[5px] px-3 text-[11.5px] font-medium capitalize transition-colors ${filter === value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
             >
-              {value === "all" ? t("notification.all") : t("notification.unreadTab")}
+              {value === "all" ? t("notification.all") : value === "unread" ? t("notification.unreadTab") : t("invitation.title")}
             </button>
           ))}
         </div>
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        {filter === "invitations" ? <InvitationInbox selectedId={selectedInvitationId} onNavigate={onNavigate} /> : <>
         {query.isLoading ? (
           <div className="space-y-2 p-2">
             {[0, 1, 2, 3].map((item) => (
@@ -98,34 +107,37 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
           </div>
         ) : (
           <ul className="space-y-1">
-            {items.map((item) => (
-              <li key={item.id} className="group relative">
-                <button
-                  type="button"
-                  onClick={() => openItem(item)}
-                  className={`flex w-full gap-3 rounded-md px-2.5 py-3 pr-9 text-left outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 ${item.readAt ? "" : "bg-primary/5"}`}
-                >
-                  {item.actor ? <UserAvatar name={item.actor.name} avatar={item.actor.avatar} size="sm" /> : <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Bot className="size-4" /></span>}
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-start gap-2">
-                      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium">{item.title}</span>
-                      {!item.readAt ? <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" /> : null}
+            {items.map((item) => {
+              const content = presentNotification(item);
+              return (
+                <li key={item.id} className="group relative">
+                  <button
+                    type="button"
+                    onClick={() => openItem(item)}
+                    className={`flex w-full gap-3 rounded-md px-2.5 py-3 pr-9 text-left outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/30 ${item.readAt ? "" : "bg-primary/5"}`}
+                  >
+                    {item.actor ? <UserAvatar name={item.actor.name} avatar={item.actor.avatar} size="sm" /> : <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"><Bot className="size-4" /></span>}
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-start gap-2">
+                        <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium">{content.title}</span>
+                        {!item.readAt ? <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" /> : null}
+                      </span>
+                      <span className="mt-0.5 line-clamp-2 text-[11.5px] leading-4 text-muted-foreground">{content.body}</span>
+                      <time className="mt-1 block text-[10.5px] text-muted-foreground/70" dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
                     </span>
-                    <span className="mt-0.5 line-clamp-2 text-[11.5px] leading-4 text-muted-foreground">{item.body}</span>
-                    <time className="mt-1 block text-[10.5px] text-muted-foreground/70" dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  aria-label={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
-                  title={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
-                  onClick={() => item.readAt ? markUnread.mutate(item.id) : markRead.mutate(item.id)}
-                  className="absolute right-2 top-3 grid size-7 place-items-center rounded-md text-muted-foreground opacity-0 outline-none hover:bg-background hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 group-hover:opacity-100"
-                >
-                  <MoreHorizontal className="size-4" />
-                </button>
-              </li>
-            ))}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
+                    title={item.readAt ? t("notification.markUnread") : t("notification.markRead")}
+                    onClick={() => item.readAt ? markUnread.mutate(item.id) : markRead.mutate(item.id)}
+                    className="absolute right-2 top-3 grid size-7 place-items-center rounded-md text-muted-foreground opacity-0 outline-none hover:bg-background hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 group-hover:opacity-100"
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
         {query.hasNextPage ? (
@@ -133,6 +145,7 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
             {query.isFetchingNextPage ? <Loader2 className="animate-spin" /> : null} {t("notification.loadMore")}
           </Button>
         ) : null}
+        </>}
       </div>
     </div>
   );

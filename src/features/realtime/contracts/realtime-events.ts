@@ -9,6 +9,7 @@ import type { BoardMemberUser, BoardResponse } from "@/features/boards/types";
 import type {
   ProjectResponse,
   ProjectMemberResponse,
+  ProjectInvitationResponse,
 } from "@/features/projects/types";
 import type { TaskActivity } from "@/features/task-activities/types";
 import type { NotificationResponse } from "@/features/notifications/types";
@@ -140,6 +141,10 @@ export type ProjectMemberRoleUpdatedPayload = RealtimeEnvelope<{
   member: ProjectMemberResponse;
 }>;
 
+export type ProjectInvitationChangedPayload = RealtimeEnvelope<{
+  invitation: ProjectInvitationResponse;
+}>;
+
 export type TaskCreatedPayload = RealtimeEnvelope<{
   boardId: string;
   listId: string;
@@ -253,6 +258,7 @@ export type ServerToClientEvents = {
   "project:member_role_updated": (
     payload: ProjectMemberRoleUpdatedPayload,
   ) => void;
+  "project:invitation_changed": (payload: ProjectInvitationChangedPayload) => void;
   "notification:new": (payload: {
     type:
       | "TASK_DUE_SOON"

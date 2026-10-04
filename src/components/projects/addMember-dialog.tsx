@@ -71,12 +71,12 @@ type AddMemberDialogProps = {
 
 const SCOPE_COPY: Record<
   AddMemberScope,
-  { title: "member.add"; description: "member.addToProjectHelp" | "member.addToBoardHelp"; hint: "member.addHint" }
+  { title: "member.add" | "invitation.invite"; description: "invitation.help" | "member.addToBoardHelp"; hint: "member.addHint" | "invitation.hint" }
 > = {
   project: {
-    title: "member.add",
-    description: "member.addToProjectHelp",
-    hint: "member.addHint",
+    title: "invitation.invite",
+    description: "invitation.help",
+    hint: "invitation.hint",
   },
   board: {
     title: "member.add",
@@ -359,7 +359,7 @@ export function AddMemberDialog({
                   transition={SPRING_PRESS}
                   className="group inline-flex h-11 items-center justify-center gap-3 whitespace-nowrap rounded-full bg-primary pl-5 pr-1.5 text-[13px] font-medium text-primary-foreground shadow-[0_10px_30px_-16px_color-mix(in_oklab,var(--primary)_70%,transparent)] outline-none transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/90 focus-visible:ring-4 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-38.5"
                 >
-                  <span>{isPending ? t("member.adding") : t("member.add")}</span>
+                  <span>{isBoardScope ? (isPending ? t("member.adding") : t("member.add")) : (isPending ? t("invitation.sending") : t("invitation.invite"))}</span>
                   <span className="grid size-8 place-items-center rounded-full bg-primary-foreground/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:scale-105">
                     {isPending ? (
                       <motion.span

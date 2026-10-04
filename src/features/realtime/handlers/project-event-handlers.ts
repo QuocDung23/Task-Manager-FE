@@ -5,6 +5,7 @@ import type {
   ProjectMemberAddedPayload,
   ProjectMemberRemovedPayload,
   ProjectMemberRoleUpdatedPayload,
+  ProjectInvitationChangedPayload,
   ProjectUpdatedPayload,
 } from "../contracts/realtime-events";
 import type { TypedSocket } from "../socket";
@@ -19,6 +20,15 @@ import {
   applyProjectMemberRoleUpdated,
   applyProjectUpdated,
 } from "@/features/projects/utils/project-cache";
+import { upsertInvitation } from "@/features/projects/utils/project-invitation-cache";
+import { projectInvitationKeys } from "@/features/projects/utils/project-invitation-query-keys";
+import { boardKeys } from "@/features/boards/utils/board-query-keys";
+import type { BoardResponse } from "@/features/boards/types";
+import { clearProjectAccessCache } from "@/features/projects/utils/clear-project-access-cache";
+import { projectKeys } from "@/features/projects/utils/project-query-keys";
+import { router } from "@/router";
+import { revokeProjectRoomAccess } from "../rooms/project-room-registry";
+import { revokeBoardRoomAccess } from "../rooms/board-room-registry";
 
 function isProjectCreatedPayload(
   value: unknown,
@@ -150,6 +160,31 @@ export function registerProjectEventHandlers(
       payload.data.memberId,
       payload.data.userId,
     );
+    if (payload.data.userId === getCurrentUserId(socket)) {
+      const path = router.state.location.pathname;
+      const boardId = path.startsWith("/board/") ? path.split("/")[2] : null;
+      const board = boardId
+        ? queryClient.getQueryData<{ data: BoardResponse }>(boardKeys.detail(boardId))?.data
+        : null;
+      const locationState = router.state.location.state as { projectId?: string } | null;
+      const activeBoardProjectId = board?.projectId ?? locationState?.projectId;
+      const boardIds = clearProjectAccessCache(queryClient, payload.data.projectId);
+      revokeProjectRoomAccess(payload.data.projectId);
+      for (const id of boardIds) revokeBoardRoomAccess(id);
+      applyProjectDeleted(queryClient, payload.data.projectId);
+      void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      if (path === `/project/${payload.data.projectId}` || (boardId && activeBoardProjectId === payload.data.projectId)) {
+        void router.navigate("/projects", { replace: true });
+      }
+    }
+  };
+
+  const handleInvitationChanged = (payload: ProjectInvitationChangedPayload): void => {
+    if (!payload || typeof payload.eventId !== "string" || typeof payload.data?.invitation?.id !== "string") return;
+    if (!rememberEvent(payload.eventId)) return;
+    const invitation = payload.data.invitation;
+    upsertInvitation(queryClient, invitation.id, invitation.status, invitation);
+    void queryClient.invalidateQueries({ queryKey: projectInvitationKeys.all });
   };
 
   const handleMemberRoleUpdated = (
@@ -166,6 +201,7 @@ export function registerProjectEventHandlers(
   socket.on("project:member_added", handleMemberAdded);
   socket.on("project:member_removed", handleMemberRemoved);
   socket.on("project:member_role_updated", handleMemberRoleUpdated);
+  socket.on("project:invitation_changed", handleInvitationChanged);
 
   return () => {
     socket.off("project:created", handleCreated);
@@ -174,5 +210,6 @@ export function registerProjectEventHandlers(
     socket.off("project:member_added", handleMemberAdded);
     socket.off("project:member_removed", handleMemberRemoved);
     socket.off("project:member_role_updated", handleMemberRoleUpdated);
+    socket.off("project:invitation_changed", handleInvitationChanged);
   };
 }
