@@ -118,6 +118,7 @@ export function DialogManageMembersBoard({
       <AddMemberDialog
         scope="board"
         projectId={projectId}
+        boardId={boardId}
         open={open && openAddMember}
         onOpenChange={setOpenAddMember}
         onAdd={(user) => addMemberMutation.mutateAsync(user.id)}

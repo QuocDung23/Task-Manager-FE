@@ -6,10 +6,14 @@ import { authStorage } from "../storage/auth-storage";
 import type { ApiError } from "@/lib/api-error";
 import { getApiErrorMessage } from "@/lib/error-message";
 import { t } from "@/services/i18n";
+import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 
 export const useLogout = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const resetWorkspaceUi = useWorkspaceUiStore(
+    (state) => state.resetWorkspaceUi,
+  );
 
   return useMutation({
     mutationFn: authApi.logout,
@@ -24,6 +28,7 @@ export const useLogout = () => {
     onSettled: () => {
       authStorage.clearToken();
       queryClient.clear();
+      resetWorkspaceUi();
       toast.success(t("auth.logoutSuccess"));
       navigate("/login", { replace: true });
     },

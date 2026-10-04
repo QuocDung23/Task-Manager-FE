@@ -42,6 +42,13 @@ export type ProjectMemberListResponse = {
   totalMembers: number;
 };
 
+export type ProjectInvitationResponse = {
+  id: string;
+  projectId: string;
+  inviteeId: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "REVOKED";
+};
+
 export type CreateProjectDto = {
   name: string;
   description?: string;

@@ -1,6 +1,6 @@
 import { useClearOnLocaleChange } from "@/services/i18n";
 import { useT } from "@/services/i18n";
-import { useEffect, useId, useState, type ReactElement } from "react";
+import { useEffect, useId, type ReactElement } from "react";
 import { ArrowRight, FolderPlus, Loader2, Plus, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateProject } from "@/features/projects/hooks/useCreateProject";
 import type { ProjectRequest } from "@/features/projects/types";
+import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 import {
   EASE_FLUID,
   SPRING_PRESS,
@@ -37,7 +38,10 @@ interface CreateProjectDialogProps {
 }
 
 export function CreateProjectDialog({ trigger }: CreateProjectDialogProps) {
-  const [open, setOpen] = useState(false);
+  const open = useWorkspaceUiStore((state) => state.createProjectDialogOpen);
+  const setOpen = useWorkspaceUiStore(
+    (state) => state.setCreateProjectDialogOpen,
+  );
   const t = useT();
   const reduceMotion = useReducedMotion();
   const formId = useId();
@@ -59,6 +63,10 @@ export function CreateProjectDialog({ trigger }: CreateProjectDialogProps) {
     },
   });
   useClearOnLocaleChange(() => clearErrors());
+
+  useEffect(() => {
+    return () => useWorkspaceUiStore.getState().setCreateProjectDialogOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!open) {

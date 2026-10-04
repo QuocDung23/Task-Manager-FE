@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { FolderOpen, Loader2, Search } from "lucide-react";
@@ -8,9 +8,11 @@ import { useProjectBoardCounts } from "@/features/projects/hooks/useProjectBoard
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ErrorState } from "@/components/ui/error-state";
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import { getApiErrorMessage } from "@/lib/error-message";
 import { getCurrentUserId, resolveMembership } from "@/lib/membership";
 import { APP_ROUTES } from "@/router/constans";
+import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 
 import { HeaderLayout } from "@/layouts/header-layout";
 import { PaginationLayout } from "@/layouts/pagination-layout";
@@ -26,27 +28,24 @@ export function ViewMainPage() {
   const t = useT();
   const reduceMotion = useReducedMotion();
   const projectGridRef = useRef<HTMLDivElement>(null);
-  const [page, setPage] = useState(1);
 
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const search = useWorkspaceUiStore((state) => state.projectList.search);
+  const debouncedSearch = useWorkspaceUiStore(
+    (state) => state.projectList.debouncedSearch,
+  );
+  const page = useWorkspaceUiStore((state) => state.projectList.page);
+  const setSearch = useWorkspaceUiStore((state) => state.setProjectSearch);
+  const commitSearch = useWorkspaceUiStore((state) => state.commitProjectSearch);
+  const setPage = useWorkspaceUiStore((state) => state.setProjectPage);
 
   const currentUserId = useMemo(() => getCurrentUserId(), []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search.trim());
-      setPage(1);
-    }, 500);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [search]);
+  useDebouncedSearch(search, debouncedSearch, commitSearch);
 
   const {
     data: responeData,
     isLoading,
+    isPlaceholderData,
     isError,
     error,
     refetch,
@@ -72,9 +71,9 @@ export function ViewMainPage() {
   const isPageOutOfRange = Boolean(pagination && page > totalPage);
 
   useEffect(() => {
-    if (!pagination || page <= totalPage) return;
+    if (!pagination || isPlaceholderData || page <= totalPage) return;
     setPage(totalPage);
-  }, [pagination, page, totalPage]);
+  }, [pagination, isPlaceholderData, page, totalPage, setPage]);
 
   const handleChangePage = (newPage: number): void => {
     setPage(newPage);

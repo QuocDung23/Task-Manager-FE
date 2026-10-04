@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import type { ApiError } from "@/lib/api-error";
 import { applyProjectMemberAdded } from "../utils/project-cache";
 import { projectKeys } from "../utils/project-query-keys";
+import { projectInvitationKeys } from "../utils/project-invitation-query-keys";
 
 function isFullProjectMember(value: unknown): value is ProjectMemberResponse {
   if (!value || typeof value !== "object") return false;
@@ -37,6 +38,9 @@ export const useAddMemberProject = () => {
     }) => projectApi.addMember(projectId, data),
     onSuccess: (response, variables) => {
       toast.success(t("toast.memberAdded"));
+      void queryClient.invalidateQueries({
+        queryKey: projectInvitationKeys.pending(variables.projectId),
+      });
       const raw = response?.data as
         | ProjectMemberResponse
         | AddProjectMemberResponse

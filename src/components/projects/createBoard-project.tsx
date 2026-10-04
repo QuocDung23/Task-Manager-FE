@@ -1,6 +1,6 @@
 import { useClearOnLocaleChange } from "@/services/i18n";
 import { useT } from "@/services/i18n";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId } from "react";
 import { ArrowRight, FolderPlus, Loader2, Plus, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateBoard } from "@/features/boards/hooks/useCreateBoard";
 import type { BoardRequest } from "@/features/boards/types";
+import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 import {
   EASE_FLUID,
   SPRING_PRESS,
@@ -37,7 +38,23 @@ interface CreateBoardDialogProps {
 }
 
 export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
-  const [open, setOpen] = useState(false);
+  const openProjectId = useWorkspaceUiStore(
+    (state) => state.createBoardProjectId,
+  );
+  const openCreateBoardDialog = useWorkspaceUiStore(
+    (state) => state.openCreateBoardDialog,
+  );
+  const closeCreateBoardDialog = useWorkspaceUiStore(
+    (state) => state.closeCreateBoardDialog,
+  );
+  const open = openProjectId === projectId;
+  const setOpen = (nextOpen: boolean): void => {
+    if (nextOpen) {
+      openCreateBoardDialog(projectId);
+      return;
+    }
+    closeCreateBoardDialog(projectId);
+  };
   const t = useT();
   const reduceMotion = useReducedMotion();
   const formId = useId();
@@ -59,6 +76,10 @@ export function CreateBoardDialog({ projectId }: CreateBoardDialogProps) {
     },
   });
   useClearOnLocaleChange(() => clearErrors());
+
+  useEffect(() => {
+    return () => closeCreateBoardDialog(projectId);
+  }, [closeCreateBoardDialog, projectId]);
 
   useEffect(() => {
     if (!open) reset({ name: "", description: "" });

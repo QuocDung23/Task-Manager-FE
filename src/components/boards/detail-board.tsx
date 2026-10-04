@@ -1,7 +1,7 @@
 import { useT } from "@/services/i18n";
 import { TranslateText } from "@/services/i18n";
 import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Loader2, Search, Users, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -9,7 +9,12 @@ import { Input } from "@/components/ui/input";
 import { useBoard } from "@/features/boards/hooks/useBoard";
 import { useBoardMembers } from "@/features/boards/hooks/useBoardMembers";
 import { useLists } from "@/features/lists/hooks/useLists";
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch";
 import { EASE_FLUID } from "@/lib/motion";
+import {
+  getListSearchUiState,
+  useWorkspaceUiStore,
+} from "@/store/workspace-ui-store";
 
 import { CreateListDialog } from "../lists/create-list-dialog";
 import { TaskDetail } from "../tasks/task-detail";
@@ -46,22 +51,28 @@ const contentTransition = (reduceMotion: boolean | null) =>
 export function DetailBoard({ boardId }: DetailBoardProps) {
   const t = useT();
   const { data: boardData, isLoading: isLoadingBoard } = useBoard(boardId);
-  const [page] = useState(1);
+  const page = 1;
   const limit = 200;
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { search, debouncedSearch } = useWorkspaceUiStore((state) =>
+    getListSearchUiState(state, boardId),
+  );
+  const setListSearch = useWorkspaceUiStore((state) => state.setListSearch);
+  const commitListSearch = useWorkspaceUiStore(
+    (state) => state.commitListSearch,
+  );
   const [taskFilters, setTaskFilters] = useState<TaskListFilters>({});
   const [tagsManagerOpen, setTagsManagerOpen] = useState(false);
   const [openManageMembers, setOpenManageMembers] = useState(false);
   const { data: boardMembers } = useBoardMembers(boardId);
   const reduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search.trim());
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+  useDebouncedSearch(
+    search,
+    debouncedSearch,
+    (value) => commitListSearch(boardId, value),
+    500,
+    boardId,
+  );
 
   const {
     data: listsData,
@@ -240,7 +251,7 @@ export function DetailBoard({ boardId }: DetailBoardProps) {
                   type="search"
                   placeholder={t("board.searchLists")}
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => setListSearch(boardId, e.target.value)}
                   className="h-10 rounded-full border border-foreground/8 bg-card/70 pl-10 pr-4 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_0_rgba(15,23,42,0.03)] transition-[border-color,box-shadow,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] placeholder:text-muted-foreground/65 hover:bg-card focus-visible:border-accent/40 focus-visible:bg-background focus-visible:ring-4 focus-visible:ring-accent/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                 />
               </div>

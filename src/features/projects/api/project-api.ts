@@ -6,6 +6,7 @@ import type {
   CreateProjectDto,
   ProjectMemberListResponse,
   ProjectMemberResponse,
+  ProjectInvitationResponse,
   ProjectResponse,
   UpdateProjectDto,
 } from "../types";
@@ -75,6 +76,16 @@ export const projectApi = {
     const response = await axiosLocal.get<
       ApiResponse<ProjectMemberListResponse>
     >(`/project/${projectId}/members`);
+    return response.data;
+  },
+  getPendingInvitations: async (
+    projectId: string,
+  ): Promise<ApiResponse<ProjectInvitationResponse[]>> => {
+    const response = await axiosLocal.get<
+      ApiResponse<ProjectInvitationResponse[]>
+    >(`/project/${projectId}/invitations`, {
+      params: { status: "PENDING" },
+    });
     return response.data;
   },
   updateMemberRole: async (
